@@ -21,13 +21,26 @@ export const biddingApi = {
     return auctionPricingSchema.parse(response.data);
   },
 
-  placeBid: async (auctionId: string, amount: number): Promise<BidResponse> => {
-    const response = await httpClient.post<unknown>(`/auctions/${auctionId}/bids`, { amount });
+  /** `idempotencyKey` identifies one bid intent: a retry with the same key never bids twice. */
+  placeBid: async (
+    auctionId: string,
+    amount: number,
+    idempotencyKey?: string,
+  ): Promise<BidResponse> => {
+    const response = await httpClient.post<unknown>(
+      `/auctions/${auctionId}/bids`,
+      { amount },
+      idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
+    );
     return bidResponseSchema.parse(response.data);
   },
 
-  buyNow: async (auctionId: string): Promise<BidResponse> => {
-    const response = await httpClient.post<unknown>(`/auctions/${auctionId}/buy-now`);
+  buyNow: async (auctionId: string, idempotencyKey?: string): Promise<BidResponse> => {
+    const response = await httpClient.post<unknown>(
+      `/auctions/${auctionId}/buy-now`,
+      undefined,
+      idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
+    );
     return bidResponseSchema.parse(response.data);
   },
 

@@ -12,7 +12,7 @@ export function useBuyNow(auctionId: string) {
   const { t } = useBiddingTranslation();
 
   return useMutation({
-    mutationFn: () => biddingApi.buyNow(auctionId),
+    mutationFn: (idempotencyKey: string) => biddingApi.buyNow(auctionId, idempotencyKey),
     onSuccess: () => {
       toast.success(t('toast.boughtNow'));
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.catalog.auction(auctionId) });

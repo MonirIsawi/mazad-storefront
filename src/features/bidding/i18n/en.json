@@ -12,7 +12,12 @@
     "cancel": "Cancel",
     "decrease": "Decrease amount",
     "increase": "Increase amount",
-    "minimumHint": "Minimum bid {{amount}}"
+    "minimumHint": "Minimum bid {{amount}}",
+    "priceMoved": "The minimum bid rose to {{amount}} while you were deciding. Tap again to bid that amount.",
+    "confirmNewAmount": "Bid {{amount}}",
+    "bidBuysNow": "This amount reaches the buy-now price: placing it buys the item now.",
+    "confirmBuyNow": "Confirm purchase for {{amount}}",
+    "buyNowConfirmHint": "Buying now ends the auction. You pay {{amount}} plus delivery."
   },
   "autoBid": {
     "setUp": "Set up auto-bid",

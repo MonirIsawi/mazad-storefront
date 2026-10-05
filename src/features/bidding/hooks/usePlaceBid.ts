@@ -14,8 +14,9 @@ export function usePlaceBid(auctionId: string) {
   const { t } = useBiddingTranslation();
 
   return useMutation({
-    mutationFn: (amount: number) => biddingApi.placeBid(auctionId, amount),
-    onSuccess: (_data, submittedAmount) => {
+    mutationFn: ({ amount, idempotencyKey }: { amount: number; idempotencyKey: string }) =>
+      biddingApi.placeBid(auctionId, amount, idempotencyKey),
+    onSuccess: (_data, { amount: submittedAmount }) => {
       // The response's own id/amount can silently belong to another bidder's auto-bid
       // counter-offer (see bidding.schema.ts), so the confirmation echoes what *this* user
       // submitted and the real standing is reconciled from the refetches below.

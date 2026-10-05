@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Icon } from '@shared/components/ui';
 import { BottomActionBar, Stepper } from '@shared/components/ios';
-import { getErrorCode, parseMoney, roundMoney } from '@shared/lib';
+import { getErrorCode, newIdempotencyKey, parseMoney, roundMoney } from '@shared/lib';
 import { useMoney } from '@shared/hooks';
 import { ROUTES } from '@shared/constants';
 import { computeMinimumBid } from '../lib/computeMinimumBid';
@@ -36,6 +36,32 @@ export function BidForm({ auction }: BidFormProps) {
   // than syncing in an effect means the displayed amount is never briefly below what the server
   // would accept, and a deliberately higher bid is still preserved.
   const amount = Math.max(chosenAmount, minimumBid);
+  // The floor rose above what the user picked: the next tap only adopts the new amount, so a bid
+  // is never sent for more than the user had in front of them when they decided.
+  const priceMoved = chosenAmount < minimumBid;
+  const buyNowPrice = parseMoney(auction.buyNowPrice);
+  const reachesBuyNow = buyNowPrice != null && amount >= buyNowPrice;
+
+  // One Idempotency-Key per bid intent (auction + amount): retrying the same bid after a timeout
+  // reuses it, so a bid the server already committed is never placed twice.
+  const intent = useRef<{ amount: number; key: string } | null>(null);
+  function submit() {
+    if (priceMoved) {
+      setChosenAmount(minimumBid);
+      return;
+    }
+    if (intent.current?.amount !== amount) {
+      intent.current = { amount, key: newIdempotencyKey() };
+    }
+    placeBid.mutate(
+      { amount, idempotencyKey: intent.current.key },
+      {
+        onSuccess: () => {
+          intent.current = null;
+        },
+      },
+    );
+  }
 
   const errorCode = getErrorCode(placeBid.error);
 
@@ -58,6 +84,16 @@ export function BidForm({ auction }: BidFormProps) {
         <p className="text-caption text-muted-foreground">
           {t('form.minimumHint', { amount: money(String(minimumBid)) })}
         </p>
+        {priceMoved ? (
+          <p role="status" className="text-footnote font-semibold text-warning">
+            {t('form.priceMoved', { amount: money(String(minimumBid)) })}
+          </p>
+        ) : null}
+        {reachesBuyNow ? (
+          <p role="status" className="text-footnote font-semibold text-foreground">
+            {t('form.bidBuysNow')}
+          </p>
+        ) : null}
 
         {errorCode ? (
           <p role="alert" className="flex items-start gap-1.5 text-footnote text-destructive">
@@ -90,9 +126,11 @@ export function BidForm({ auction }: BidFormProps) {
           hasShadow
           className="flex-[1.3]"
           isLoading={placeBid.isPending}
-          onClick={() => placeBid.mutate(amount)}
+          onClick={submit}
         >
-          {t('form.placeBid')}
+          {priceMoved
+            ? t('form.confirmNewAmount', { amount: money(String(minimumBid)) })
+            : t('form.placeBid')}
         </Button>
       </BottomActionBar>
     </>
