@@ -6577,7 +6577,8 @@
         "properties": {
           "key": {
             "type": "string",
-            "description": "Storage key from POST /uploads"
+            "description": "Storage key from POST /uploads",
+            "example": "images/2f1c…/full.webp"
           },
           "sortOrder": {
             "type": "number",
