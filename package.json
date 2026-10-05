@@ -16,6 +16,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "contracts:sync": "node scripts/sync-api-contract.mjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },

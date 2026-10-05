@@ -1,0 +1,7922 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/auth/otp/request": {
+      "post": {
+        "description": "With OTP_CHANNEL=TELEGRAM: returns delivered=true if the phone is already linked to the bot chat, otherwise telegramDeepLink for the user to open (t.me/<bot>?start=…).",
+        "operationId": "AuthController_requestOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpRequestResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Request OTP",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/otp/verify": {
+      "post": {
+        "operationId": "AuthController_verifyOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "LOGIN/SIGNUP: a new session. PASSWORD_RESET: a single-use reset token (no session).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AuthSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PasswordResetTokenResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Requires a SIGNUP OTP (POST /auth/otp/request) in `code`.",
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Register with password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rotates the refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "description": "Takes the single-use resetToken from POST /auth/otp/verify (purpose PASSWORD_RESET).",
+        "operationId": "AuthController_resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reset password",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "AuthController_logoutAll",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/login": {
+      "post": {
+        "operationId": "AdminAuthController_adminLogin",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/logout": {
+      "post": {
+        "operationId": "AdminAuthController_adminLogout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          },
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "MeController_getProfile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      },
+      "patch": {
+        "operationId": "MeController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/password": {
+      "post": {
+        "operationId": "MeController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/sessions": {
+      "get": {
+        "operationId": "MeController_listSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/sessions/{id}": {
+      "delete": {
+        "operationId": "MeController_revokeSession",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/devices/fcm-token": {
+      "put": {
+        "operationId": "MeController_updateFcm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFcmTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/addresses": {
+      "get": {
+        "operationId": "MeController_listAddresses",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      },
+      "post": {
+        "operationId": "MeController_createAddress",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/addresses/{id}": {
+      "patch": {
+        "operationId": "MeController_updateAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAddressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      },
+      "delete": {
+        "operationId": "MeController_deleteAddress",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "AdminUsersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "BANNED"
+              ]
+            }
+          },
+          {
+            "name": "isVerified",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minStrikes",
+            "required": false,
+            "in": "query",
+            "description": "Minimum no-show strikes",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "hasStores",
+            "required": false,
+            "in": "query",
+            "description": "Users who have at least one store",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search name, phone, username",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CUSTOMER",
+                "ADMIN"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List users with filters",
+        "tags": [
+          "Admin Users"
+        ]
+      },
+      "post": {
+        "operationId": "AdminUsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create admin account",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/export": {
+      "get": {
+        "operationId": "AdminUsersController_export",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "BANNED"
+              ]
+            }
+          },
+          {
+            "name": "isVerified",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minStrikes",
+            "required": false,
+            "in": "query",
+            "description": "Minimum no-show strikes",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "hasStores",
+            "required": false,
+            "in": "query",
+            "description": "Users who have at least one store",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search name, phone, username",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "role",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CUSTOMER",
+                "ADMIN"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export users CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/deactivated": {
+      "get": {
+        "operationId": "AdminUsersController_listDeactivated",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List deactivated admin accounts",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}": {
+      "get": {
+        "operationId": "AdminUsersController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminUsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/ban": {
+      "post": {
+        "operationId": "AdminUsersController_ban",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BanUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/unban": {
+      "post": {
+        "operationId": "AdminUsersController_unban",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/verify": {
+      "post": {
+        "operationId": "AdminUsersController_verify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/deactivate": {
+      "post": {
+        "operationId": "AdminUsersController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate an admin account (soft-delete + ban)",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/reactivate": {
+      "post": {
+        "operationId": "AdminUsersController_reactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate a deactivated admin account",
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_getTree",
+        "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Category tree with localized names",
+        "tags": [
+          "Categories"
+        ]
+      }
+    },
+    "/api/v1/admin/categories": {
+      "get": {
+        "operationId": "AdminCategoriesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all categories (admin)",
+        "tags": [
+          "Admin Categories"
+        ]
+      },
+      "post": {
+        "operationId": "AdminCategoriesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create category",
+        "tags": [
+          "Admin Categories"
+        ]
+      }
+    },
+    "/api/v1/admin/categories/{id}": {
+      "patch": {
+        "operationId": "AdminCategoriesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update category",
+        "tags": [
+          "Admin Categories"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminCategoriesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete category",
+        "tags": [
+          "Admin Categories"
+        ]
+      }
+    },
+    "/api/v1/me/stores": {
+      "get": {
+        "operationId": "MeStoresController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my stores",
+        "tags": [
+          "My Stores"
+        ]
+      },
+      "post": {
+        "operationId": "MeStoresController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a store",
+        "tags": [
+          "My Stores"
+        ]
+      }
+    },
+    "/api/v1/me/stores/{id}": {
+      "patch": {
+        "operationId": "MeStoresController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a store",
+        "tags": [
+          "My Stores"
+        ]
+      },
+      "delete": {
+        "operationId": "MeStoresController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete a store",
+        "tags": [
+          "My Stores"
+        ]
+      }
+    },
+    "/api/v1/stores/{id}": {
+      "get": {
+        "operationId": "StoresController_getPublic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public store page",
+        "tags": [
+          "Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/stores": {
+      "get": {
+        "operationId": "AdminStoresController_list",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all seller stores",
+        "tags": [
+          "Admin Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/stores/export": {
+      "get": {
+        "operationId": "AdminStoresController_export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export stores CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/stores/{id}": {
+      "get": {
+        "operationId": "AdminStoresController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Store detail for admin",
+        "tags": [
+          "Admin Stores"
+        ]
+      }
+    },
+    "/api/v1/uploads": {
+      "post": {
+        "operationId": "UploadsController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload an image (JPEG/PNG/WebP, max 5 MB)",
+        "tags": [
+          "Uploads"
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "ProductsController_list",
+        "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Fulltext search",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "condition",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "NEW",
+                "LIKE_NEW",
+                "OPEN_BOX",
+                "USED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Search/list public products",
+        "tags": [
+          "Products"
+        ]
+      },
+      "post": {
+        "operationId": "MeProductsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a product",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}/similar": {
+      "get": {
+        "operationId": "ProductsController_similar",
+        "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Similar products in same category",
+        "tags": [
+          "Products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "operationId": "ProductsController_detail",
+        "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Product detail (public; owner sees blocked state when authenticated)",
+        "tags": [
+          "Products"
+        ]
+      },
+      "patch": {
+        "operationId": "MeProductsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update own product",
+        "tags": [
+          "My Products"
+        ]
+      },
+      "delete": {
+        "operationId": "MeProductsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Soft-delete own product",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/me/products": {
+      "get": {
+        "operationId": "MeProductsController_listMine",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List my products",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}/variants": {
+      "put": {
+        "operationId": "MeProductsController_replaceVariants",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceVariantsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace product variants",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}/images": {
+      "post": {
+        "operationId": "MeProductsController_addImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddProductImageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add product image",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/products/{id}/images/{imageId}": {
+      "delete": {
+        "operationId": "MeProductsController_removeImage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove product image",
+        "tags": [
+          "My Products"
+        ]
+      }
+    },
+    "/api/v1/admin/products": {
+      "get": {
+        "operationId": "AdminProductsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "isBlocked",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Moderation product list",
+        "tags": [
+          "Admin Products"
+        ]
+      }
+    },
+    "/api/v1/admin/products/export": {
+      "get": {
+        "operationId": "AdminProductsController_export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export products CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Products"
+        ]
+      }
+    },
+    "/api/v1/admin/products/{id}": {
+      "get": {
+        "operationId": "AdminProductsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Product detail for moderation",
+        "tags": [
+          "Admin Products"
+        ]
+      }
+    },
+    "/api/v1/admin/products/{id}/block": {
+      "post": {
+        "operationId": "AdminProductsController_block",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Block a product (moderation)",
+        "tags": [
+          "Admin Products"
+        ]
+      }
+    },
+    "/api/v1/admin/products/{id}/unblock": {
+      "post": {
+        "operationId": "AdminProductsController_unblock",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unblock a product",
+        "tags": [
+          "Admin Products"
+        ]
+      }
+    },
+    "/api/v1/auctions": {
+      "get": {
+        "operationId": "AuctionsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "live",
+                "upcoming",
+                "ended"
+              ]
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "maxPrice",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "condition",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NEW",
+                "LIKE_NEW",
+                "OPEN_BOX",
+                "USED"
+              ]
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search product name/description",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "endingSoon",
+            "required": false,
+            "in": "query",
+            "description": "Live auctions ending within 1 hour",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "endsAt",
+                "startsAt",
+                "currentPrice"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auctions"
+        ]
+      },
+      "post": {
+        "operationId": "AuctionsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuctionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a draft auction for your product",
+        "tags": [
+          "Auctions"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}": {
+      "get": {
+        "operationId": "AuctionsController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auctions"
+        ]
+      },
+      "patch": {
+        "operationId": "AuctionsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAuctionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update draft or rejected auction",
+        "tags": [
+          "Auctions"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/similar": {
+      "get": {
+        "operationId": "AuctionsController_similar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auctions"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/bids": {
+      "get": {
+        "operationId": "AuctionsController_bids",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Auctions"
+        ]
+      },
+      "post": {
+        "operationId": "BiddingController_place",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceBidDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bidding"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/submit": {
+      "post": {
+        "operationId": "AuctionsController_submit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auctions"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/cancel": {
+      "post": {
+        "operationId": "AuctionsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAuctionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Auctions"
+        ]
+      }
+    },
+    "/api/v1/me/auctions": {
+      "get": {
+        "operationId": "MeAuctionsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions": {
+      "get": {
+        "operationId": "AdminAuctionsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by auction status enum, e.g. PENDING_APPROVAL, LIVE",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List auctions for admin (optional status filter)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/export": {
+      "get": {
+        "operationId": "AdminAuctionsController_export",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by auction status enum, e.g. PENDING_APPROVAL, LIVE",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export auctions CSV (same filters as list, capped)",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/{id}/bids": {
+      "get": {
+        "operationId": "AdminAuctionsController_bids",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bid history for admin",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/{id}": {
+      "get": {
+        "operationId": "AdminAuctionsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Auction detail for admin",
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/{id}/approve": {
+      "post": {
+        "operationId": "AdminAuctionsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/{id}/reject": {
+      "post": {
+        "operationId": "AdminAuctionsController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAuctionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/auctions/{id}/cancel": {
+      "post": {
+        "operationId": "AdminAuctionsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelAuctionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "AdminPlatformSettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get platform settings",
+        "tags": [
+          "Admin Settings"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminPlatformSettingsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePlatformSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update platform settings",
+        "tags": [
+          "Admin Settings"
+        ]
+      }
+    },
+    "/api/v1/me/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/me/notifications/unread-count": {
+      "get": {
+        "operationId": "NotificationsController_unread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationsController_markRead",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_markAllRead",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/buy-now": {
+      "post": {
+        "operationId": "BiddingController_buyNow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bidding"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/auto-bid": {
+      "put": {
+        "operationId": "BiddingController_setAutoBid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AutoBidDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bidding"
+        ]
+      },
+      "delete": {
+        "operationId": "BiddingController_removeAutoBid",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bidding"
+        ]
+      }
+    },
+    "/api/v1/me/bids": {
+      "get": {
+        "operationId": "MeBidsController_listMine",
+        "parameters": [
+          {
+            "name": "standing",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "WINNING",
+                "OUTBID",
+                "AWAITING_CONFIRMATION",
+                "WON",
+                "LOST"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My bid history with current standing per auction",
+        "tags": [
+          "Bidding"
+        ]
+      }
+    },
+    "/api/v1/homepage": {
+      "get": {
+        "operationId": "HomepageController_getFeed",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Homepage"
+        ]
+      }
+    },
+    "/api/v1/me/wins": {
+      "get": {
+        "operationId": "WinsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Wins"
+        ]
+      }
+    },
+    "/api/v1/wins/confirm": {
+      "post": {
+        "operationId": "WinsController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmWinsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Wins"
+        ]
+      }
+    },
+    "/api/v1/wins/{id}/decline": {
+      "post": {
+        "operationId": "WinsController_decline",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Wins"
+        ]
+      }
+    },
+    "/api/v1/me/orders": {
+      "get": {
+        "operationId": "OrdersController_listBuyer",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/me/sales": {
+      "get": {
+        "operationId": "OrdersController_listSales",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by store; omit for all stores",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List seller orders (all stores by default)",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}": {
+      "get": {
+        "operationId": "OrdersController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/status": {
+      "post": {
+        "operationId": "OrdersController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Advance order status (seller or admin)",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/cancel": {
+      "post": {
+        "operationId": "OrdersController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders": {
+      "get": {
+        "description": "Filter by status/seller/customer/store/date range. Search by order number, names, phone, or product. Omit status for all orders.",
+        "operationId": "AdminOrdersController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status; omit for all",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CREATED",
+                "CONFIRMED",
+                "OUT_FOR_DELIVERY",
+                "DELIVERED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search order number, customer/seller name or phone, product name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Created on or after (ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Created on or before (ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "total",
+                "orderNumber"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List all orders with pagination, filters, and search",
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders/export": {
+      "get": {
+        "operationId": "AdminOrdersController_export",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status; omit for all",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CREATED",
+                "CONFIRMED",
+                "OUT_FOR_DELIVERY",
+                "DELIVERED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search order number, customer/seller name or phone, product name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Created on or after (ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Created on or before (ISO date)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "total",
+                "orderNumber"
+              ]
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export orders CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders/{id}": {
+      "get": {
+        "operationId": "AdminOrdersController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders/{id}/status": {
+      "post": {
+        "operationId": "AdminOrdersController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOrderStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders/{id}/cancel": {
+      "post": {
+        "operationId": "AdminOrdersController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/order-items/{id}/return": {
+      "post": {
+        "operationId": "ReturnsController_open",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/me/returns": {
+      "get": {
+        "operationId": "ReturnsController_listMine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/cancel": {
+      "post": {
+        "operationId": "ReturnsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/me/sales/returns": {
+      "get": {
+        "operationId": "ReturnsController_sellerQueue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/approve": {
+      "post": {
+        "operationId": "ReturnsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/reject": {
+      "post": {
+        "operationId": "ReturnsController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenReturnDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/received": {
+      "post": {
+        "operationId": "ReturnsController_received",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/returns/{id}/refund": {
+      "post": {
+        "operationId": "ReturnsController_refund",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Returns"
+        ]
+      }
+    },
+    "/api/v1/admin/returns": {
+      "get": {
+        "operationId": "AdminReturnsController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Returns"
+        ]
+      }
+    },
+    "/api/v1/admin/returns/export": {
+      "get": {
+        "operationId": "AdminReturnsController_export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export returns CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Returns"
+        ]
+      }
+    },
+    "/api/v1/admin/returns/{id}": {
+      "get": {
+        "operationId": "AdminReturnsController_getOne",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Returns"
+        ]
+      }
+    },
+    "/api/v1/admin/returns/{id}/status": {
+      "post": {
+        "operationId": "AdminReturnsController_updateStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminReturnStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Returns"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/watch": {
+      "post": {
+        "operationId": "WatchlistController_add",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Watchlist"
+        ]
+      },
+      "delete": {
+        "operationId": "WatchlistController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Watchlist"
+        ]
+      }
+    },
+    "/api/v1/me/watchlist": {
+      "get": {
+        "operationId": "WatchlistController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Watchlist"
+        ]
+      }
+    },
+    "/api/v1/sellers/{id}": {
+      "get": {
+        "operationId": "SellersController_profile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Sellers"
+        ]
+      }
+    },
+    "/api/v1/sellers/{id}/follow": {
+      "post": {
+        "operationId": "SellersController_follow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Sellers"
+        ]
+      },
+      "delete": {
+        "operationId": "SellersController_unfollow",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Sellers"
+        ]
+      }
+    },
+    "/api/v1/me/following": {
+      "get": {
+        "operationId": "MeFollowController_following",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/followers": {
+      "get": {
+        "operationId": "MeFollowController_followers",
+        "parameters": [
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/order-items/{id}/review": {
+      "post": {
+        "operationId": "ReviewsController_create",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/products/{id}/reviews": {
+      "get": {
+        "operationId": "ReviewsController_byProduct",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/sellers/{id}/reviews": {
+      "get": {
+        "operationId": "ReviewsController_bySeller",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/admin/stats": {
+      "get": {
+        "operationId": "AdminStatsController_getStats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Stats"
+        ]
+      }
+    },
+    "/api/v1/admin/stats/trends": {
+      "get": {
+        "operationId": "AdminStatsController_getTrends",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Stats"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AdminAuditController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List audit logs with filters",
+        "tags": [
+          "Admin Audit"
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs/export": {
+      "get": {
+        "operationId": "AdminAuditController_export",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export audit logs CSV (same filters as list, capped)",
+        "tags": [
+          "Admin Audit"
+        ]
+      }
+    },
+    "/api/v1/admin/search": {
+      "get": {
+        "operationId": "AdminSearchController_run",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Global admin search across users, orders, products, auctions",
+        "tags": [
+          "Admin Search"
+        ]
+      }
+    },
+    "/api/v1/product-ai/capabilities": {
+      "get": {
+        "description": "Returns feature flags and provider availability. Works even when Product AI is disabled.",
+        "operationId": "ProductAiController_getCapabilities",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiCapabilitiesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Product AI capabilities",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/analyze": {
+      "post": {
+        "description": "Accepts a single product image, creates a Product AI session, generates local Sharp variants, optionally runs Gemini vision analysis when enabled, and returns the session for review. WHITE_BACKGROUND variant is a white canvas placement only — not AI background removal.",
+        "operationId": "ProductAiController_analyze",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image"
+                ],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "locale": {
+                    "type": "string",
+                    "enum": [
+                      "ar",
+                      "en"
+                    ],
+                    "default": "ar"
+                  },
+                  "sellerId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiAnalyzeResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "PRODUCT_AI_IMAGE_REQUIRED"
+          },
+          "413": {
+            "description": "PRODUCT_AI_IMAGE_TOO_LARGE"
+          },
+          "415": {
+            "description": "PRODUCT_AI_INVALID_IMAGE_TYPE"
+          },
+          "422": {
+            "description": "PRODUCT_AI_IMAGE_TOO_SMALL / PRODUCT_AI_INVALID_IMAGE"
+          },
+          "429": {
+            "description": "PRODUCT_AI_DAILY_LIMIT_EXCEEDED"
+          },
+          "503": {
+            "description": "PRODUCT_AI_DISABLED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload product image and create AI session",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}": {
+      "get": {
+        "operationId": "ProductAiController_getSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiSessionResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PRODUCT_AI_SESSION_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get owned Product AI session with image variants",
+        "tags": [
+          "Product AI"
+        ]
+      },
+      "delete": {
+        "description": "Cancels the session and best-effort deletes temporary stored image files.",
+        "operationId": "ProductAiController_cancelSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiSessionCancelResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PRODUCT_AI_SESSION_NOT_FOUND"
+          },
+          "409": {
+            "description": "PRODUCT_AI_SESSION_CANNOT_BE_CANCELLED"
+          },
+          "410": {
+            "description": "PRODUCT_AI_SESSION_EXPIRED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel Product AI session",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/product-views": {
+      "get": {
+        "operationId": "ProductAiController_getProductViews",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get suggested and generated AI product views for a session",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/product-views/select-subject": {
+      "post": {
+        "operationId": "ProductAiController_selectProductViewsSubject",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SelectProductViewsSubjectBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Select primary product for AI product views when multiple products are detected",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/product-views/generate": {
+      "post": {
+        "description": "Manually enqueues durable BullMQ jobs per view. Does not auto-generate on analyze.",
+        "operationId": "ProductAiController_generateProductViews",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateProductViewsBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate selected AI product views",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/ai-studio-enhanced/regenerate": {
+      "post": {
+        "description": "Manually re-enqueues generative studio enhancement with strict per-session limits. Does not block on generation.",
+        "operationId": "ProductAiController_regenerateAiStudioEnhanced",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Regeneration enqueued"
+          },
+          "404": {
+            "description": "PRODUCT_AI_SESSION_NOT_FOUND"
+          },
+          "409": {
+            "description": "Regenerate limit or cooldown exceeded"
+          },
+          "503": {
+            "description": "AI Studio Enhanced disabled"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Regenerate AI Studio Enhanced image",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/reference-images/refresh": {
+      "post": {
+        "description": "Re-runs SerpAPI Google Lens using the stored optimized image variant. Does not modify Gemini analysis.",
+        "operationId": "ProductAiController_refreshReferenceImages",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "description": "Product AI session identifier",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshReferenceImagesResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "PRODUCT_AI_SESSION_NOT_FOUND"
+          },
+          "409": {
+            "description": "PRODUCT_AI_REFERENCE_IMAGE_SESSION_NOT_READY"
+          },
+          "429": {
+            "description": "Refresh limit or cooldown exceeded"
+          },
+          "503": {
+            "description": "PRODUCT_AI_IMAGE_SEARCH_DISABLED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Refresh reference images for a Product AI session",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/sessions/{sessionId}/draft": {
+      "post": {
+        "operationId": "ProductAiController_createDraft",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiDraftResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRODUCT_AI_DRAFT_ALREADY_EXISTS"
+          },
+          "503": {
+            "description": "PRODUCT_AI_DRAFT_DISABLED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Generate a Product AI draft from a completed session",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/drafts/{draftId}": {
+      "get": {
+        "operationId": "ProductAiController_getDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiDraftResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "PRODUCT_AI_DRAFT_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an owned Product AI draft",
+        "tags": [
+          "Product AI"
+        ]
+      },
+      "patch": {
+        "operationId": "ProductAiController_updateDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductAiDraftBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiDraftResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRODUCT_AI_DRAFT_VERSION_CONFLICT"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update an owned Product AI draft",
+        "tags": [
+          "Product AI"
+        ]
+      },
+      "delete": {
+        "operationId": "ProductAiController_deleteDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Draft deleted"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an owned Product AI draft",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/drafts/{draftId}/reset": {
+      "post": {
+        "operationId": "ProductAiController_resetDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetProductAiDraftBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductAiDraftResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reset draft field values to AI suggestions",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/product-ai/drafts/{draftId}/create-product": {
+      "post": {
+        "operationId": "ProductAiController_createProductFromDraft",
+        "parameters": [
+          {
+            "name": "draftId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductFromDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductFromDraftResponseDto"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateProductFromDraftResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "PRODUCT_AI_DRAFT_NOT_READY_FOR_PRODUCT"
+          },
+          "503": {
+            "description": "PRODUCT_AI_DRAFT_PRODUCT_CREATION_DISABLED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a Product from a READY Product AI draft",
+        "tags": [
+          "Product AI"
+        ]
+      }
+    },
+    "/api/v1/me/wallet": {
+      "get": {
+        "operationId": "WalletController_getWallet",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get wallet balance (Phase 6 stub)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/me/wallet/transactions": {
+      "get": {
+        "operationId": "WalletController_listTransactions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List wallet transactions (Phase 6 stub)",
+        "tags": [
+          "Me"
+        ]
+      }
+    },
+    "/api/v1/admin/commission/summary": {
+      "get": {
+        "operationId": "AdminCommissionController_getSummary",
+        "parameters": [
+          {
+            "name": "periodStart",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "periodEnd",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Commission summary (aggregated by order)",
+        "tags": [
+          "Admin Commission"
+        ]
+      }
+    },
+    "/api/v1/admin/commission/by-order": {
+      "get": {
+        "operationId": "AdminCommissionController_listByOrder",
+        "parameters": [
+          {
+            "name": "periodStart",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "periodEnd",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Commission ledger by order (not by line item)",
+        "tags": [
+          "Admin Commission"
+        ]
+      }
+    },
+    "/api/v1/admin/commission/by-seller": {
+      "get": {
+        "operationId": "AdminCommissionController_listBySeller",
+        "parameters": [
+          {
+            "name": "periodStart",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "periodEnd",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Commission breakdown by seller",
+        "tags": [
+          "Admin Commission"
+        ]
+      }
+    },
+    "/api/v1/admin/commission/export": {
+      "get": {
+        "operationId": "AdminCommissionController_export",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export commission-by-order CSV (same period filters, capped)",
+        "tags": [
+          "Admin Commission"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Mazad API",
+    "description": "All endpoints",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "CUSTOMER",
+          "ADMIN"
+        ]
+      },
+      "UserStatus": {
+        "type": "string",
+        "enum": [
+          "ACTIVE",
+          "BANNED"
+        ]
+      },
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserRole"
+              }
+            ]
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "example": "+9647701234567"
+          },
+          "username": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserStatus"
+              }
+            ]
+          },
+          "isVerified": {
+            "type": "boolean"
+          },
+          "banReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "noShowStrikes": {
+            "type": "number"
+          },
+          "locale": {
+            "type": "string",
+            "example": "ar"
+          },
+          "phoneVerifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "phone",
+          "username",
+          "fullName",
+          "status",
+          "isVerified",
+          "banReason",
+          "noShowStrikes",
+          "locale",
+          "phoneVerifiedAt",
+          "createdAt",
+          "updatedAt",
+          "deletedAt"
+        ]
+      },
+      "AuthSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access JWT (typ=access); send as Authorization: Bearer"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque refresh token; single use, rotated on every refresh"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "sessionId",
+          "user"
+        ]
+      },
+      "PasswordResetTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "Single-use token for POST /auth/password/reset"
+          },
+          "resetTokenExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "resetToken",
+          "resetTokenExpiresAt"
+        ]
+      },
+      "RequestOtpDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "+9647701234567"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "SIGNUP",
+              "LOGIN",
+              "PASSWORD_RESET"
+            ]
+          }
+        },
+        "required": [
+          "phone",
+          "purpose"
+        ]
+      },
+      "OtpChannel": {
+        "type": "string",
+        "enum": [
+          "TELEGRAM",
+          "WHATSAPP",
+          "SMS"
+        ]
+      },
+      "OtpRequestResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "channel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OtpChannel"
+              }
+            ]
+          },
+          "delivered": {
+            "type": "boolean",
+            "description": "false: the user must open telegramDeepLink to receive the code"
+          },
+          "telegramDeepLink": {
+            "type": "string"
+          },
+          "botUsername": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "expiresAt",
+          "channel",
+          "delivered"
+        ]
+      },
+      "VerifyOtpDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "SIGNUP",
+              "LOGIN",
+              "PASSWORD_RESET"
+            ]
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "fcmToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "code",
+          "purpose"
+        ]
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "SIGNUP OTP sent to this phone via POST /auth/otp/request"
+          },
+          "password": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "fcmToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "code",
+          "password",
+          "fullName"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "fcmToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone",
+          "password"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "resetToken": {
+            "type": "string",
+            "description": "resetToken returned by POST /auth/otp/verify with purpose PASSWORD_RESET"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "resetToken",
+          "newPassword"
+        ]
+      },
+      "MessageResponseDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "AdminLoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "admin"
+          },
+          "password": {
+            "type": "string",
+            "example": "Admin123!"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ar",
+              "en"
+            ]
+          }
+        }
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "UpdateFcmTokenDto": {
+        "type": "object",
+        "properties": {
+          "fcmToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fcmToken"
+        ]
+      },
+      "CreateAddressDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label",
+          "city"
+        ]
+      },
+      "UpdateAddressDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label",
+          "city"
+        ]
+      },
+      "CreateAdminUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "ops_admin"
+          },
+          "password": {
+            "type": "string",
+            "example": "SecurePass123!"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Operations Admin"
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "default": "ar"
+          }
+        },
+        "required": [
+          "username",
+          "password",
+          "fullName"
+        ]
+      },
+      "BanUserDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "VerifyUserDto": {
+        "type": "object",
+        "properties": {
+          "isVerified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "isVerified"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": [
+          "nameEn",
+          "nameAr"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "object"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "iconUrl": {
+            "type": "object"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateStoreDto": {
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "deliveryFee": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "nameEn",
+          "nameAr",
+          "city"
+        ]
+      },
+      "UpdateStoreDto": {
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "area": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          },
+          "contactPhone": {
+            "type": "string"
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "deliveryFee": {
+            "type": "number"
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "description": "Defaults to seller default store; city required if no stores yet"
+          },
+          "defaultStoreCity": {
+            "type": "string",
+            "description": "Used to auto-create default store on first product"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": "string"
+          },
+          "descriptionAr": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "LIKE_NEW",
+              "OPEN_BOX",
+              "USED"
+            ],
+            "default": "USED"
+          },
+          "marketPrice": {
+            "type": "number",
+            "description": "Original/market price shown on detail page"
+          }
+        },
+        "required": [
+          "categoryId",
+          "nameEn",
+          "nameAr",
+          "descriptionEn",
+          "descriptionAr"
+        ]
+      },
+      "UpdateProductDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": "string"
+          },
+          "descriptionAr": {
+            "type": "string"
+          },
+          "condition": {
+            "type": "string",
+            "enum": [
+              "NEW",
+              "LIKE_NEW",
+              "OPEN_BOX",
+              "USED"
+            ]
+          },
+          "marketPrice": {
+            "type": "object"
+          }
+        }
+      },
+      "ProductVariantDto": {
+        "type": "object",
+        "properties": {
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "valueEn": {
+            "type": "string"
+          },
+          "valueAr": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nameEn",
+          "nameAr",
+          "valueEn",
+          "valueAr"
+        ]
+      },
+      "ReplaceVariantsDto": {
+        "type": "object",
+        "properties": {
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVariantDto"
+            }
+          }
+        },
+        "required": [
+          "variants"
+        ]
+      },
+      "AddProductImageDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Storage key from POST /uploads"
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          },
+          "isCover": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "BlockProductDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "CreateAuctionDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string",
+            "description": "Product to auction (must belong to you)"
+          },
+          "startingPrice": {
+            "type": "number",
+            "example": 100,
+            "description": "Opening bid price"
+          },
+          "minIncrement": {
+            "type": "number",
+            "example": 10,
+            "description": "Minimum raise per bid"
+          },
+          "startsAt": {
+            "type": "string",
+            "example": "2026-07-26T10:00:00.000Z"
+          },
+          "endsAt": {
+            "type": "string",
+            "example": "2026-07-27T10:00:00.000Z"
+          },
+          "buyNowPrice": {
+            "type": "number",
+            "example": 1000,
+            "description": "Instant buy price; ends auction immediately"
+          },
+          "antiSnipingMinutes": {
+            "type": "number",
+            "example": 5,
+            "description": "Extend auction when bid placed near end (minutes)"
+          },
+          "maxExtensions": {
+            "type": "number",
+            "example": 10,
+            "description": "Max anti-sniping extensions"
+          }
+        },
+        "required": [
+          "productId",
+          "startingPrice",
+          "minIncrement",
+          "startsAt",
+          "endsAt"
+        ]
+      },
+      "UpdateAuctionDto": {
+        "type": "object",
+        "properties": {
+          "startingPrice": {
+            "type": "number",
+            "example": 100
+          },
+          "minIncrement": {
+            "type": "number",
+            "example": 10
+          },
+          "startsAt": {
+            "type": "string",
+            "example": "2026-07-26T10:00:00.000Z"
+          },
+          "endsAt": {
+            "type": "string",
+            "example": "2026-07-27T10:00:00.000Z"
+          },
+          "buyNowPrice": {
+            "type": "number",
+            "example": 1000
+          }
+        }
+      },
+      "CancelAuctionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Seller changed mind"
+          }
+        }
+      },
+      "RejectAuctionDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Product images are unclear",
+            "minLength": 3
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "UpdatePlatformSettingsDto": {
+        "type": "object",
+        "properties": {
+          "antiSnipingMinutes": {
+            "type": "number",
+            "example": 5
+          },
+          "extensionMinutes": {
+            "type": "number",
+            "example": 5
+          },
+          "minBidIncrement": {
+            "type": "number",
+            "example": 1000
+          },
+          "buyerDeposit": {
+            "type": "number",
+            "example": 0
+          },
+          "defaultCommission": {
+            "type": "number",
+            "example": 5
+          },
+          "payoutDelayDays": {
+            "type": "number",
+            "example": 7
+          },
+          "cashOnDelivery": {
+            "type": "boolean"
+          },
+          "autoRefundReturn": {
+            "type": "boolean"
+          },
+          "manualAuctionApproval": {
+            "type": "boolean"
+          },
+          "manualProductApproval": {
+            "type": "boolean"
+          },
+          "autoBanCounterfeit": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlaceBidDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AutoBidDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ConfirmWinsDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "UpdateOrderStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "CONFIRMED",
+              "OUT_FOR_DELIVERY",
+              "DELIVERED",
+              "CANCELLED"
+            ],
+            "example": "CONFIRMED",
+            "description": "Next status. Seller flow: CREATED → CONFIRMED → OUT_FOR_DELIVERY → DELIVERED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CancelOrderDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Customer requested cancellation"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "OpenReturnDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AdminReturnStatusDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CreateReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "ProductAiVisionCapabilitiesDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": false
+          },
+          "provider": {
+            "type": "string",
+            "example": "disabled",
+            "enum": [
+              "disabled",
+              "gemini"
+            ]
+          }
+        },
+        "required": [
+          "enabled",
+          "provider"
+        ]
+      },
+      "ProductAiImageSearchCapabilitiesDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": false
+          },
+          "provider": {
+            "type": "string",
+            "example": "disabled",
+            "enum": [
+              "disabled",
+              "serpapi_google_lens"
+            ]
+          },
+          "maxReferenceImages": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": [
+          "enabled",
+          "provider",
+          "maxReferenceImages"
+        ]
+      },
+      "ProductAiCapabilityFeatureFlagsDto": {
+        "type": "object",
+        "properties": {
+          "imageUpload": {
+            "type": "boolean",
+            "example": true,
+            "description": "Image upload analyze endpoint (Phase 2)"
+          },
+          "imageEnhancement": {
+            "type": "boolean",
+            "example": true,
+            "description": "Local image enhancement via Sharp (Phase 2)"
+          },
+          "productAnalysis": {
+            "type": "boolean",
+            "example": false,
+            "description": "Vision-based product analysis (Phase 3)"
+          },
+          "referenceImageSearch": {
+            "type": "boolean",
+            "example": false,
+            "description": "External reference image search (Phase 4)"
+          },
+          "referenceImageDownload": {
+            "type": "boolean",
+            "example": false,
+            "description": "Secure local reference image download (Phase 5A)"
+          },
+          "productDraftCreation": {
+            "type": "boolean",
+            "example": false,
+            "description": "Product draft creation from session (Phase 5B)"
+          },
+          "productCreationFromDraft": {
+            "type": "boolean",
+            "example": false,
+            "description": "Product creation from draft (Phase 5C)"
+          },
+          "studioBackground": {
+            "type": "boolean",
+            "example": false,
+            "description": "Studio background presentation after background removal (Phase 5F)"
+          },
+          "aiStudioEnhanced": {
+            "type": "boolean",
+            "example": false,
+            "description": "Generative AI professional studio hero image (AI_STUDIO_ENHANCED)"
+          },
+          "productViews": {
+            "type": "boolean",
+            "example": false,
+            "description": "Manual multi-angle AI product views (AI_PRODUCT_VIEWS)"
+          }
+        },
+        "required": [
+          "imageUpload",
+          "imageEnhancement",
+          "productAnalysis",
+          "referenceImageSearch",
+          "referenceImageDownload",
+          "productDraftCreation",
+          "productCreationFromDraft",
+          "studioBackground",
+          "aiStudioEnhanced",
+          "productViews"
+        ]
+      },
+      "ProductAiImageConstraintsDto": {
+        "type": "object",
+        "properties": {
+          "maxSizeMb": {
+            "type": "number",
+            "example": 5
+          },
+          "minWidth": {
+            "type": "number",
+            "example": 300
+          },
+          "minHeight": {
+            "type": "number",
+            "example": 300
+          },
+          "supportedMimeTypes": {
+            "example": [
+              "image/jpeg",
+              "image/png",
+              "image/webp"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "maxSizeMb",
+          "minWidth",
+          "minHeight",
+          "supportedMimeTypes"
+        ]
+      },
+      "ProductAiCapabilitiesResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true,
+            "description": "Whether Product AI module is enabled"
+          },
+          "vision": {
+            "$ref": "#/components/schemas/ProductAiVisionCapabilitiesDto"
+          },
+          "imageSearch": {
+            "$ref": "#/components/schemas/ProductAiImageSearchCapabilitiesDto"
+          },
+          "features": {
+            "$ref": "#/components/schemas/ProductAiCapabilityFeatureFlagsDto"
+          },
+          "imageConstraints": {
+            "$ref": "#/components/schemas/ProductAiImageConstraintsDto"
+          }
+        },
+        "required": [
+          "enabled",
+          "vision",
+          "imageSearch",
+          "features"
+        ]
+      },
+      "ProductAiBackgroundRemovalDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "fallback_canvas",
+              "failed",
+              "disabled"
+            ],
+            "example": "success"
+          },
+          "provider": {
+            "type": "string",
+            "example": "local_onnx"
+          },
+          "modelVersion": {
+            "type": "string",
+            "example": "imgly-medium-v1.4.5"
+          },
+          "pipelineVersion": {
+            "type": "string",
+            "example": "bg-v1"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "failureReason": {
+            "type": "string",
+            "example": "INFERENCE_FAILED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ProductAiStudioCompositeDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "failed",
+              "skipped",
+              "disabled"
+            ],
+            "example": "success"
+          },
+          "templateVersion": {
+            "type": "string",
+            "example": "studio-minimal-v1"
+          },
+          "pipelineVersion": {
+            "type": "string",
+            "example": "studio-v1"
+          },
+          "provider": {
+            "type": "string",
+            "example": "sharp-compositor"
+          },
+          "completedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "failureReason": {
+            "type": "string",
+            "example": "TEMPLATE_NOT_FOUND"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ProductAiAiStudioEnhancedDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "success",
+              "failed",
+              "disabled",
+              "rejected_fidelity"
+            ]
+          },
+          "provider": {
+            "type": "string",
+            "example": "gemini-image"
+          },
+          "model": {
+            "type": "string",
+            "example": "gemini-2.5-flash-image"
+          },
+          "pipelineVersion": {
+            "type": "string",
+            "example": "ai-studio-v1"
+          },
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sourceVariant": {
+            "type": "string",
+            "enum": [
+              "ORIGINAL",
+              "OPTIMIZED"
+            ]
+          },
+          "fidelityScore": {
+            "type": "number",
+            "example": 0.91,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "failureReason": {
+            "type": "string",
+            "example": "COLOR_CHANGED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ProductAiImageVariantResponseDto": {
+        "type": "object",
+        "properties": {
+          "variantId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "example": "OPTIMIZED"
+          },
+          "storageKey": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "sizeBytes": {
+            "type": "number"
+          },
+          "backgroundRemoval": {
+            "description": "Present on WHITE_BACKGROUND when white-background processing is configured.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductAiBackgroundRemovalDto"
+              }
+            ]
+          },
+          "studioComposite": {
+            "description": "Present on STUDIO_BACKGROUND when studio presentation is configured.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductAiStudioCompositeDto"
+              }
+            ]
+          },
+          "aiStudioEnhanced": {
+            "description": "Present on AI_STUDIO_ENHANCED when generative studio enhancement is configured.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductAiAiStudioEnhancedDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "variantId",
+          "type",
+          "storageKey",
+          "url",
+          "width",
+          "height",
+          "sizeBytes"
+        ]
+      },
+      "ProductVisionIdentificationDto": {
+        "type": "object",
+        "properties": {
+          "productTypeAr": {
+            "type": "object",
+            "nullable": true,
+            "example": "هاتف ذكي"
+          },
+          "productTypeEn": {
+            "type": "object",
+            "nullable": true,
+            "example": "Smartphone"
+          },
+          "brand": {
+            "type": "object",
+            "nullable": true,
+            "example": "Samsung"
+          },
+          "model": {
+            "type": "object",
+            "nullable": true,
+            "example": "Galaxy S24 Ultra"
+          },
+          "variant": {
+            "type": "object",
+            "nullable": true
+          },
+          "colorAr": {
+            "type": "object",
+            "nullable": true,
+            "example": "أسود"
+          },
+          "colorEn": {
+            "type": "object",
+            "nullable": true,
+            "example": "Black"
+          },
+          "confidence": {
+            "type": "number",
+            "example": 0.91,
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "confidence"
+        ]
+      },
+      "ProductVisionDetectedTextDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BRAND",
+              "MODEL",
+              "SERIAL",
+              "BARCODE",
+              "LABEL",
+              "OTHER"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "sensitive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text",
+          "type",
+          "confidence",
+          "sensitive"
+        ]
+      },
+      "ProductVisionContentDto": {
+        "type": "object",
+        "properties": {
+          "titleAr": {
+            "type": "string"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "shortDescriptionAr": {
+            "type": "string"
+          },
+          "shortDescriptionEn": {
+            "type": "string"
+          },
+          "descriptionAr": {
+            "type": "string"
+          },
+          "descriptionEn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "titleAr",
+          "titleEn",
+          "shortDescriptionAr",
+          "shortDescriptionEn",
+          "descriptionAr",
+          "descriptionEn"
+        ]
+      },
+      "ProductVisionSpecificationDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "valueAr": {
+            "type": "string"
+          },
+          "valueEn": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "IMAGE",
+              "VISIBLE_TEXT",
+              "MODEL_INFERENCE",
+              "USER_REQUIRED"
+            ]
+          },
+          "requiresUserConfirmation": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "nameAr",
+          "nameEn",
+          "valueAr",
+          "valueEn",
+          "confidence",
+          "source",
+          "requiresUserConfirmation"
+        ]
+      },
+      "ProductVisionCategorySuggestionDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "object",
+            "nullable": true
+          },
+          "categoryNameAr": {
+            "type": "object",
+            "nullable": true
+          },
+          "categoryNameEn": {
+            "type": "object",
+            "nullable": true
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "confidence"
+        ]
+      },
+      "ProductVisionConditionAssessmentDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "APPEARS_NEW",
+              "APPEARS_USED",
+              "VISIBLE_DAMAGE"
+            ]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "visibleNotesAr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibleNotesEn": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "requiresUserConfirmation": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "value",
+          "confidence",
+          "visibleNotesAr",
+          "visibleNotesEn",
+          "requiresUserConfirmation"
+        ]
+      },
+      "ProductVisionUserRequiredFieldDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "MODEL",
+              "COLOR",
+              "CAPACITY",
+              "SIZE",
+              "CONDITION",
+              "AUTHENTICITY",
+              "WARRANTY",
+              "ACCESSORIES",
+              "OTHER"
+            ]
+          },
+          "questionAr": {
+            "type": "string"
+          },
+          "questionEn": {
+            "type": "string"
+          },
+          "reasonAr": {
+            "type": "string"
+          },
+          "reasonEn": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "questionAr",
+          "questionEn",
+          "reasonAr",
+          "reasonEn"
+        ]
+      },
+      "ProductVisionResultDto": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "string",
+            "example": "1.0"
+          },
+          "identification": {
+            "$ref": "#/components/schemas/ProductVisionIdentificationDto"
+          },
+          "detectedText": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVisionDetectedTextDto"
+            }
+          },
+          "content": {
+            "$ref": "#/components/schemas/ProductVisionContentDto"
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVisionSpecificationDto"
+            }
+          },
+          "categorySuggestion": {
+            "$ref": "#/components/schemas/ProductVisionCategorySuggestionDto"
+          },
+          "keywordsAr": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "keywordsEn": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "conditionAssessment": {
+            "$ref": "#/components/schemas/ProductVisionConditionAssessmentDto"
+          },
+          "userRequiredFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductVisionUserRequiredFieldDto"
+            }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "identification",
+          "detectedText",
+          "content",
+          "specifications",
+          "categorySuggestion",
+          "keywordsAr",
+          "keywordsEn",
+          "conditionAssessment",
+          "userRequiredFields",
+          "confidence",
+          "warnings"
+        ]
+      },
+      "ProductAiReferenceImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "externalUrl": {
+            "type": "string"
+          },
+          "sourceUrl": {
+            "type": "object",
+            "nullable": true
+          },
+          "sourceDomain": {
+            "type": "object",
+            "nullable": true,
+            "example": "samsung.com"
+          },
+          "sourceTitle": {
+            "type": "object",
+            "nullable": true
+          },
+          "imageWidth": {
+            "type": "object",
+            "nullable": true,
+            "example": 1200
+          },
+          "imageHeight": {
+            "type": "object",
+            "nullable": true,
+            "example": 1200
+          },
+          "matchScore": {
+            "type": "number",
+            "example": 0.92,
+            "minimum": 0,
+            "maximum": 1
+          },
+          "exactMatch": {
+            "type": "boolean",
+            "example": true
+          },
+          "isOfficialSource": {
+            "type": "boolean",
+            "example": true
+          },
+          "warnings": {
+            "example": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "localImage": {
+            "type": "object",
+            "nullable": true
+          },
+          "localThumbnail": {
+            "type": "object",
+            "nullable": true
+          },
+          "downloadStatus": {
+            "type": "string",
+            "enum": [
+              "stored",
+              "failed",
+              "skipped",
+              "external_only"
+            ],
+            "example": "external_only"
+          }
+        },
+        "required": [
+          "id",
+          "thumbnailUrl",
+          "externalUrl",
+          "sourceUrl",
+          "sourceDomain",
+          "sourceTitle",
+          "imageWidth",
+          "imageHeight",
+          "matchScore",
+          "exactMatch",
+          "isOfficialSource",
+          "warnings"
+        ]
+      },
+      "ProductAiReferenceImagesResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "provider": {
+            "type": "string",
+            "example": "serpapi_google_lens",
+            "enum": [
+              "disabled",
+              "serpapi_google_lens"
+            ]
+          },
+          "fromCache": {
+            "type": "boolean",
+            "example": false
+          },
+          "totalCandidates": {
+            "type": "number",
+            "example": 8,
+            "minimum": 0
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiReferenceImageResponseDto"
+            }
+          }
+        },
+        "required": [
+          "enabled",
+          "provider",
+          "fromCache",
+          "totalCandidates",
+          "images"
+        ]
+      },
+      "ProductAiWarningDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "VISION_ANALYSIS_NOT_AVAILABLE"
+          },
+          "message": {
+            "type": "string",
+            "example": "Product analysis is not available in this phase."
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ProductAiAnalyzeResponseDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "REVIEW_REQUIRED"
+          },
+          "locale": {
+            "type": "string",
+            "example": "ar"
+          },
+          "originalImage": {
+            "$ref": "#/components/schemas/ProductAiImageVariantResponseDto"
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiImageVariantResponseDto"
+            }
+          },
+          "analysis": {
+            "nullable": true,
+            "description": "Vision analysis result. Null when vision is disabled or analysis failed partially.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductVisionResultDto"
+              }
+            ]
+          },
+          "referenceImages": {
+            "$ref": "#/components/schemas/ProductAiReferenceImagesResponseDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiWarningDto"
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "sessionId",
+          "status",
+          "locale",
+          "originalImage",
+          "variants",
+          "referenceImages",
+          "warnings",
+          "expiresAt"
+        ]
+      },
+      "ProductAiSourceImageDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "storageKey": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "storageKey"
+        ]
+      },
+      "ProductAiSessionErrorDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "PRODUCT_AI_IMAGE_PROCESSING_FAILED"
+          },
+          "message": {
+            "type": "string",
+            "example": "Failed to process product image."
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ProductAiSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "CREATED",
+              "PROCESSING",
+              "REVIEW_REQUIRED",
+              "CONFIRMED",
+              "CANCELLED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "locale": {
+            "type": "string",
+            "example": "ar"
+          },
+          "visionProvider": {
+            "type": "string",
+            "example": "disabled"
+          },
+          "imageSearchProvider": {
+            "type": "string",
+            "example": "disabled"
+          },
+          "visionEnabled": {
+            "type": "boolean"
+          },
+          "imageSearchEnabled": {
+            "type": "boolean"
+          },
+          "sourceImageKey": {
+            "type": "object",
+            "nullable": true
+          },
+          "sourceImage": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductAiSourceImageDto"
+              }
+            ]
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiImageVariantResponseDto"
+            }
+          },
+          "result": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductVisionResultDto"
+              }
+            ]
+          },
+          "referenceImages": {
+            "$ref": "#/components/schemas/ProductAiReferenceImagesResponseDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiWarningDto"
+            }
+          },
+          "error": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProductAiSessionErrorDto"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "locale",
+          "visionProvider",
+          "imageSearchProvider",
+          "visionEnabled",
+          "imageSearchEnabled",
+          "sourceImageKey",
+          "sourceImage",
+          "variants",
+          "referenceImages",
+          "warnings",
+          "error",
+          "expiresAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SelectProductViewsSubjectBodyDto": {
+        "type": "object",
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "example": "laptop",
+            "description": "Primary product candidate id from productViews.subject.candidates"
+          }
+        },
+        "required": [
+          "candidateId"
+        ]
+      },
+      "GenerateProductViewsBodyDto": {
+        "type": "object",
+        "properties": {
+          "views": {
+            "example": [
+              "front_three_quarter",
+              "left_side",
+              "rear"
+            ],
+            "description": "Structured view keys validated against the session planner",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "views"
+        ]
+      },
+      "RefreshReferenceImagesResponseDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string"
+          },
+          "referenceImages": {
+            "$ref": "#/components/schemas/ProductAiReferenceImagesResponseDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiWarningDto"
+            }
+          }
+        },
+        "required": [
+          "sessionId",
+          "referenceImages",
+          "warnings"
+        ]
+      },
+      "ProductAiSessionCancelResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "CANCELLED"
+          },
+          "cancelledAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "cancelledAt"
+        ]
+      },
+      "ProductAiDraftImageResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceType": {
+            "type": "string",
+            "enum": [
+              "SESSION_VARIANT",
+              "REFERENCE_IMAGE",
+              "AI_PRODUCT_VIEW"
+            ]
+          },
+          "sourceId": {
+            "type": "string"
+          },
+          "storageKey": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          },
+          "width": {
+            "type": "object",
+            "nullable": true
+          },
+          "height": {
+            "type": "object",
+            "nullable": true
+          },
+          "mimeType": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "sourceType",
+          "sourceId",
+          "storageKey",
+          "url",
+          "sortOrder",
+          "isPrimary",
+          "width",
+          "height",
+          "mimeType"
+        ]
+      },
+      "ProductAiDraftResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": "object",
+            "nullable": true
+          },
+          "locale": {
+            "type": "string"
+          },
+          "originType": {
+            "type": "string",
+            "enum": [
+              "AI_SESSION",
+              "IMPORT",
+              "DUPLICATE",
+              "MANUAL"
+            ]
+          },
+          "originId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EDITING",
+              "READY"
+            ]
+          },
+          "version": {
+            "type": "number"
+          },
+          "fields": {
+            "type": "object"
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiDraftImageResponseDto"
+            }
+          },
+          "originSnapshotVersion": {
+            "type": "object",
+            "nullable": true
+          },
+          "generationVersion": {
+            "type": "string"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "sellerId",
+          "locale",
+          "originType",
+          "originId",
+          "status",
+          "version",
+          "fields",
+          "specifications",
+          "images",
+          "originSnapshotVersion",
+          "generationVersion",
+          "warnings",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "ProductAiDraftFieldPatchDto": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "object",
+            "nullable": true
+          }
+        }
+      },
+      "ProductAiDraftFieldsPatchDto": {
+        "type": "object",
+        "properties": {
+          "titleAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "titleEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "shortDescriptionAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "shortDescriptionEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "descriptionAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "descriptionEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "variant": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "colorAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "colorEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "categoryId": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "condition": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          }
+        }
+      },
+      "ProductAiDraftSpecificationPatchDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "nameAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "nameEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "valueAr": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          },
+          "valueEn": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldPatchDto"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "ProductAiDraftGalleryPatchDto": {
+        "type": "object",
+        "properties": {
+          "primaryImageId": {
+            "type": "string",
+            "description": "Draft image id or source key such as REFERENCE_IMAGE:<id>"
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ProductAiDraftExistingGalleryItemDto"
+                },
+                {
+                  "$ref": "#/components/schemas/ProductAiDraftNewGalleryItemDto"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "images"
+        ]
+      },
+      "UpdateProductAiDraftBodyDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "description": "Expected draft version for optimistic concurrency"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "EDITING",
+              "READY"
+            ]
+          },
+          "fields": {
+            "$ref": "#/components/schemas/ProductAiDraftFieldsPatchDto"
+          },
+          "specifications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductAiDraftSpecificationPatchDto"
+            }
+          },
+          "gallery": {
+            "$ref": "#/components/schemas/ProductAiDraftGalleryPatchDto"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "ResetProductAiDraftBodyDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "number",
+            "description": "Expected draft version for optimistic concurrency"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "CreateProductFromDraftDto": {
+        "type": "object",
+        "properties": {
+          "storeId": {
+            "type": "string",
+            "description": "Defaults to seller default store"
+          },
+          "defaultStoreCity": {
+            "type": "string",
+            "description": "Used to auto-create default store on first product"
+          },
+          "marketPrice": {
+            "type": "number",
+            "description": "Original/market price shown on detail page"
+          }
+        }
+      },
+      "CreateProductFromDraftResponseDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "draftId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "productId",
+          "draftId",
+          "createdAt"
+        ]
+      }
+    }
+  }
+}
