@@ -9,8 +9,7 @@ const VARIANT_CLASSES = {
   tinted: 'bg-primary-tint text-primary-text hover:opacity-75 active:opacity-75',
   gray: 'bg-fill text-foreground hover:opacity-70 active:opacity-70',
   outline: 'border border-border bg-transparent text-foreground hover:bg-fill active:bg-fill',
-  destructive:
-    'bg-destructive text-destructive-foreground hover:opacity-85 active:opacity-85',
+  destructive: 'bg-destructive text-destructive-foreground hover:opacity-85 active:opacity-85',
   plain: 'bg-transparent text-primary-text hover:bg-fill active:bg-fill',
 } as const;
 
@@ -53,8 +52,7 @@ export function buttonVariants({
 }
 
 export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'>,
-    ButtonVariantProps {
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'color'>, ButtonVariantProps {
   isLoading?: boolean;
 }
 

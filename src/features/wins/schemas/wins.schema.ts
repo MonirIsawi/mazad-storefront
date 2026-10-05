@@ -1,11 +1,6 @@
 import { z } from 'zod';
 
-export const winStatusSchema = z.enum([
-  'PENDING_CONFIRMATION',
-  'CONFIRMED',
-  'DECLINED',
-  'EXPIRED',
-]);
+export const winStatusSchema = z.enum(['PENDING_CONFIRMATION', 'CONFIRMED', 'DECLINED', 'EXPIRED']);
 
 /**
  * GET /me/wins returns the raw `AuctionWin` rows with the auction and order-item relations

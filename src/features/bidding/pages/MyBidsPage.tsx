@@ -9,12 +9,7 @@ import { Badge, Card, Icon, Skeleton } from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { ROUTES } from '@shared/constants';
 import { useLocale, useMoney, useServerClock } from '@shared/hooks';
-import {
-  formatDuration,
-  getImageTintStyle,
-  pickLocalizedName,
-  resolveAssetUrl,
-} from '@shared/lib';
+import { formatDuration, getImageTintStyle, pickLocalizedName, resolveAssetUrl } from '@shared/lib';
 import { useMyBids } from '../hooks/useMyBids';
 import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 import type { BidStanding, MyBidItem } from '../types/bidding.types';

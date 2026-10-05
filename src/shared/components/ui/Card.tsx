@@ -27,10 +27,7 @@ export function Card({ isInset = false, hasShadow = true, className, ...props }:
 
 export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingElement>) {
   return (
-    <h3
-      className={cn('px-4 pt-4 text-title-3 font-bold text-foreground', className)}
-      {...props}
-    />
+    <h3 className={cn('px-4 pt-4 text-title-3 font-bold text-foreground', className)} {...props} />
   );
 }
 
@@ -49,14 +46,12 @@ export interface SectionHeaderProps {
 /** SectionHeader — the "title + عرض الكل" row that opens every home-feed section. */
 export function SectionHeader({ title, actionLabel, action, className }: SectionHeaderProps) {
   return (
-    <div
-      className={cn(
-        'flex min-h-touch items-center justify-between gap-3 px-1 pb-2',
-        className,
-      )}
-    >
+    <div className={cn('flex min-h-touch items-center justify-between gap-3 px-1 pb-2', className)}>
       <h2 className="text-title-2 font-bold text-foreground">{title}</h2>
-      {action ?? (actionLabel ? <span className="text-subhead font-semibold text-primary-text">{actionLabel}</span> : null)}
+      {action ??
+        (actionLabel ? (
+          <span className="text-subhead font-semibold text-primary-text">{actionLabel}</span>
+        ) : null)}
     </div>
   );
 }

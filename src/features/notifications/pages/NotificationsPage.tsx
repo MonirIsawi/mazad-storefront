@@ -119,10 +119,7 @@ function NotificationRow({
 
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span
-          className={cn(
-            'text-subhead text-foreground',
-            isUnread ? 'font-semibold' : 'font-medium',
-          )}
+          className={cn('text-subhead text-foreground', isUnread ? 'font-semibold' : 'font-medium')}
         >
           {title}
         </span>

@@ -4,7 +4,15 @@ import { useState } from 'react';
 import { ROUTES } from '@shared/constants';
 import { ErrorState, PageLoader } from '@shared/components/feedback';
 import { ScreenHeader } from '@shared/components/layout';
-import { Badge, Button, Card, CardContent, Icon, Input, SectionHeader } from '@shared/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  Icon,
+  Input,
+  SectionHeader,
+} from '@shared/components/ui';
 import { useLocale, useMoney } from '@shared/hooks';
 import { formatDateTime, getErrorCode, pickLocalizedName } from '@shared/lib';
 import { useOrder } from '../hooks/useOrders';

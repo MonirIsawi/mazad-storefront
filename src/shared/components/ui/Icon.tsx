@@ -99,8 +99,7 @@ const ICON_BUTTON_TONE = {
   primary: 'bg-primary text-primary-foreground shadow-button',
 } as const;
 
-export interface IconButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
+export interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   name: IconName;
   /** Required — an icon-only control has no visible text to name it. */
   label: string;
