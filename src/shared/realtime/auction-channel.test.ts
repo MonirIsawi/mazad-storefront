@@ -74,7 +74,15 @@ describe('auction channel', () => {
       'https://api.mazad.example/realtime',
     );
     expect(realtimeUrl('not a url')).toBeNull();
-    expect(realtimeUrl(undefined)).toBeNull();
+    expect(realtimeUrl('')).toBeNull();
+  });
+
+  it('defaults to NEXT_PUBLIC_API_URL, and to no realtime when it is unset', () => {
+    vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.mazad.example/api/v1');
+    expect(realtimeUrl()).toBe('https://api.mazad.example/realtime');
+    vi.stubEnv('NEXT_PUBLIC_API_URL', '');
+    expect(realtimeUrl()).toBeNull();
+    vi.unstubAllEnvs();
   });
 
   it('joins once connected and again after every reconnect', () => {
