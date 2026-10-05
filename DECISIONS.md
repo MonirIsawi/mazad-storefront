@@ -162,3 +162,36 @@
 **Consequences:** A countdown is only as fresh as its last `serverTime` sample — acceptable for a display timer, not precise enough to gate the actual bid submission, which the backend enforces authoritatively regardless of what the client displays. If a page never hits an endpoint carrying `serverTime`, its offset defaults to zero rather than blocking render.
 
 **Update (2026-10-05):** mazad-api now stamps every response with `X-Server-Time` (epoch ms, exposed via CORS), and `httpClient` records a sample from each one, so the first request of any page — a deep link to an auction included — anchors the clock. The store lives in `shared/lib/server-clock.ts`: each sample is corrected by half its round trip and the lowest-latency sample wins until it is five minutes old; `/homepage`'s `serverTime` is used only when no measured sample exists. The auction detail and wins deadlines now tick through `useCountdown`'s shared interval.
+
+---
+
+## ADR-014: Live Auctions Use Socket Events as Refetch Signals, With Polling Kept as Reconciliation
+
+**Status:** Accepted
+**Date:** 2026-10-05
+
+**Context:** A live auction's detail page polled three endpoints (detail, pricing, bid history)
+every 5 s: 36 requests per viewer per minute, and bids still took up to 5 s to appear. mazad-api
+already broadcasts `auction:bid_placed`, `auction:extended`, `auction:closed` and
+`auction:status_changed` to an `auction:<id>` room on its Socket.IO gateway (`/realtime`). Socket
+delivery is best-effort: events are lost while disconnected and are not replayed.
+
+**Decision:** `shared/realtime` keeps one guest Socket.IO connection.
+- Rooms are ref-counted across components and joined again after every reconnect; the socket
+  closes when nothing follows an auction.
+- An event never writes UI state. It invalidates the matching TanStack Query key, throttled to one
+  refetch per 500 ms burst.
+- `useAuction`, `useAuctionPricing` and `useAuctionBids` poll every 30 s while the room is joined,
+  and every 5 s otherwise (socket down, refused or unsupported). Polling stays LIVE-only, as before.
+
+The connection carries no token. Auction rooms are public and their events carry no private data;
+a non-public auction (a seller's own pending one) is refused by the gateway and keeps 5 s polling.
+
+**Consequences:**
+- A quiet live auction costs 6 requests per viewer per minute instead of 36 (−83%), and bids show up
+  about one round trip after they are placed (37 ms event latency measured locally), not up to 5 s
+  later.
+- Correctness never depends on the socket: a missed or duplicated event only changes when the next
+  HTTP refetch happens.
+- In production, the storefront origin must be in the API's `CORS_ORIGINS` (the gateway uses the
+  same allow-list), and the proxy must route `/socket.io/` to the API.
