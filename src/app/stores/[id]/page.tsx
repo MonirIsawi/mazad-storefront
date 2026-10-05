@@ -1,15 +1,14 @@
-'use client';
+import type { Metadata } from 'next';
+import { fetchPublicStore, storeMetadata } from '@shared/seo';
+import { StorePageClient } from './StorePageClient';
 
-import { useParams } from 'next/navigation';
-import { StorePage } from '@features/catalog';
-import { FollowSellerButton } from '@features/sellers';
+type Props = { params: Promise<{ id: string }> };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  return storeMetadata(id, await fetchPublicStore(id));
+}
 
 export default function Page() {
-  const params = useParams<{ id: string }>();
-  return (
-    <StorePage
-      id={params.id}
-      renderSellerFollowToggle={(sellerId) => <FollowSellerButton sellerId={sellerId} />}
-    />
-  );
+  return <StorePageClient />;
 }

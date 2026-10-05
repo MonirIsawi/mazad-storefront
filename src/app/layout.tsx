@@ -1,12 +1,27 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
+import { SITE_NAME, siteUrl } from '@shared/seo';
 import { AppProviders, AppShell } from './providers';
 import './styles/globals.css';
 
+const SITE_DESCRIPTION =
+  'مزادات مباشرة في العراق: زايد على المنتجات من بائعين موثوقين · Live auctions marketplace in Iraq';
+const site = siteUrl();
+
 export const metadata: Metadata = {
-  title: 'Mazad',
-  description: 'Live auctions marketplace',
+  // Absolute Open Graph/canonical URLs only when NEXT_PUBLIC_SITE_URL is configured.
+  ...(site ? { metadataBase: site } : {}),
+  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'ar_IQ',
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: SITE_NAME }],
+  },
   applicationName: 'Mazad',
   manifest: '/manifest.webmanifest',
   // iOS ignores the manifest entirely; these are what make an added-to-home-screen Mazad open
