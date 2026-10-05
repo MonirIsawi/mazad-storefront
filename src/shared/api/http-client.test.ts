@@ -98,7 +98,11 @@ describe('httpClient refresh single-flight', () => {
       httpClient.get('/notifications'),
     ]);
     await flush();
-    refresh.reject(new AxiosError('refresh rejected', 'ERR_BAD_REQUEST'));
+    refresh.reject(
+      new AxiosError('refresh rejected', 'ERR_BAD_REQUEST', undefined, null, {
+        status: 401,
+      } as AxiosResponse),
+    );
     const results = await requests;
     unsubscribe();
 
@@ -188,5 +192,32 @@ describe('httpClient refresh single-flight', () => {
       refreshToken: NEW.refreshToken,
     });
     expect(getSessionTokens()).toEqual(NEWER);
+  });
+});
+
+describe('httpClient transient refresh failures', () => {
+  it.each([
+    [
+      'a 503',
+      new AxiosError('down', 'ERR_BAD_RESPONSE', undefined, null, { status: 503 } as AxiosResponse),
+    ],
+    [
+      'a 429',
+      new AxiosError('slow down', 'ERR_BAD_REQUEST', undefined, null, {
+        status: 429,
+      } as AxiosResponse),
+    ],
+    ['a network error', new AxiosError('Network Error', 'ERR_NETWORK')],
+  ])('keeps the session when the refresh fails with %s', async (_label, failure) => {
+    fakeServer(NEW.accessToken);
+    const refresh = deferredRefresh();
+
+    const request = httpClient.get('/me').catch((error: unknown) => error);
+    await flush();
+    refresh.reject(failure);
+    expect(await request).toBe(failure);
+
+    expect(getSessionTokens()).toEqual(OLD);
+    expect(redirectToLogin).not.toHaveBeenCalled();
   });
 });

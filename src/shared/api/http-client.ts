@@ -104,6 +104,17 @@ function bearerOf(config: InternalAxiosRequestConfig): string | undefined {
   return typeof header === 'string' ? header.replace(/^Bearer /, '') : undefined;
 }
 
+/**
+ * The refresh could not be completed for reasons that say nothing about the session (offline, rate
+ * limited, server error). Only the API refusing the refresh token (400/401/403), or another tab
+ * having signed out, ends the session.
+ */
+function isTransientRefreshFailure(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === undefined || ![400, 401, 403].includes(status);
+}
+
 interface RetriableConfig extends InternalAxiosRequestConfig {
   _retried?: boolean;
 }
@@ -137,7 +148,8 @@ httpClient.interceptors.response.use(
           ? tokens
           : await refreshSessionOnce(tokens.refreshToken);
     } catch (refreshError) {
-      forceSignOut();
+      // Keep the session through outages; the next request tries the refresh again.
+      if (!isTransientRefreshFailure(refreshError)) forceSignOut();
       return Promise.reject(refreshError);
     }
 
