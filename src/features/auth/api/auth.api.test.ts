@@ -1,0 +1,81 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { httpClient } from '@shared/api';
+import { authApi } from './auth.api';
+
+vi.mock('@shared/api', () => ({ httpClient: { post: vi.fn(), get: vi.fn() } }));
+
+const post = vi.mocked(httpClient.post);
+
+beforeEach(() => {
+  post.mockReset();
+});
+
+describe('authApi sign-up contract', () => {
+  it('requests a SIGNUP code with only phone and purpose', async () => {
+    post.mockResolvedValue({
+      data: {
+        message: 'sent',
+        expiresAt: '2030-01-01T00:05:00.000Z',
+        channel: 'TELEGRAM',
+        delivered: false,
+        telegramDeepLink: 'https://t.me/mazad_bot?start=abc',
+        botUsername: 'mazad_bot',
+      },
+    });
+
+    const result = await authApi.requestOtp('+9647701234567', 'SIGNUP');
+
+    expect(post).toHaveBeenCalledWith('/auth/otp/request', {
+      phone: '+9647701234567',
+      purpose: 'SIGNUP',
+    });
+    expect(result).toEqual({
+      expiresAt: '2030-01-01T00:05:00.000Z',
+      delivered: false,
+      telegramDeepLink: 'https://t.me/mazad_bot?start=abc',
+    });
+  });
+
+  it('refuses a deep link that is not a Telegram link', async () => {
+    post.mockResolvedValue({
+      data: {
+        expiresAt: '2030-01-01T00:05:00.000Z',
+        delivered: false,
+        telegramDeepLink: 'https://evil.example',
+      },
+    });
+    await expect(authApi.requestOtp('+9647701234567', 'SIGNUP')).rejects.toThrow();
+  });
+
+  it('sends the code with POST /auth/register', async () => {
+    post.mockResolvedValue({
+      data: {
+        accessToken: 'a',
+        refreshToken: 'r',
+        sessionId: 's',
+        user: {
+          id: 'u1',
+          role: 'CUSTOMER',
+          phone: '+9647701234567',
+          fullName: 'Ali',
+          isVerified: false,
+        },
+      },
+    });
+
+    await authApi.register({
+      fullName: 'Ali',
+      phone: '+9647701234567',
+      password: 'validpassword123',
+      code: '123456',
+    });
+
+    expect(post).toHaveBeenCalledWith('/auth/register', {
+      fullName: 'Ali',
+      phone: '+9647701234567',
+      password: 'validpassword123',
+      code: '123456',
+      platform: 'web',
+    });
+  });
+});

@@ -1,7 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { ROUTES } from '@shared/constants';
 import { useLocaleStore } from '@shared/store';
 import { getSessionTokens, setSessionTokens, type SessionTokens } from './auth-session';
+import { redirectToLogin } from './redirect-to-login';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -30,13 +30,40 @@ async function refreshAccessToken(refreshToken: string): Promise<SessionTokens> 
   return { accessToken: response.data.accessToken, refreshToken: response.data.refreshToken };
 }
 
-interface RetriableConfig extends InternalAxiosRequestConfig {
-  _retried?: boolean;
+/*
+ * Single-flight refresh. mazad-api rotates the refresh token on every use and revokes the whole
+ * session when an already-rotated token comes back (REFRESH_TOKEN_REUSE, ADR-008). Requests that
+ * hit 401 together must share ONE /auth/refresh call; if each sent the same refresh token, the
+ * second call would end the session.
+ */
+let inFlightRefresh: Promise<SessionTokens> | null = null;
+
+function refreshSessionOnce(refreshToken: string): Promise<SessionTokens> {
+  inFlightRefresh ??= refreshAccessToken(refreshToken)
+    .then((tokens) => {
+      setSessionTokens(tokens);
+      return tokens;
+    })
+    .finally(() => {
+      inFlightRefresh = null;
+    });
+  return inFlightRefresh;
 }
 
+/** Ends the session once: every caller that failed together lands here, only the first acts. */
 function forceSignOut() {
+  if (!getSessionTokens()) return;
   setSessionTokens(null);
-  if (typeof window !== 'undefined') window.location.href = ROUTES.login;
+  redirectToLogin();
+}
+
+function bearerOf(config: InternalAxiosRequestConfig): string | undefined {
+  const header = config.headers.get('Authorization');
+  return typeof header === 'string' ? header.replace(/^Bearer /, '') : undefined;
+}
+
+interface RetriableConfig extends InternalAxiosRequestConfig {
+  _retried?: boolean;
 }
 
 httpClient.interceptors.response.use(
@@ -51,22 +78,28 @@ httpClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // mazad-api revokes the whole session on refresh-token reuse (REFRESH_TOKEN_REUSE) — a
-    // second 401 on an already-retried request must not attempt another refresh (ADR-008).
+    // Each request is retried at most once. A 401 on the retry means even the fresh token was
+    // refused, so the session is over; refreshing again would only loop.
     if (original._retried) {
       forceSignOut();
       return Promise.reject(error);
     }
+    original._retried = true;
 
+    let fresh: SessionTokens;
     try {
-      const refreshed = await refreshAccessToken(tokens.refreshToken);
-      setSessionTokens(refreshed);
-      original._retried = true;
-      original.headers.set('Authorization', `Bearer ${refreshed.accessToken}`);
-      return httpClient(original);
+      // A refresh may have completed while this request was in flight. Then it only needs the
+      // newer token, not a second rotation of the session.
+      fresh =
+        bearerOf(original) !== tokens.accessToken
+          ? tokens
+          : await refreshSessionOnce(tokens.refreshToken);
     } catch (refreshError) {
       forceSignOut();
       return Promise.reject(refreshError);
     }
+
+    original.headers.set('Authorization', `Bearer ${fresh.accessToken}`);
+    return httpClient(original);
   },
 );

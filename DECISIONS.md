@@ -94,7 +94,7 @@
 
 **Decision:** Store both tokens in `localStorage` via the `auth` feature's Zustand store. Protect routes with an `AuthGuard` client component that checks session state on mount and redirects to `/login`, rather than Next middleware.
 
-**Consequences:** Middleware cannot read `localStorage`, so it cannot gate routes today; moving to an `httpOnly` cookie issued by `mazad-api` would allow middleware-based protection later, at the cost of a CORS/cookie-domain story between `frontend` and `mazad-api`. `httpClient` attaches the bearer token to every request and, on a single 401, calls `POST /auth/refresh` once before giving up and clearing the session — `mazad-api` revokes the whole session on refresh-token reuse (`REFRESH_TOKEN_REUSE`), so a second failure must not retry again.
+**Consequences:** Middleware cannot read `localStorage`, so it cannot gate routes today; moving to an `httpOnly` cookie issued by `mazad-api` would allow middleware-based protection later, at the cost of a CORS/cookie-domain story between `frontend` and `mazad-api`. `httpClient` attaches the bearer token to every request and, on a 401, refreshes through a single shared `POST /auth/refresh` (concurrent 401s wait for the same promise), retries each request once, and clears the session once if that fails — `mazad-api` revokes the whole session on refresh-token reuse (`REFRESH_TOKEN_REUSE`), so a refresh token must never be sent twice and a second failure must not retry again.
 
 ---
 

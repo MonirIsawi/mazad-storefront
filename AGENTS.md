@@ -21,7 +21,7 @@ These come directly from how `mazad-api` is built — get them wrong and a featu
 2. **Locale is a header, not a query param.** Localized fields (`nameEn`/`nameAr` → `name`) are picked server-side from `Accept-Language` (`en` or `ar`, default `ar`). `httpClient` attaches this automatically from the locale store — don't add a `lang` query param by hand (ADR-010).
 3. **Success responses are raw JSON, not an envelope.** `GET /auctions` returns `{ data, meta }`; `GET /homepage` returns `{ live, upcoming, endingSoon, serverTime }` directly. Only errors have a fixed shape: `{ statusCode, errorCode, message, details, requestId, timestamp, path }`. Match on `errorCode`, never on `message` (it's human text, not an identifier).
 4. **Auction countdowns anchor to `serverTime`, not `Date.now()`.** The client clock can't be trusted against `endsAt`/anti-sniping extensions — see ADR-013.
-5. **Every request carries a bearer token when one exists**, because `mazad-api`'s global guard defaults to authenticated; only `@Public()`/`@OptionalAuth()` routes work without one. A 401 triggers one silent `/auth/refresh` retry before the session is cleared.
+5. **Every request carries a bearer token when one exists**, because `mazad-api`'s global guard defaults to authenticated; only `@Public()`/`@OptionalAuth()` routes work without one. A 401 triggers one silent, shared `/auth/refresh` (single-flight, so concurrent 401s never replay a rotated refresh token) and one retry per request before the session is cleared.
 
 ## When Adding a Feature
 

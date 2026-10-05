@@ -5,7 +5,7 @@ export { pickLocalizedName } from './locale';
 export { resolveAssetUrl } from './asset';
 export { getImageTintStyle } from './image-tint';
 export { getCategoryIcon } from './category-icon';
-export { getErrorCode } from './error.utils';
+export { getErrorCode, getErrorStatus } from './error.utils';
 export { resolveActiveTabHref } from './active-tab';
 export {
   getAuctionStatusTone,

@@ -3,7 +3,8 @@
     "phone": "رقم الهاتف",
     "phonePlaceholder": "+9647xxxxxxxx",
     "password": "كلمة المرور",
-    "fullName": "الاسم الكامل"
+    "fullName": "الاسم الكامل",
+    "code": "رمز التحقق"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -15,7 +16,15 @@
     "title": "إنشاء حساب",
     "submit": "إنشاء حساب",
     "haveAccount": "لديك حساب بالفعل؟",
-    "signIn": "تسجيل الدخول"
+    "signIn": "تسجيل الدخول",
+    "sendCode": "إرسال رمز التحقق",
+    "codeSentTo": "أرسلنا رمزًا من 6 أرقام إلى {{phone}}.",
+    "openTelegram": "لاستلام الرمز على {{phone}}، افتح بوت مزاد في تيليجرام وشارك رقم هاتفك.",
+    "openTelegramLink": "فتح تيليجرام",
+    "resend": "إعادة إرسال الرمز",
+    "resendIn": "إعادة الإرسال بعد {{seconds}} ث",
+    "newCodeSent": "تم إرسال رمز جديد.",
+    "changePhone": "تغيير الرقم"
   },
   "account": {
     "title": "الحساب",
@@ -34,7 +43,8 @@
     "field": {
       "phoneInvalid": "أدخل رقم هاتف صحيحًا.",
       "passwordMin": "يجب ألا تقل كلمة المرور عن 8 أحرف.",
-      "fullNameMin": "أدخل اسمك الكامل."
+      "fullNameMin": "أدخل اسمك الكامل.",
+      "otpInvalid": "أدخل الرمز المكوّن من 6 أرقام."
     }
   }
 }

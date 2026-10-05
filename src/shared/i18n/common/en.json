@@ -43,6 +43,13 @@
     "INVALID_CREDENTIALS": "Incorrect phone number or password.",
     "USER_BANNED": "This account has been suspended.",
     "PHONE_EXISTS": "That phone number is already registered.",
-    "USER_NOT_FOUND": "No account found for that phone number."
+    "USER_NOT_FOUND": "No account found for that phone number.",
+    "OTP_INVALID": "That code is incorrect. Check it and try again.",
+    "OTP_EXPIRED_OR_MISSING": "This code has expired or was already used. Request a new code.",
+    "OTP_EXHAUSTED": "Too many wrong attempts for this code. Request a new code.",
+    "OTP_RESEND_COOLDOWN": "Please wait a minute before requesting another code.",
+    "OTP_RATE_LIMITED": "Too many codes were requested for this number. Try again in an hour.",
+    "TOO_MANY_REQUESTS": "Too many attempts. Wait a minute and try again.",
+    "TELEGRAM_NOT_CONFIGURED": "Verification codes are unavailable right now. Try again later."
   }
 }

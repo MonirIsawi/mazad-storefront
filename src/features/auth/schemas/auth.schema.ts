@@ -12,10 +12,33 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
+/** mazad-api sends 6-digit codes (OTP_LENGTH); keep this and the pattern below in step. */
+export const OTP_CODE_LENGTH = 6;
+
+export const otpCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, 'errors.field.otpInvalid');
+
+/** Sign-up needs a SIGNUP code for the same phone (POST /auth/otp/request) before the account exists. */
 export const registerSchema = z.object({
   phone: phoneSchema,
   fullName: z.string().trim().min(2, 'errors.field.fullNameMin'),
   password: passwordSchema,
+  code: otpCodeSchema,
+});
+
+export const otpPurposeSchema = z.enum(['SIGNUP', 'LOGIN', 'PASSWORD_RESET']);
+
+// POST /auth/otp/request. When the phone isn't linked to the Telegram bot yet, `delivered` is
+// false and the code only arrives after the user opens the bot through `telegramDeepLink`.
+export const otpRequestResultSchema = z.object({
+  expiresAt: z.string(),
+  delivered: z.boolean(),
+  telegramDeepLink: z
+    .string()
+    .regex(/^https:\/\/t\.me\//)
+    .optional(),
 });
 
 // mazad-api's sanitizeUser() returns the full User row minus passwordHash; only the fields the

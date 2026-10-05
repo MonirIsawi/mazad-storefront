@@ -3,7 +3,8 @@
     "phone": "Phone number",
     "phonePlaceholder": "+9647xxxxxxxx",
     "password": "Password",
-    "fullName": "Full name"
+    "fullName": "Full name",
+    "code": "Verification code"
   },
   "login": {
     "title": "Sign in",
@@ -15,7 +16,15 @@
     "title": "Create account",
     "submit": "Create account",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "sendCode": "Send verification code",
+    "codeSentTo": "We sent a 6-digit code to {{phone}}.",
+    "openTelegram": "To get the code for {{phone}}, open our Telegram bot and share your phone number.",
+    "openTelegramLink": "Open Telegram",
+    "resend": "Resend code",
+    "resendIn": "Resend code in {{seconds}}s",
+    "newCodeSent": "A new code is on its way.",
+    "changePhone": "Change number"
   },
   "account": {
     "title": "Account",
@@ -34,7 +43,8 @@
     "field": {
       "phoneInvalid": "Enter a valid phone number.",
       "passwordMin": "Password must be at least 8 characters.",
-      "fullNameMin": "Enter your full name."
+      "fullNameMin": "Enter your full name.",
+      "otpInvalid": "Enter the 6-digit code."
     }
   }
 }

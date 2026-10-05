@@ -6,13 +6,23 @@
 2. `authApi.login()` calls `POST /auth/login` → server returns `{ accessToken, refreshToken, sessionId, user }`
 3. `useAuthStore.setSession()` writes the tokens and user to `localStorage` and updates the store
 4. The `httpClient` request interceptor attaches `Authorization: Bearer <accessToken>` to every request
-5. On a 401 outside `/auth/*` → the response interceptor tries `POST /auth/refresh` once; on success it retries the original request, on failure it clears the session and redirects to `/login`
+5. On a 401 outside `/auth/*` → the response interceptor refreshes the session (one shared `POST /auth/refresh` for all concurrent 401s); on success it retries each original request once, on failure it clears the session and redirects to `/login` once
 
-Registration (`POST /auth/register`, phone + password + full name) returns the same
-`{ accessToken, refreshToken, sessionId, user }` shape and logs the user in immediately — there
-is no separate "verify your account" step for this flow. `mazad-api` also exposes phone+OTP
-registration/login (`POST /auth/otp/request` then `/auth/otp/verify`, dev mode accepts the
-static code `1111`) for a future pass; this app only wires the password flow today.
+Registration proves the phone first. `RegisterForm` is one form in two steps:
+
+1. Full name, phone and password are validated, then `POST /auth/otp/request` with
+   `purpose: "SIGNUP"` sends a 6-digit code. If the phone is not linked to the Telegram bot yet,
+   the response has `delivered: false` and a `telegramDeepLink`; the form shows that link.
+2. The details lock, a code field appears, and `POST /auth/register` is sent with
+   `{ phone, password, fullName, code }` only once the code is 6 digits. The API verifies and
+   consumes the code before the account exists, then returns the same
+   `{ accessToken, refreshToken, sessionId, user }` shape and the user is signed in.
+
+"Resend code" unlocks after 60s, matching the API's per-phone cooldown (`OTP_RESEND_COOLDOWN`).
+Errors are shown by `errorCode`: `OTP_INVALID`, `OTP_EXPIRED_OR_MISSING` (expired or already
+used), `OTP_EXHAUSTED`, `OTP_RESEND_COOLDOWN`, `OTP_RATE_LIMITED`; the API's per-IP throttler
+answers 429 without a code of its own and is shown as `TOO_MANY_REQUESTS`. In development the
+API's `OTP_DEV_MODE` accepts the static `OTP_DEV_STATIC_CODE` (6 digits); production refuses it.
 
 After a successful sign-in or registration, the hook redirects to `/`. There is no setup wizard —
 the storefront has nothing to configure before browsing.
@@ -58,6 +68,6 @@ The tokens live in `localStorage` under the keys in `shared/constants/storage-ke
 
 ## Token Refresh
 
-Implemented in the Axios response interceptor (see [axios.md](./axios.md)): on a 401 from any endpoint other than `/auth/*`, it calls `POST /auth/refresh` with the stored `refreshToken` exactly once and retries the original request with the new `accessToken`. `mazad-api` rotates the refresh token on every use and revokes the whole session if a stale one is replayed (`REFRESH_TOKEN_REUSE`) — so a second consecutive 401 must clear the session rather than retry again, or a real reuse-detection event would loop.
+Implemented in the Axios response interceptor (see [axios.md](./axios.md)). `mazad-api` rotates the refresh token on every use and revokes the whole session if a stale one is replayed (`REFRESH_TOKEN_REUSE`), so the refresh is **single-flight**: every request that gets a 401 while a refresh is running waits for the same promise, and only one `POST /auth/refresh` goes out. Each request is retried at most once; a 401 on the retry, or a failed refresh, clears the session and redirects to `/login` exactly once. Covered by `src/shared/api/http-client.test.ts`.
 
 Moving the session to an `httpOnly` cookie issued by `mazad-api` would let a Next `middleware.ts` protect routes before render, replacing the client-side `AuthGuard` — see [ADR-008](../../DECISIONS.md#adr-008-session-tokens-live-in-localstorage-behind-a-client-side-authguard).

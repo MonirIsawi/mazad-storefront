@@ -8,3 +8,11 @@ export function getErrorCode(error: unknown): string | null {
   }
   return null;
 }
+
+/** HTTP status of a failed request, for the few errors the API sends without an errorCode. */
+export function getErrorStatus(error: unknown): number | null {
+  if (isAxiosError(error)) {
+    return error.response?.status ?? null;
+  }
+  return null;
+}

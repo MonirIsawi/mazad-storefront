@@ -40,7 +40,7 @@ Storage keys come from `shared/constants/storage-keys.ts` — never a string lit
 
 ## Response Interceptor
 
-Handles 401 globally, except on `/auth/*`, where a 401 means "wrong credentials" rather than "session expired" and belongs to the form. A single silent refresh attempt covers a genuinely expired access token:
+Handles 401 globally, except on `/auth/*`, where a 401 means "wrong credentials" rather than "session expired" and belongs to the form. The real code is `src/shared/api/http-client.ts`; its shape:
 
 ```ts
 httpClient.interceptors.response.use(
@@ -50,27 +50,30 @@ httpClient.interceptors.response.use(
     const isUnauthorized = error.response?.status === 401;
     const isAuthEndpoint = original?.url?.startsWith('/auth') ?? false;
 
-    if (isUnauthorized && !isAuthEndpoint && original && !original._retried) {
-      original._retried = true;
-      try {
-        const { accessToken } = await refreshSession(); // POST /auth/refresh
-        original.headers ??= {};
-        original.headers.Authorization = `Bearer ${accessToken}`;
-        return httpClient(original);
-      } catch {
-        useAuthStore.getState().clearSession();
-        if (typeof window !== 'undefined') window.location.href = ROUTES.login;
-      }
-    }
+    if (!isUnauthorized || isAuthEndpoint || !original) return Promise.reject(error);
+    if (original._retried) return signOutOnce(error); // the fresh token was refused too
+    original._retried = true;
 
-    return Promise.reject(error);
+    // One shared promise: concurrent 401s wait for the same POST /auth/refresh.
+    const { accessToken } = await refreshSessionOnce().catch(signOutOnce);
+    original.headers.set('Authorization', `Bearer ${accessToken}`);
+    return httpClient(original);
   },
 );
 ```
 
-The `_retried` flag is what stops an infinite loop: `mazad-api` revokes the whole session on
-refresh-token reuse (`REFRESH_TOKEN_REUSE`), so a second 401 after the retry must clear the
-session, never attempt a second refresh.
+Three rules keep this safe with `mazad-api`'s refresh-token rotation (`REFRESH_TOKEN_REUSE`
+revokes the whole session):
+
+- **Single flight.** While a refresh is running, every other 401 awaits the same promise instead
+  of sending the same (soon rotated) refresh token again.
+- **One retry per request.** `_retried` stops loops: a 401 on the retry ends the session.
+- **One sign-out.** Requests that fail together all call the sign-out; only the first, which still
+  finds a session, clears it and redirects.
+
+A request that left with an older access token than the current one is simply retried with the
+current token, without another refresh. The refresh itself uses bare `axios`, so it never enters
+this interceptor.
 
 ## Usage in Feature API Modules
 
