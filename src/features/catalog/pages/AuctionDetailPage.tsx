@@ -9,7 +9,7 @@ import { PageLoader, ErrorState } from '@shared/components/feedback';
 import { Badge, Card, CardContent, Icon, IconButton, SectionHeader } from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { AuctionRail } from '@shared/components/cards';
-import { useLocale, useMoney, useServerClock } from '@shared/hooks';
+import { useCountdown, useLocale, useMoney } from '@shared/hooks';
 import {
   formatDuration,
   getAuctionStatusLabelKey,
@@ -42,13 +42,14 @@ export function AuctionDetailPage({
   const { t, isReady } = useCatalogTranslation();
   const { t: tCommon } = useTranslation('common');
   const { locale } = useLocale();
-  const { now } = useServerClock();
   const { money, number } = useMoney();
   const [tab, setTab] = useState<DetailTab>('details');
 
   const auction = useAuction(id);
   const bids = useAuctionBids(id, auction.data?.status === 'LIVE');
   const similar = useSimilarAuctions(id);
+  // Ticks every second on the shared interval, anchored to the server clock (ADR-013).
+  const endsInMs = useCountdown(auction.data?.endsAt);
 
   if (!isReady || auction.isPending) return <PageLoader />;
   if (auction.isError || !auction.data) {
@@ -59,7 +60,6 @@ export function AuctionDetailPage({
   const name = pickLocalizedName(data.product, locale);
   const coverImage = resolveAssetUrl(data.product.coverImage);
   const price = data.currentPrice ?? data.startingPrice;
-  const endsInMs = new Date(data.endsAt).getTime() - now();
   const tone = getAuctionStatusTone(data.status, endsInMs);
   const isLive = data.status === 'LIVE';
 
@@ -142,10 +142,7 @@ export function AuctionDetailPage({
                   label={t('detail.condition')}
                   value={t(`condition.${data.product.condition}`)}
                 />
-                <DetailRow
-                  label={t('detail.deliveryFee')}
-                  value={money(data.store.deliveryFee)}
-                />
+                <DetailRow label={t('detail.deliveryFee')} value={money(data.store.deliveryFee)} />
               </>
             ) : tab === 'bids' ? (
               bids.data ? (

@@ -46,9 +46,11 @@ function getServerSnapshot() {
  * Always derived from useServerClock's offset rather than a locally accumulated count, so a
  * drifting or wrong device clock can't make an auction look open after it closed (ADR-013).
  */
-export function useCountdown(endsAt: string): number {
+export function useCountdown(endsAt: string | null | undefined): number {
   useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const { now } = useServerClock();
 
+  // No deadline yet (data still loading): nothing to count down.
+  if (!endsAt) return 0;
   return new Date(endsAt).getTime() - now();
 }

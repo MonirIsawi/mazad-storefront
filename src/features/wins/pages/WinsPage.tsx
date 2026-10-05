@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, PageLoader } from '@shared/components/feedback'
 import { ScreenHeader } from '@shared/components/layout';
 import { Badge, Button, Card, Icon, Input, SectionHeader, Skeleton } from '@shared/components/ui';
 import { BottomActionBar, ListRow } from '@shared/components/ios';
-import { useLocale, useMoney, useServerClock } from '@shared/hooks';
+import { useCountdown, useLocale, useMoney } from '@shared/hooks';
 import { formatDuration, getErrorCode, pickLocalizedName } from '@shared/lib';
 import { useWins } from '../hooks/useWins';
 import { useConfirmWins, useDeclineWin } from '../hooks/useConfirmWins';
@@ -72,7 +72,10 @@ export function WinsPage({ addresses = [], isAddressesPending = false }: WinsPag
             title={t('page.emptyTitle')}
             message={t('page.empty')}
             action={
-              <Link href={ROUTES.auctions} className="mt-2 text-subhead font-semibold text-primary-text">
+              <Link
+                href={ROUTES.auctions}
+                className="mt-2 text-subhead font-semibold text-primary-text"
+              >
                 {t('page.title')}
               </Link>
             }
@@ -199,11 +202,11 @@ function WinCard({
   const { t } = useWinsTranslation();
   const { locale } = useLocale();
   const { money } = useMoney();
-  const { now } = useServerClock();
   const decline = useDeclineWin();
+  // Ticks every second on the shared interval, anchored to the server clock (ADR-013).
+  const remainingMs = useCountdown(win.confirmationDeadline);
 
   const name = pickLocalizedName(win.auction.product, locale);
-  const remainingMs = new Date(win.confirmationDeadline).getTime() - now();
   const isPending = win.status === 'PENDING_CONFIRMATION';
   const hasExpired = isPending && remainingMs <= 0;
 
@@ -245,7 +248,9 @@ function WinCard({
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center gap-1.5 text-footnote text-muted-foreground tabular-nums">
             <Icon name="clock" size={14} />
-            {hasExpired ? t('card.expired') : `${t('card.deadline')} ${formatDuration(remainingMs)}`}
+            {hasExpired
+              ? t('card.expired')
+              : `${t('card.deadline')} ${formatDuration(remainingMs)}`}
           </span>
           <Button
             variant="plain"

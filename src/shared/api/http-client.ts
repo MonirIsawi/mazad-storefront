@@ -1,4 +1,5 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import axios, { type AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
+import { recordServerTimeSample } from '@shared/lib/server-clock';
 import { useLocaleStore } from '@shared/store';
 import {
   getSessionTokens,
@@ -24,8 +25,33 @@ httpClient.interceptors.request.use((config) => {
   }
   // mazad-api picks nameEn/nameAr from this header, default "ar" (see ADR-010).
   config.headers.set('Accept-Language', useLocaleStore.getState().locale);
+  (config as TimedConfig).sentAt = Date.now();
   return config;
 });
+
+interface TimedConfig extends InternalAxiosRequestConfig {
+  sentAt?: number;
+}
+
+/** Every response (errors included) carries X-Server-Time: one clock sample per request. */
+function sampleServerClock(response: AxiosResponse | undefined) {
+  const serverMs = Number(response?.headers?.['x-server-time']);
+  const sentAt = (response?.config as TimedConfig | undefined)?.sentAt;
+  if (sentAt !== undefined && Number.isFinite(serverMs)) {
+    recordServerTimeSample(serverMs, sentAt, Date.now());
+  }
+}
+
+httpClient.interceptors.response.use(
+  (response) => {
+    sampleServerClock(response);
+    return response;
+  },
+  (error: AxiosError) => {
+    sampleServerClock(error.response);
+    return Promise.reject(error);
+  },
+);
 
 /** Bare axios, not httpClient — a refresh call must never itself re-enter this interceptor. */
 async function refreshAccessToken(refreshToken: string): Promise<SessionTokens> {
