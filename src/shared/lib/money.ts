@@ -16,6 +16,38 @@ export function parseMoney(value: string | null | undefined): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+/** mazad-api's Decimal(12, 2) ceiling; larger amounts are refused there. */
+export const MAX_MONEY_AMOUNT = 9_999_999_999.99;
+
+/**
+ * Money arithmetic happens in integer minor units (hundredths, matching the API's Decimal(12, 2)),
+ * never in binary floating point: the largest amount is 999,999,999,999 minor units, well inside
+ * Number's exact-integer range. A Decimal string is parsed digit by digit; a number (a Stepper
+ * value, an input) is first rounded to 2 decimals, which also absorbs float noise like 0.1 + 0.2.
+ */
+export function toMinorUnits(value: string | number | null | undefined): number | null {
+  if (value == null) return null;
+  const text =
+    typeof value === 'number' ? (Number.isFinite(value) ? value.toFixed(2) : '') : value.trim();
+  const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(text);
+  if (!match) return null;
+  const [, sign, whole, fraction = ''] = match;
+  const minor = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  if (!Number.isSafeInteger(minor)) return null;
+  return sign === '-' ? -minor : minor;
+}
+
+/** Minor units back to the amount the API takes (`{ amount: 1260.5 }` serializes exactly). */
+export function fromMinorUnits(minor: number): number {
+  return minor / 100;
+}
+
+/** Snaps a computed amount (e.g. value ± step) to exact 2-decimal money. */
+export function roundMoney(value: number): number {
+  const minor = toMinorUnits(value);
+  return minor == null ? value : fromMinorUnits(minor);
+}
+
 /**
  * Western numerals → Arabic-Indic. Every *quantity* the user reads in Arabic goes through this:
  * prices, bid counts, ratings, item counts. Countdowns deliberately don't — they stay Western

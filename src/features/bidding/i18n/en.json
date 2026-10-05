@@ -52,11 +52,13 @@
     "field": {
       "amountRequired": "Enter an amount.",
       "amountStep": "Amounts can have at most 2 decimal places.",
+      "amountTooHigh": "That amount is above the maximum allowed.",
       "belowMinimum": "Minimum bid is {{amount}}."
     },
     "ADDRESS_REQUIRED": "You need a saved delivery address before you can bid.",
     "addAddressLink": "Add an address",
     "BID_TOO_LOW": "Someone else already bid that much or more.",
+    "BID_AMOUNT_TOO_HIGH": "That bid is above the maximum allowed amount.",
     "BIDDER_NOT_ALLOWED": "Your account can't place bids right now.",
     "OWN_AUCTION_BID": "You can't bid on your own auction.",
     "AUCTION_NOT_LIVE": "This auction isn't live anymore.",

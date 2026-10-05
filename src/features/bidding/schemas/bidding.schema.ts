@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MAX_MONEY_AMOUNT } from '@shared/lib';
 
 export const bidStandingSchema = z.enum([
   'WINNING',
@@ -102,12 +103,14 @@ export const placeBidFormSchema = z.object({
   amount: z
     .number({ error: 'errors.field.amountRequired' })
     .positive('errors.field.amountRequired')
-    .multipleOf(0.01, 'errors.field.amountStep'),
+    .multipleOf(0.01, 'errors.field.amountStep')
+    .max(MAX_MONEY_AMOUNT, 'errors.field.amountTooHigh'),
 });
 
 export const autoBidFormSchema = z.object({
   maxAmount: z
     .number({ error: 'errors.field.amountRequired' })
     .positive('errors.field.amountRequired')
-    .multipleOf(0.01, 'errors.field.amountStep'),
+    .multipleOf(0.01, 'errors.field.amountStep')
+    .max(MAX_MONEY_AMOUNT, 'errors.field.amountTooHigh'),
 });

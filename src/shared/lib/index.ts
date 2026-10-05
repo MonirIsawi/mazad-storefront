@@ -1,5 +1,14 @@
 export { cn } from './cn';
-export { parseMoney, formatMoney, formatNumber, toArabicDigits } from './money';
+export {
+  parseMoney,
+  formatMoney,
+  formatNumber,
+  toArabicDigits,
+  toMinorUnits,
+  fromMinorUnits,
+  roundMoney,
+  MAX_MONEY_AMOUNT,
+} from './money';
 export { formatDate, formatDateTime, formatDuration } from './date';
 export { pickLocalizedName } from './locale';
 export { resolveAssetUrl } from './asset';

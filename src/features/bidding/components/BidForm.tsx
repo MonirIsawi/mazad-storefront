@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Icon } from '@shared/components/ui';
 import { BottomActionBar, Stepper } from '@shared/components/ios';
-import { getErrorCode, parseMoney } from '@shared/lib';
+import { getErrorCode, parseMoney, roundMoney } from '@shared/lib';
 import { useMoney } from '@shared/hooks';
 import { ROUTES } from '@shared/constants';
 import { computeMinimumBid } from '../lib/computeMinimumBid';
@@ -48,7 +48,8 @@ export function BidForm({ auction }: BidFormProps) {
             value={amount}
             min={minimumBid}
             step={increment}
-            onChange={setChosenAmount}
+            // Stepper adds in floating point; snap every step to exact 2-decimal money.
+            onChange={(next) => setChosenAmount(roundMoney(next))}
             displayValue={money(String(amount))}
             decrementLabel={t('form.decrease')}
             incrementLabel={t('form.increase')}
