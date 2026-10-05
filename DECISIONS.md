@@ -177,6 +177,7 @@ already broadcasts `auction:bid_placed`, `auction:extended`, `auction:closed` an
 delivery is best-effort: events are lost while disconnected and are not replayed.
 
 **Decision:** `shared/realtime` keeps one guest Socket.IO connection.
+
 - Rooms are ref-counted across components and joined again after every reconnect; the socket
   closes when nothing follows an auction.
 - An event never writes UI state. It invalidates the matching TanStack Query key, throttled to one
@@ -188,6 +189,7 @@ The connection carries no token. Auction rooms are public and their events carry
 a non-public auction (a seller's own pending one) is refused by the gateway and keeps 5 s polling.
 
 **Consequences:**
+
 - A quiet live auction costs 6 requests per viewer per minute instead of 36 (−83%), and bids show up
   about one round trip after they are placed (37 ms event latency measured locally), not up to 5 s
   later.
