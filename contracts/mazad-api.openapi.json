@@ -296,6 +296,7 @@
     },
     "/api/v1/admin/auth/login": {
       "post": {
+        "description": "Admins with 2FA enabled receive { mfaRequired, mfaToken } and finish at POST /admin/auth/login/mfa.",
         "operationId": "AdminAuthController_adminLogin",
         "parameters": [],
         "requestBody": {
@@ -304,6 +305,50 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/AdminLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AuthSessionResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AdminMfaChallengeResponseDto"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Admin login",
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/login/mfa": {
+      "post": {
+        "operationId": "AdminAuthController_adminLoginMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMfaLoginDto"
               }
             }
           }
@@ -325,6 +370,164 @@
             "bearer": []
           }
         ],
+        "summary": "Admin login, second step: authenticator or recovery code",
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa": {
+      "get": {
+        "operationId": "AdminAuthController_mfaStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMfaStatusResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/setup": {
+      "post": {
+        "operationId": "AdminAuthController_mfaSetup",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMfaSetupResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start 2FA enrollment (inactive until confirmed)",
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/enable": {
+      "post": {
+        "operationId": "AdminAuthController_mfaEnable",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMfaEnabledResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm enrollment with a first code; returns recovery codes once",
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/disable": {
+      "post": {
+        "operationId": "AdminAuthController_mfaDisable",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMfaDisableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn 2FA off (password + current code or recovery code)",
+        "tags": [
+          "Admin Auth"
+        ]
+      }
+    },
+    "/api/v1/admin/auth/mfa/recovery-codes": {
+      "post": {
+        "operationId": "AdminAuthController_mfaRecoveryCodes",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminMfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMfaRecoveryCodesResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace all recovery codes (current code required)",
         "tags": [
           "Admin Auth"
         ]
@@ -5794,6 +5997,30 @@
           "message"
         ]
       },
+      "AdminMfaChallengeResponseDto": {
+        "type": "object",
+        "properties": {
+          "mfaRequired": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "mfaToken": {
+            "type": "string",
+            "description": "Send with the code to POST /admin/auth/login/mfa"
+          },
+          "mfaTokenExpiresIn": {
+            "type": "number",
+            "example": 300
+          }
+        },
+        "required": [
+          "mfaRequired",
+          "mfaToken",
+          "mfaTokenExpiresIn"
+        ]
+      },
       "AdminLoginDto": {
         "type": "object",
         "properties": {
@@ -5809,6 +6036,123 @@
         "required": [
           "username",
           "password"
+        ]
+      },
+      "AdminMfaLoginDto": {
+        "type": "object",
+        "properties": {
+          "mfaToken": {
+            "type": "string",
+            "description": "mfaToken from POST /admin/auth/login"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit authenticator code or a recovery code"
+          }
+        },
+        "required": [
+          "mfaToken",
+          "code"
+        ]
+      },
+      "AdminMfaStatusResponseDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "recoveryCodesRemaining": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "enabled",
+          "recoveryCodesRemaining"
+        ]
+      },
+      "AdminMfaSetupResponseDto": {
+        "type": "object",
+        "properties": {
+          "otpauthUrl": {
+            "type": "string",
+            "description": "otpauth:// URI to show as a QR code"
+          },
+          "secret": {
+            "type": "string",
+            "description": "The same secret in base32, for manual entry"
+          }
+        },
+        "required": [
+          "otpauthUrl",
+          "secret"
+        ]
+      },
+      "AdminMfaCodeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit authenticator code (or a recovery code where allowed)"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "AdminMfaEnabledResponseDto": {
+        "type": "object",
+        "properties": {
+          "recoveryCodes": {
+            "description": "Single-use; shown only this once",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "enabled": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          }
+        },
+        "required": [
+          "recoveryCodes",
+          "enabled"
+        ]
+      },
+      "AdminMfaDisableDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456",
+            "description": "6-digit authenticator code (or a recovery code where allowed)"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "password"
+        ]
+      },
+      "AdminMfaRecoveryCodesResponseDto": {
+        "type": "object",
+        "properties": {
+          "recoveryCodes": {
+            "description": "Single-use; shown only this once",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "recoveryCodes"
         ]
       },
       "UpdateProfileDto": {
