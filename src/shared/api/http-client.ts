@@ -1,6 +1,12 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useLocaleStore } from '@shared/store';
-import { getSessionTokens, setSessionTokens, type SessionTokens } from './auth-session';
+import {
+  getSessionTokens,
+  readPersistedTokens,
+  setSessionTokens,
+  type SessionTokens,
+} from './auth-session';
+import { withCrossTabLock } from './cross-tab-lock';
 import { redirectToLogin } from './redirect-to-login';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -35,18 +41,28 @@ async function refreshAccessToken(refreshToken: string): Promise<SessionTokens> 
  * session when an already-rotated token comes back (REFRESH_TOKEN_REUSE, ADR-008). Requests that
  * hit 401 together must share ONE /auth/refresh call; if each sent the same refresh token, the
  * second call would end the session.
+ *
+ * Across tabs the same rule holds: the refresh runs under a Web Lock, and whoever gets the lock
+ * first checks storage. If another tab already rotated the session, its tokens are adopted with
+ * no network call; if another tab signed out, this refresh fails and this tab signs out too.
  */
 let inFlightRefresh: Promise<SessionTokens> | null = null;
 
+/** Runs while holding the cross-tab lock; the new tokens are persisted before it is released. */
+async function rotateOrAdopt(refreshToken: string): Promise<SessionTokens> {
+  const persisted = readPersistedTokens();
+  if (!persisted) throw new Error('Signed out in another tab');
+  const tokens =
+    persisted.refreshToken !== refreshToken ? persisted : await refreshAccessToken(refreshToken);
+  // Inside the lock: the next tab to get it must already see the rotated refresh token.
+  setSessionTokens(tokens);
+  return tokens;
+}
+
 function refreshSessionOnce(refreshToken: string): Promise<SessionTokens> {
-  inFlightRefresh ??= refreshAccessToken(refreshToken)
-    .then((tokens) => {
-      setSessionTokens(tokens);
-      return tokens;
-    })
-    .finally(() => {
-      inFlightRefresh = null;
-    });
+  inFlightRefresh ??= withCrossTabLock(() => rotateOrAdopt(refreshToken)).finally(() => {
+    inFlightRefresh = null;
+  });
   return inFlightRefresh;
 }
 

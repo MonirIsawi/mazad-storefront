@@ -50,3 +50,37 @@ export function subscribeToSessionTokens(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
+
+/** The tokens as persisted right now — possibly rotated or cleared by another tab. */
+export function readPersistedTokens(): SessionTokens | null {
+  return readStoredTokens();
+}
+
+function sameTokens(a: SessionTokens | null, b: SessionTokens | null): boolean {
+  return a?.accessToken === b?.accessToken && a?.refreshToken === b?.refreshToken;
+}
+
+/**
+ * Adopts what another tab persisted (a refreshed session, or a sign-out) without any network call.
+ * Exported for tests; in the browser it runs on `storage` events, which fire only in the tabs that
+ * did not make the change.
+ */
+export function syncSessionFromStorage(): void {
+  const stored = readStoredTokens();
+  if (sameTokens(stored, currentTokens)) return;
+  currentTokens = stored;
+  listeners.forEach((listener) => listener(stored));
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    // key === null: localStorage.clear() in another tab.
+    if (
+      event.key === null ||
+      event.key === STORAGE_KEYS.accessToken ||
+      event.key === STORAGE_KEYS.refreshToken
+    ) {
+      syncSessionFromStorage();
+    }
+  });
+}
