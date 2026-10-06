@@ -28,6 +28,15 @@ export const registerSchema = z.object({
   code: otpCodeSchema,
 });
 
+/**
+ * The delete-account confirmation. The password stays optional because the API does not tell the
+ * client whether the account has one (a phone-code sign-up has none); the API decides.
+ */
+export const deleteAccountSchema = z.object({
+  password: z.string().max(200),
+  isConfirmed: z.boolean(),
+});
+
 export const otpPurposeSchema = z.enum(['SIGNUP', 'LOGIN', 'PASSWORD_RESET']);
 
 // POST /auth/otp/request. When the phone isn't linked to the Telegram bot yet, `delivered` is

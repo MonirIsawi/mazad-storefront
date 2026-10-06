@@ -39,6 +39,66 @@
     "wins": "My wins",
     "orders": "My orders"
   },
+  "deleteAccount": {
+    "title": "Delete account",
+    "summary": "Permanently close your Mazad account. Open orders, auctions, returns and any wallet balance must be finished first.",
+    "open": "Delete account",
+    "consequences": {
+      "permanent": "Your account is closed permanently and can't be restored.",
+      "removed": "Your name, phone number, addresses, saved items, followed sellers, notifications, Telegram link and push notification registrations are removed.",
+      "kept": "Your orders, bids, wins, returns, refunds and payment records are kept, because the other party and our accounting need them, but they no longer show your name.",
+      "signedOut": "You're signed out on all your devices.",
+      "phone": "The same phone number can't be used to create a new account for 30 days."
+    },
+    "passwordHint": "Enter your password. If you signed up with a phone code and have no password, leave it empty.",
+    "confirmLabel": "I understand this can't be undone.",
+    "confirm": "Delete my account",
+    "cancel": "Cancel",
+    "deleted": "Your account was deleted.",
+    "reauthAction": "Sign out and sign in again",
+    "links": {
+      "selling": "My auctions for sale"
+    },
+    "blocked": {
+      "title": "Your account can't be deleted yet. First finish:",
+      "hint": "Once these are done, come back and delete your account."
+    },
+    "reasons": {
+      "SELLER_AUCTIONS_ACTIVE": "Auctions you're selling that are pending approval, scheduled, live, or ended and still waiting on the winner.",
+      "SELLER_ORDERS_OPEN": "Orders you sold that haven't been delivered or cancelled yet.",
+      "SELLER_RETURN_WINDOW_OPEN": "Orders you sold that were delivered recently and are still within the return period.",
+      "BUYER_ORDERS_OPEN": "Your purchases that haven't been delivered or cancelled yet.",
+      "WINS_PENDING": "Auctions you won that are waiting for your confirmation.",
+      "RETURNS_OPEN": "Return requests in progress, as a buyer or a seller.",
+      "LEADING_BIDS": "Live auctions where you hold the highest bid.",
+      "WALLET_NOT_EMPTY": "A balance or a held amount in your wallet.",
+      "unknown": "Another open item on your account."
+    },
+    "errors": {
+      "PASSWORD_REQUIRED": "Enter your password to delete your account.",
+      "INVALID_CURRENT_PASSWORD": "That password is incorrect.",
+      "REAUTH_REQUIRED": "For your security, an account without a password needs a recent sign-in. Set a password with “Forgot password?” on the sign-in screen of the Mazad app, then delete your account using it.",
+      "ACCOUNT_DELETION_NOT_ALLOWED": "This account can't be deleted here."
+    }
+  },
+  "accountDeletion": {
+    "title": "Delete your Mazad account",
+    "intro": "You can permanently delete your Mazad account yourself, in the Mazad app or on this website. This page explains how, and what happens to your data.",
+    "howTitle": "How to delete your account",
+    "steps": {
+      "signIn": "Sign in to your Mazad account, in the app or on the website.",
+      "account": "Open Account.",
+      "delete": "At the bottom of the Account screen, choose Delete account and confirm. You'll be asked for your password if your account has one."
+    },
+    "passwordless": "If your account has no password (for example, it was created with a phone code), first set one with “Forgot password?” on the sign-in screen of the Mazad app, then delete your account using it.",
+    "beforeTitle": "Before you can delete",
+    "beforeIntro": "An account can't be deleted while it still has open business with other people. Finish these first; the delete screen lists anything that is still open:",
+    "deletedTitle": "What is deleted",
+    "keptTitle": "What is kept, and why",
+    "afterTitle": "After deletion",
+    "ctaSignedIn": "Go to your account",
+    "ctaSignedOut": "Sign in"
+  },
   "errors": {
     "field": {
       "phoneInvalid": "Enter a valid phone number.",

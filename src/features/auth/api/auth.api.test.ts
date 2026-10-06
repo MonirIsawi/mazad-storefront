@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { httpClient } from '@shared/api';
 import { authApi } from './auth.api';
 
-vi.mock('@shared/api', () => ({ httpClient: { post: vi.fn(), get: vi.fn() } }));
+vi.mock('@shared/api', () => ({
+  httpClient: { post: vi.fn(), get: vi.fn(), delete: vi.fn() },
+}));
 
 const post = vi.mocked(httpClient.post);
 
@@ -77,5 +79,27 @@ describe('authApi sign-up contract', () => {
       code: '123456',
       platform: 'web',
     });
+  });
+});
+
+describe('authApi account deletion contract', () => {
+  const remove = vi.mocked(httpClient.delete);
+
+  beforeEach(() => {
+    remove.mockReset().mockResolvedValue({ data: { message: 'Account deleted' } });
+  });
+
+  it('sends only the password in the DELETE /me body', async () => {
+    await authApi.deleteAccount('secret-pass');
+    expect(remove).toHaveBeenCalledWith('/me', { data: { password: 'secret-pass' } });
+  });
+
+  it('sends an empty body when there is no password', async () => {
+    await authApi.deleteAccount(undefined);
+    await authApi.deleteAccount('');
+    expect(remove.mock.calls).toEqual([
+      ['/me', { data: {} }],
+      ['/me', { data: {} }],
+    ]);
   });
 });

@@ -37,4 +37,12 @@ export const authApi = {
     const response = await httpClient.get<unknown>('/me');
     return authUserSchema.parse(response.data);
   },
+
+  /**
+   * DELETE /me: closes the account and revokes every session. The API rejects any body field but
+   * `password`, which is sent only when the user typed one (a passwordless account has none).
+   */
+  deleteAccount: async (password?: string): Promise<void> => {
+    await httpClient.delete('/me', { data: password ? { password } : {} });
+  },
 };

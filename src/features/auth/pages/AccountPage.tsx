@@ -10,6 +10,7 @@ import { useLocale, useTheme } from '@shared/hooks';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useLogout } from '../hooks/useLogout';
+import { DeleteAccountSection } from '../components/DeleteAccountSection';
 
 export function AccountPage() {
   const { t, isReady } = useAuthTranslation();
@@ -93,6 +94,8 @@ export function AccountPage() {
         >
           {t('account.signOut')}
         </Button>
+
+        <DeleteAccountSection />
       </div>
     </>
   );
