@@ -1,9 +1,11 @@
 'use client';
 
+import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import { Button, Input } from '@shared/components/ui';
+import { ROUTES } from '@shared/constants';
 import { getErrorCode } from '@shared/lib';
 import { loginSchema } from '../schemas/auth.schema';
 import type { LoginValues } from '../types/auth.types';
@@ -40,6 +42,12 @@ export function LoginForm() {
         error={errors.password ? t(errors.password.message ?? '') : undefined}
         {...register('password')}
       />
+      <Link
+        href={ROUTES.resetPassword}
+        className="self-end text-sm font-medium text-accent hover:underline"
+      >
+        {t('reset.forgot')}
+      </Link>
       {errorCode ? (
         <p role="alert" className="text-sm text-destructive">
           {tCommon(`errors.${errorCode}`, { defaultValue: tCommon('errors.generic') })}

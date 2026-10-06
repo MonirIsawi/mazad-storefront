@@ -3,6 +3,7 @@
 export { AuthGuard } from './components/AuthGuard';
 export { LoginPage } from './pages/LoginPage';
 export { RegisterPage } from './pages/RegisterPage';
+export { ResetPasswordPage } from './pages/ResetPasswordPage';
 export { AccountPage } from './pages/AccountPage';
 export { AccountDeletionInfoPage } from './pages/AccountDeletionInfoPage';
 export { useLogin } from './hooks/useLogin';

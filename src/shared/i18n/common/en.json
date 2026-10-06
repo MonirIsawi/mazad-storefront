@@ -50,6 +50,10 @@
     "OTP_RESEND_COOLDOWN": "Please wait a minute before requesting another code.",
     "OTP_RATE_LIMITED": "Too many codes were requested for this number. Try again in an hour.",
     "TOO_MANY_REQUESTS": "Too many attempts. Wait a minute and try again.",
-    "TELEGRAM_NOT_CONFIGURED": "Verification codes are unavailable right now. Try again later."
+    "TELEGRAM_NOT_CONFIGURED": "Verification codes are unavailable right now. Try again later.",
+    "RESET_TOKEN_INVALID": "This reset has expired or was already used. Start again to get a new code.",
+    "ACCOUNT_DISABLED": "This account is no longer active.",
+    "OTP_LOGIN_NOT_ALLOWED": "Administrator accounts can't reset their password here.",
+    "PHONE_RECENTLY_DELETED": "An account with this number was deleted recently. The number can be used again later."
   }
 }

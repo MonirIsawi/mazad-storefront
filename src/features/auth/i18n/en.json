@@ -77,7 +77,7 @@
     "errors": {
       "PASSWORD_REQUIRED": "Enter your password to delete your account.",
       "INVALID_CURRENT_PASSWORD": "That password is incorrect.",
-      "REAUTH_REQUIRED": "For your security, an account without a password needs a recent sign-in. Set a password with “Forgot password?” on the sign-in screen of the Mazad app, then delete your account using it.",
+      "REAUTH_REQUIRED": "For your security, an account without a password needs a recent sign-in. Set a password with “Forgot password?” on the sign-in page, then delete your account using it.",
       "ACCOUNT_DELETION_NOT_ALLOWED": "This account can't be deleted here."
     }
   },
@@ -90,7 +90,7 @@
       "account": "Open Account.",
       "delete": "At the bottom of the Account screen, choose Delete account and confirm. You'll be asked for your password if your account has one."
     },
-    "passwordless": "If your account has no password (for example, it was created with a phone code), first set one with “Forgot password?” on the sign-in screen of the Mazad app, then delete your account using it.",
+    "passwordless": "If your account has no password (for example, it was created with a phone code), first set one with “Forgot password?” on the sign-in page, then delete your account using it.",
     "beforeTitle": "Before you can delete",
     "beforeIntro": "An account can't be deleted while it still has open business with other people. Finish these first; the delete screen lists anything that is still open:",
     "deletedTitle": "What is deleted",
@@ -104,7 +104,19 @@
       "phoneInvalid": "Enter a valid phone number.",
       "passwordMin": "Password must be at least 8 characters.",
       "fullNameMin": "Enter your full name.",
-      "otpInvalid": "Enter the 6-digit code."
+      "otpInvalid": "Enter the 6-digit code.",
+      "passwordMax": "Password must be at most 128 characters."
     }
+  },
+  "reset": {
+    "forgot": "Forgot password?",
+    "title": "Reset password",
+    "intro": "Enter your phone number and we'll send you a verification code.",
+    "verify": "Verify code",
+    "newPassword": "New password",
+    "submit": "Save new password",
+    "done": "Password updated. Sign in with your new password.",
+    "startOver": "Start again",
+    "remembered": "Remembered your password?"
   }
 }

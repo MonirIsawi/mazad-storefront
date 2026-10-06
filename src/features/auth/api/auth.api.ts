@@ -1,5 +1,10 @@
 import { httpClient } from '@shared/api';
-import { authResponseSchema, authUserSchema, otpRequestResultSchema } from '../schemas/auth.schema';
+import {
+  authResponseSchema,
+  authUserSchema,
+  otpRequestResultSchema,
+  resetTokenResultSchema,
+} from '../schemas/auth.schema';
 import type {
   AuthResponse,
   AuthUser,
@@ -7,6 +12,7 @@ import type {
   OtpPurpose,
   OtpRequestResult,
   RegisterValues,
+  ResetTokenResult,
 } from '../types/auth.types';
 
 export const authApi = {
@@ -27,6 +33,21 @@ export const authApi = {
   login: async (values: LoginValues): Promise<AuthResponse> => {
     const response = await httpClient.post<unknown>('/auth/login', { ...values, platform: 'web' });
     return authResponseSchema.parse(response.data);
+  },
+
+  /** PASSWORD_RESET: the API verifies and consumes the code and returns a reset token, not a session. */
+  verifyResetCode: async (phone: string, code: string): Promise<ResetTokenResult> => {
+    const response = await httpClient.post<unknown>('/auth/otp/verify', {
+      phone,
+      code,
+      purpose: 'PASSWORD_RESET',
+    });
+    return resetTokenResultSchema.parse(response.data);
+  },
+
+  /** Sets the new password and revokes every session of the account; nobody is signed in. */
+  resetPassword: async (resetToken: string, newPassword: string): Promise<void> => {
+    await httpClient.post('/auth/password/reset', { resetToken, newPassword });
   },
 
   logout: async (): Promise<void> => {

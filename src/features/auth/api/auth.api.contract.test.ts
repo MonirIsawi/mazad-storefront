@@ -65,6 +65,39 @@ describe.skipIf(!API_URL)('auth contract with a live mazad-api', () => {
     expect(result).toBe('OTP_EXPIRED_OR_MISSING');
   });
 
+  it('resets a password through a PASSWORD_RESET code exactly as ResetPasswordForm does', async () => {
+    const { authApi } = await loadClient();
+    const phone = newPhone();
+    await authApi.requestOtp(phone, 'SIGNUP');
+    await authApi.register({
+      fullName: 'Contract Test',
+      phone,
+      password: 'ContractPass1!',
+      code: DEV_CODE,
+    });
+
+    expect((await authApi.requestOtp(phone, 'PASSWORD_RESET')).delivered).toBe(true);
+    expect(await codeOf(authApi.verifyResetCode(phone, '000000'))).toBe('OTP_INVALID');
+    const { resetToken } = await authApi.verifyResetCode(phone, DEV_CODE);
+    await authApi.resetPassword(resetToken, 'ResetPass2!');
+
+    // Single use; the old password is gone and the new one signs in.
+    expect(await codeOf(authApi.resetPassword(resetToken, 'Another3!'))).toBe(
+      'RESET_TOKEN_INVALID',
+    );
+    expect(await codeOf(authApi.login({ phone, password: 'ContractPass1!' }))).toBe(
+      'INVALID_CREDENTIALS',
+    );
+    expect((await authApi.login({ phone, password: 'ResetPass2!' })).user.phone).toBe(phone);
+  });
+
+  it('tells a reset for a number without an account apart', async () => {
+    const { authApi } = await loadClient();
+    const phone = newPhone();
+    await authApi.requestOtp(phone, 'PASSWORD_RESET');
+    expect(await codeOf(authApi.verifyResetCode(phone, DEV_CODE))).toBe('USER_NOT_FOUND');
+  });
+
   it('refreshes once for concurrent 401s and keeps the session alive', async () => {
     const { authApi, httpClient, setSessionTokens, getSessionTokens } = await loadClient();
     const phone = newPhone();

@@ -103,3 +103,36 @@ describe('authApi account deletion contract', () => {
     ]);
   });
 });
+
+describe('authApi password reset contract', () => {
+  const TOKEN = 'a'.repeat(64);
+
+  it('verifies a PASSWORD_RESET code and returns only the reset token', async () => {
+    post.mockResolvedValue({
+      data: { resetToken: TOKEN, resetTokenExpiresAt: '2030-01-01T00:10:00.000Z' },
+    });
+
+    const result = await authApi.verifyResetCode('+9647701234567', '123456');
+
+    expect(post).toHaveBeenCalledWith('/auth/otp/verify', {
+      phone: '+9647701234567',
+      code: '123456',
+      purpose: 'PASSWORD_RESET',
+    });
+    expect(result).toEqual({ resetToken: TOKEN, resetTokenExpiresAt: '2030-01-01T00:10:00.000Z' });
+  });
+
+  it('refuses a response without a well-formed reset token (e.g. a session)', async () => {
+    post.mockResolvedValue({ data: { accessToken: 'a', refreshToken: 'r', sessionId: 's' } });
+    await expect(authApi.verifyResetCode('+9647701234567', '123456')).rejects.toThrow();
+  });
+
+  it('sends only the token and the new password', async () => {
+    post.mockResolvedValue({ data: { message: 'Password updated' } });
+    await authApi.resetPassword(TOKEN, 'NewPassword1!');
+    expect(post).toHaveBeenCalledWith('/auth/password/reset', {
+      resetToken: TOKEN,
+      newPassword: 'NewPassword1!',
+    });
+  });
+});

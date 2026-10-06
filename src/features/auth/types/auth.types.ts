@@ -8,6 +8,8 @@ import type {
   otpPurposeSchema,
   otpRequestResultSchema,
   deleteAccountSchema,
+  resetPasswordSchema,
+  resetTokenResultSchema,
 } from '../schemas/auth.schema';
 
 export type LoginValues = z.infer<typeof loginSchema>;
@@ -18,3 +20,5 @@ export type AuthResponse = z.infer<typeof authResponseSchema>;
 export type OtpPurpose = z.infer<typeof otpPurposeSchema>;
 export type OtpRequestResult = z.infer<typeof otpRequestResultSchema>;
 export type DeleteAccountValues = z.infer<typeof deleteAccountSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+export type ResetTokenResult = z.infer<typeof resetTokenResultSchema>;

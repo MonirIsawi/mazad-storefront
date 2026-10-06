@@ -5,7 +5,11 @@ import { siteUrl } from '@shared/seo';
 export default function robots(): MetadataRoute.Robots {
   const base = siteUrl();
   return {
-    rules: { userAgent: '*', allow: '/', disallow: ['/account/', '/login', '/register'] },
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/account/', '/login', '/register', '/reset-password'],
+    },
     ...(base ? { host: base.origin } : {}),
   };
 }

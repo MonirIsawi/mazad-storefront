@@ -29,6 +29,22 @@ export const registerSchema = z.object({
 });
 
 /**
+ * Password reset, one form in three steps (docs/api/authentication.md, "Password reset"):
+ * phone → PASSWORD_RESET code → new password. mazad-api accepts 8–128 characters.
+ */
+export const resetPasswordSchema = z.object({
+  phone: phoneSchema,
+  code: otpCodeSchema,
+  newPassword: passwordSchema.max(128, 'errors.field.passwordMax'),
+});
+
+/** POST /auth/otp/verify with purpose PASSWORD_RESET: a single-use reset token, never a session. */
+export const resetTokenResultSchema = z.object({
+  resetToken: z.string().regex(/^[a-f0-9]{64}$/),
+  resetTokenExpiresAt: z.string(),
+});
+
+/**
  * The delete-account confirmation. The password stays optional because the API does not tell the
  * client whether the account has one (a phone-code sign-up has none); the API decides.
  */

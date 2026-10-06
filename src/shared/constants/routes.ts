@@ -5,6 +5,7 @@ export const ROUTES = {
   store: (id: string) => `/stores/${id}`,
   login: '/login',
   register: '/register',
+  resetPassword: '/reset-password',
   account: '/account',
   addressesList: '/account/addresses',
   myBids: '/account/bids',

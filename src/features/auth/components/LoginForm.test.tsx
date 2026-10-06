@@ -32,4 +32,12 @@ describe('LoginForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/valid phone/i);
   });
+
+  it('links to the password reset', () => {
+    renderWithQuery(<LoginForm />);
+    expect(screen.getByRole('link', { name: /forgot password/i })).toHaveAttribute(
+      'href',
+      '/reset-password',
+    );
+  });
 });
