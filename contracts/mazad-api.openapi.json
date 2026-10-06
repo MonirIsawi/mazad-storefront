@@ -606,6 +606,34 @@
         "tags": [
           "Me"
         ]
+      },
+      "delete": {
+        "operationId": "MeController_deleteAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete my account (anonymise, keep transaction history, end all sessions)",
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/password": {
@@ -6167,6 +6195,15 @@
               "ar",
               "en"
             ]
+          }
+        }
+      },
+      "DeleteAccountDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "Required when the account has a password. Passwordless accounts must have signed in within 10 minutes."
           }
         }
       },
