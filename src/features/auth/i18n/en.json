@@ -105,7 +105,8 @@
       "passwordMin": "Password must be at least 8 characters.",
       "fullNameMin": "Enter your full name.",
       "otpInvalid": "Enter the 6-digit code.",
-      "passwordMax": "Password must be at most 128 characters."
+      "passwordMax": "Password must be at most 128 characters.",
+      "passwordMismatch": "The passwords don't match."
     }
   },
   "reset": {
@@ -114,6 +115,7 @@
     "intro": "Enter your phone number and we'll send you a verification code.",
     "verify": "Verify code",
     "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
     "submit": "Save new password",
     "done": "Password updated. Sign in with your new password.",
     "startOver": "Start again",

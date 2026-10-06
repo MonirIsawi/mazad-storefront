@@ -78,7 +78,8 @@ on the API (`OTP_LENGTH`, 6 by default); the storefront sends 6.
 
 `POST /auth/password/reset` with `{ resetToken, newPassword }`.
 
-- `newPassword` is 8–128 characters. Any other body field gives a 400 validation error.
+- `newPassword` is 8–128 characters. Any other body field gives a 400 validation error. The
+  form asks for it twice and only sends it when both match (the API takes it once).
 - Success returns `{ message: "Password updated" }`.
   - The password is changed and **every session of the account is revoked**, on every device.
   - The user is not signed in: they sign in with the new password.

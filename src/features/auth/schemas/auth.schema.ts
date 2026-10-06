@@ -32,11 +32,17 @@ export const registerSchema = z.object({
  * Password reset, one form in three steps (docs/api/authentication.md, "Password reset"):
  * phone → PASSWORD_RESET code → new password. mazad-api accepts 8–128 characters.
  */
-export const resetPasswordSchema = z.object({
-  phone: phoneSchema,
-  code: otpCodeSchema,
-  newPassword: passwordSchema.max(128, 'errors.field.passwordMax'),
-});
+export const resetPasswordSchema = z
+  .object({
+    phone: phoneSchema,
+    code: otpCodeSchema,
+    newPassword: passwordSchema.max(128, 'errors.field.passwordMax'),
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.confirmPassword === values.newPassword, {
+    path: ['confirmPassword'],
+    message: 'errors.field.passwordMismatch',
+  });
 
 /** POST /auth/otp/verify with purpose PASSWORD_RESET: a single-use reset token, never a session. */
 export const resetTokenResultSchema = z.object({

@@ -70,10 +70,19 @@ async function requestCode(user: ReturnType<typeof userEvent.setup>) {
   return screen.findByLabelText(/verification code/i);
 }
 
+async function typePasswords(
+  user: ReturnType<typeof userEvent.setup>,
+  password: string,
+  confirmation = password,
+) {
+  await user.type(await reachPasswordStep(user), password);
+  await user.type(screen.getByLabelText(/confirm new password/i), confirmation);
+}
+
 async function reachPasswordStep(user: ReturnType<typeof userEvent.setup>) {
   await user.type(await requestCode(user), '123456');
   await user.click(screen.getByRole('button', { name: /verify code/i }));
-  return screen.findByLabelText(/new password/i);
+  return screen.findByLabelText(/^new password$/i);
 }
 
 describe('ResetPasswordForm', () => {
@@ -103,7 +112,7 @@ describe('ResetPasswordForm', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/code is incorrect/i);
     expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/new password/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/^new password$/i)).not.toBeInTheDocument();
   });
 
   it('explains when no account uses the number', async () => {
@@ -117,7 +126,7 @@ describe('ResetPasswordForm', () => {
 
   it('saves the new password with the reset token, then sends the user to sign in', async () => {
     const user = setup();
-    await user.type(await reachPasswordStep(user), 'BrandNew123');
+    await typePasswords(user, 'BrandNew123');
     await user.click(screen.getByRole('button', { name: /save new password/i }));
 
     await vi.waitFor(() => expect(router.replace).toHaveBeenCalledWith('/login'));
@@ -131,7 +140,7 @@ describe('ResetPasswordForm', () => {
   it('drops a session this browser still held (the API revoked it)', async () => {
     setSessionTokens({ accessToken: 'access', refreshToken: 'refresh' });
     const user = setup();
-    await user.type(await reachPasswordStep(user), 'BrandNew123');
+    await typePasswords(user, 'BrandNew123');
     await user.click(screen.getByRole('button', { name: /save new password/i }));
 
     await vi.waitFor(() => expect(router.replace).toHaveBeenCalledWith('/login'));
@@ -140,17 +149,26 @@ describe('ResetPasswordForm', () => {
 
   it('enforces the 8-character minimum before calling the API', async () => {
     const user = setup();
-    await user.type(await reachPasswordStep(user), 'short');
+    await typePasswords(user, 'short');
     await user.click(screen.getByRole('button', { name: /save new password/i }));
 
     expect(await screen.findByText(/at least 8 characters/i)).toBeInTheDocument();
     expect(authApi.resetPassword).not.toHaveBeenCalled();
   });
 
+  it('requires the new password twice, identically', async () => {
+    const user = setup();
+    await typePasswords(user, 'BrandNew123', 'BrandNew124');
+    await user.click(screen.getByRole('button', { name: /save new password/i }));
+
+    expect(await screen.findByText(/passwords don't match/i)).toBeInTheDocument();
+    expect(authApi.resetPassword).not.toHaveBeenCalled();
+  });
+
   it('offers to start again when the reset token expired', async () => {
     vi.mocked(authApi.resetPassword).mockRejectedValueOnce(apiError(401, 'RESET_TOKEN_INVALID'));
     const user = setup();
-    await user.type(await reachPasswordStep(user), 'BrandNew123');
+    await typePasswords(user, 'BrandNew123');
     await user.click(screen.getByRole('button', { name: /save new password/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/expired or was already used/i);

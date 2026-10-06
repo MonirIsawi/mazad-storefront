@@ -17,7 +17,7 @@ import { SignupCodeStep } from './SignupCodeStep';
  * Password reset, one form in three steps (docs/api/authentication.md, "Password reset"):
  * phone → "send code" (POST /auth/otp/request, purpose PASSWORD_RESET), code → "verify"
  * (POST /auth/otp/verify → single-use reset token), new password → "save"
- * (POST /auth/password/reset). The phone is locked once a code is pending, so the token is for
+ * (POST /auth/password/reset, typed twice). The phone is locked once a code is pending, so the token is for
  * exactly the number the code went to.
  */
 export function ResetPasswordForm() {
@@ -35,7 +35,7 @@ export function ResetPasswordForm() {
     formState: { errors },
   } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { phone: '', code: '', newPassword: '' },
+    defaultValues: { phone: '', code: '', newPassword: '', confirmPassword: '' },
   });
 
   const step = resetToken ? 'password' : otp.sent ? 'code' : 'phone';
@@ -59,6 +59,7 @@ export function ResetPasswordForm() {
     setResetToken(null);
     resetField('code');
     resetField('newPassword');
+    resetField('confirmPassword');
     setNotice(null);
   };
 
@@ -78,7 +79,7 @@ export function ResetPasswordForm() {
       );
       return;
     }
-    if (!resetToken || !(await trigger('newPassword'))) return;
+    if (!resetToken || !(await trigger(['newPassword', 'confirmPassword']))) return;
     save.mutate({ resetToken, newPassword: getValues('newPassword') });
   };
 
@@ -124,6 +125,15 @@ export function ResetPasswordForm() {
           autoFocus
           error={fieldError(errors.newPassword?.message)}
           {...register('newPassword')}
+        />
+      ) : null}
+      {step === 'password' ? (
+        <Input
+          label={t('reset.confirmPassword')}
+          type="password"
+          autoComplete="new-password"
+          error={fieldError(errors.confirmPassword?.message)}
+          {...register('confirmPassword')}
         />
       ) : null}
       {errorCode ? (
