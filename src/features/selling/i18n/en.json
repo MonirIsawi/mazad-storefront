@@ -12,7 +12,7 @@
     "add": "Add store",
     "edit": "Edit store",
     "empty": "You have no stores yet.",
-    "emptyHint": "Your first store is created automatically with your first product.",
+    "emptyHint": "Add a store to start selling. Every product belongs to one of your stores.",
     "default": "Default",
     "deliveryFee": "Delivery {{fee}}",
     "delete": "Delete store",
