@@ -11,6 +11,7 @@ import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 import { BidForm } from './BidForm';
 import { BuyNowButton } from './BuyNowButton';
 import { AutoBidControl } from './AutoBidControl';
+import { closedMessageKey } from '../lib/closed-message';
 
 export interface BidPanelProps {
   auctionId: string;
@@ -33,7 +34,7 @@ export function BidPanel({ auctionId }: BidPanelProps) {
     return (
       <BottomActionBar>
         <span className="w-full py-3 text-center text-subhead text-muted-foreground">
-          {t('panel.notLive')}
+          {t(closedMessageKey(pricing.data.status))}
         </span>
       </BottomActionBar>
     );

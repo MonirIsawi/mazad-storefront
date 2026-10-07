@@ -1,6 +1,7 @@
 {
   "panel": {
     "notLive": "Bidding is closed for this auction.",
+    "notStarted": "Bidding hasn't started yet.",
     "loadError": "Couldn't load bidding details.",
     "signInToBid": "Sign in to place a bid"
   },
