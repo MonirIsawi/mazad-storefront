@@ -58,6 +58,19 @@ export function toArabicDigits(value: string | number): string {
   return String(value).replace(/\d/g, (digit) => ARABIC_INDIC_DIGITS.charAt(Number(digit)));
 }
 
+/**
+ * `{{count, num}}` inside translations (registered as the i18next `num` formatter): a quantity
+ * embedded in a sentence follows the same digits as formatNumber — Arabic-Indic in Arabic. Keeps
+ * up to two decimals (ratings) and passes non-numbers through, digits converted.
+ */
+export function formatQuantity(value: unknown, locale: string | undefined): string {
+  const text =
+    typeof value === 'number' && Number.isFinite(value)
+      ? new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value)
+      : String(value ?? '');
+  return locale === 'ar' ? toArabicDigits(text) : text;
+}
+
 /** Localizes a bare number — bid counts, follower counts — without a currency suffix. */
 export function formatNumber(value: number | null | undefined, locale: Locale): string {
   if (value == null || !Number.isFinite(value)) return '—';

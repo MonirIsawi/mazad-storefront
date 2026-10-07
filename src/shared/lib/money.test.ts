@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatMoney, formatNumber, parseMoney, toArabicDigits } from './money';
+import { formatMoney, formatNumber, formatQuantity, parseMoney, toArabicDigits } from './money';
 
 describe('parseMoney', () => {
   it('parses a decimal string', () => {
@@ -44,5 +44,14 @@ describe('formatNumber', () => {
   it('localizes a bare count with no currency suffix', () => {
     expect(formatNumber(12, 'ar')).toBe('١٢');
     expect(formatNumber(12, 'en')).toBe('12');
+  });
+});
+
+describe('formatQuantity', () => {
+  it('matches formatNumber digits and keeps decimals', () => {
+    expect(formatQuantity(1250, 'ar')).toBe('١,٢٥٠');
+    expect(formatQuantity(4.25, 'en')).toBe('4.25');
+    expect(formatQuantity('7', 'ar')).toBe('٧');
+    expect(formatQuantity(undefined, 'ar')).toBe('');
   });
 });

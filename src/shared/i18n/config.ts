@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import commonEn from './common/en.json';
 import commonAr from './common/ar.json';
+import { formatQuantity } from '@shared/lib/money';
 
 export const COMMON_NAMESPACE = 'common';
 
@@ -19,6 +20,8 @@ if (!i18next.isInitialized) {
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
   });
+  // `{{count, num}}`: counts inside sentences get the same digits as formatNumber.
+  i18next.services.formatter?.add('num', (value, lng) => formatQuantity(value, lng));
 }
 
 /** Registers a feature namespace's bundle once its i18n/index.ts loader resolves (ADR-007). */
