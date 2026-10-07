@@ -6,7 +6,9 @@ const ENDING_SOON_MS = 60 * 60 * 1000;
 
 export function getAuctionStatusTone(status: AuctionStatus, endsInMs: number): AuctionStatusTone {
   if (status === 'LIVE') {
-    return endsInMs > 0 && endsInMs <= ENDING_SOON_MS ? 'warning' : 'live';
+    // Past the deadline the server still says LIVE until its close job runs (a second or two) or
+    // an anti-sniping bid moves endsAt: keep "ending soon" until then, never fall back to "live".
+    return endsInMs <= ENDING_SOON_MS ? 'warning' : 'live';
   }
   if (status === 'SCHEDULED') return 'upcoming';
   return 'neutral';
