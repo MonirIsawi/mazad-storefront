@@ -1,9 +1,15 @@
 name: CI
 
+# Fork branches (hardening/**) run here too: a PR from a fork waits for the upstream owner to approve
+# its workflow run, so pushes are validated in the fork itself. No secrets are used by this workflow.
 on:
   push:
-    branches: [main]
+    branches: [main, 'hardening/**']
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
