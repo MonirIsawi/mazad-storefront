@@ -12,3 +12,11 @@ export function pickLocalizedName(entity: LocalizedEntity, locale: 'en' | 'ar'):
   if (locale === 'en' && entity.nameEn) return entity.nameEn;
   return entity.nameAr || entity.nameEn || '';
 }
+
+/**
+ * Joins the non-empty parts of an address or order summary with the list separator of the UI
+ * language: the Arabic comma "،" in Arabic, ", " in English.
+ */
+export function joinList(parts: (string | null | undefined)[], locale: 'en' | 'ar'): string {
+  return parts.filter((part): part is string => Boolean(part)).join(locale === 'ar' ? '، ' : ', ');
+}

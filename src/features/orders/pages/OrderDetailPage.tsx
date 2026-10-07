@@ -14,7 +14,7 @@ import {
   SectionHeader,
 } from '@shared/components/ui';
 import { useLocale, useMoney } from '@shared/hooks';
-import { formatDateTime, getErrorCode, pickLocalizedName } from '@shared/lib';
+import { formatDateTime, getErrorCode, joinList, pickLocalizedName } from '@shared/lib';
 import { useOrder } from '../hooks/useOrders';
 import { useCancelOrder, useOpenReturn } from '../hooks/useOrderMutations';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
@@ -98,7 +98,7 @@ export function OrderDetailPage({ id }: { id: string }) {
           <Card>
             <CardContent className="flex flex-col gap-1.5 text-subhead">
               <p className="text-foreground">
-                {[data.shipCity, data.shipArea, data.shipStreet].filter(Boolean).join('، ')}
+                {joinList([data.shipCity, data.shipArea, data.shipStreet], locale)}
               </p>
               {data.shipDetails ? (
                 <p className="text-muted-foreground">{data.shipDetails}</p>

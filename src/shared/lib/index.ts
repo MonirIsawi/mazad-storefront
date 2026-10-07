@@ -10,7 +10,7 @@ export {
   MAX_MONEY_AMOUNT,
 } from './money';
 export { formatDate, formatDateTime, formatDuration } from './date';
-export { pickLocalizedName } from './locale';
+export { joinList, pickLocalizedName } from './locale';
 export { resolveAssetUrl } from './asset';
 export { getImageTintStyle } from './image-tint';
 export { getCategoryIcon } from './category-icon';

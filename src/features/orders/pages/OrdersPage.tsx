@@ -6,7 +6,7 @@ import { EmptyState, ErrorState, PageLoader } from '@shared/components/feedback'
 import { ScreenHeader } from '@shared/components/layout';
 import { Badge, Card, Icon, Skeleton } from '@shared/components/ui';
 import { useLocale, useMoney } from '@shared/hooks';
-import { formatDate, pickLocalizedName } from '@shared/lib';
+import { formatDate, joinList, pickLocalizedName } from '@shared/lib';
 import { useOrders } from '../hooks/useOrders';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
 import type { Order, OrderStatus } from '../types/orders.types';
@@ -67,10 +67,10 @@ function OrderRow({ order }: { order: Order }) {
         </div>
 
         <p className="truncate text-footnote text-muted-foreground">
-          {order.items
-            .map((item) => pickLocalizedName(item.product, locale))
-            .slice(0, 2)
-            .join('، ')}
+          {joinList(
+            order.items.slice(0, 2).map((item) => pickLocalizedName(item.product, locale)),
+            locale,
+          )}
           {order.items.length > 2 ? ' …' : ''}
         </p>
 
