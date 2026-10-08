@@ -1,6 +1,8 @@
 import { httpClient } from '@shared/api';
 import { orderSchema, ordersListSchema } from '../schemas/orders.schema';
-import type { Order, OrdersList } from '../types/orders.types';
+import type { Order, OrderStatus, OrdersList } from '../types/orders.types';
+
+export type SellerReturnAction = 'approve' | 'reject' | 'received' | 'refund';
 
 export const ordersApi = {
   list: async (): Promise<OrdersList> => {
@@ -21,5 +23,28 @@ export const ordersApi = {
 
   openReturn: async (orderItemId: string, reason: string): Promise<void> => {
     await httpClient.post(`/order-items/${orderItemId}/return`, { reason });
+  },
+
+  /** The seller's received orders across their stores, newest first (same bare-array shape). */
+  listSales: async (): Promise<OrdersList> => {
+    const response = await httpClient.get<unknown>('/me/sales', { params: { limit: 50 } });
+    return ordersListSchema.parse(response.data);
+  },
+
+  /** Seller: CREATED → CONFIRMED → OUT_FOR_DELIVERY → DELIVERED (mazad-api SELLER_TRANSITIONS). */
+  updateStatus: async (id: string, status: OrderStatus): Promise<void> => {
+    await httpClient.post(`/orders/${id}/status`, { status });
+  },
+
+  /** Seller side of a return: approve, reject (reason required), product received, refund. */
+  returnAction: async (
+    returnId: string,
+    action: SellerReturnAction,
+    reason?: string,
+  ): Promise<void> => {
+    await httpClient.post(
+      `/returns/${returnId}/${action}`,
+      action === 'reject' ? { reason } : undefined,
+    );
   },
 };

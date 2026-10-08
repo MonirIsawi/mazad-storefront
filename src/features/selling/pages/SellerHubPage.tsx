@@ -11,8 +11,9 @@ import { useStores } from '../hooks/useStores';
 import { useSellingTranslation } from '../hooks/useSellingTranslation';
 
 /** The seller's front door. Counts come from the same queries the child screens use, so opening
- *  one of them is already warm. */
-export function SellerHubPage() {
+ *  one of them is already warm. `openSalesCount` (received orders that still need the seller)
+ *  comes from the orders feature, composed in the route file. */
+export function SellerHubPage({ openSalesCount }: { openSalesCount?: number }) {
   const { t, isReady } = useSellingTranslation();
   const stores = useStores();
   const products = useProducts();
@@ -28,6 +29,12 @@ export function SellerHubPage() {
         <p className="text-subhead text-foreground-soft">{t('hub.subtitle')}</p>
 
         <Card hasShadow className="overflow-hidden">
+          <ListRow
+            icon="package"
+            title={t('hub.sales')}
+            value={openSalesCount}
+            href={ROUTES.sellingSales}
+          />
           <ListRow
             icon="gavel"
             title={t('hub.auctions')}

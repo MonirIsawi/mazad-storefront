@@ -34,6 +34,7 @@ export const QUERY_KEYS = {
   orders: {
     list: ['orders', 'list'] as const,
     detail: (id: string) => ['orders', 'detail', id] as const,
+    sales: ['orders', 'sales'] as const,
   },
   notifications: {
     list: ['notifications', 'list'] as const,

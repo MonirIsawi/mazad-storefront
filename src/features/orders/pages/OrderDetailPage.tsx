@@ -16,9 +16,16 @@ import {
 import { useLocale, useMoney } from '@shared/hooks';
 import { formatDateTime, getErrorCode, joinList, pickLocalizedName } from '@shared/lib';
 import { useOrder } from '../hooks/useOrders';
-import { useCancelOrder, useOpenReturn } from '../hooks/useOrderMutations';
+import {
+  useAdvanceOrder,
+  useCancelOrder,
+  useOpenReturn,
+  useReturnAction,
+} from '../hooks/useOrderMutations';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
+import { nextSellerStatus, sellerReturnActions } from '../lib/seller-orders';
 import type { Order, OrderStatus } from '../types/orders.types';
+import type { OrdersMode } from './OrdersPage';
 
 const STATUS_TONE: Record<OrderStatus, 'live' | 'upcoming' | 'warning' | 'neutral'> = {
   CREATED: 'upcoming',
@@ -28,7 +35,12 @@ const STATUS_TONE: Record<OrderStatus, 'live' | 'upcoming' | 'warning' | 'neutra
   CANCELLED: 'neutral',
 };
 
-export function OrderDetailPage({ id }: { id: string }) {
+/** Seller route (Sales): the same order, with the seller's actions instead of the buyer's. */
+export function SaleDetailPage({ id }: { id: string }) {
+  return <OrderDetailPage id={id} mode="seller" />;
+}
+
+export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: OrdersMode }) {
   const { t, isReady } = useOrdersTranslation();
   const { locale } = useLocale();
   const { money } = useMoney();
@@ -42,10 +54,14 @@ export function OrderDetailPage({ id }: { id: string }) {
 
   const data = order.data;
   const cancelError = getErrorCode(cancelOrder.error);
+  const isSeller = mode === 'seller';
 
   return (
     <>
-      <ScreenHeader title={`${t('detail.title')} ${data.orderNumber}`} backHref={ROUTES.orders} />
+      <ScreenHeader
+        title={`${t('detail.title')} ${data.orderNumber}`}
+        backHref={isSeller ? ROUTES.sellingSales : ROUTES.orders}
+      />
 
       <div className="flex flex-col gap-5 px-gutter pb-6">
         <Card isInset className="flex items-center justify-between gap-3">
@@ -56,6 +72,11 @@ export function OrderDetailPage({ id }: { id: string }) {
             <span className="text-footnote text-muted-foreground">
               {t('detail.placedAt')} · {formatDateTime(data.createdAt, locale)}
             </span>
+            {isSeller && data.customer ? (
+              <span className="truncate text-footnote text-foreground-soft">
+                {t('sales.buyer')}: {data.customer.fullName}
+              </span>
+            ) : null}
           </div>
           <Badge tone={STATUS_TONE[data.status]} hasDot={data.status === 'OUT_FOR_DELIVERY'}>
             {t(`status.${data.status}`)}
@@ -70,8 +91,9 @@ export function OrderDetailPage({ id }: { id: string }) {
                 key={item.id}
                 orderId={data.id}
                 item={item}
+                mode={mode}
                 isLast={index === data.items.length - 1}
-                canReturn={data.status === 'DELIVERED'}
+                canReturn={!isSeller && data.status === 'DELIVERED'}
               />
             ))}
           </Card>
@@ -121,6 +143,8 @@ export function OrderDetailPage({ id }: { id: string }) {
           </p>
         ) : null}
 
+        {isSeller ? <SellerNextStep order={data} /> : null}
+
         {cancelError ? (
           <p role="alert" className="text-footnote text-destructive">
             {t(`errors.${cancelError}`, { defaultValue: t('errors.ORDER_STATUS_INVALID') })}
@@ -158,11 +182,13 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 function OrderItemRow({
   orderId,
   item,
+  mode,
   isLast,
   canReturn,
 }: {
   orderId: string;
   item: Order['items'][number];
+  mode: OrdersMode;
   isLast: boolean;
   canReturn: boolean;
 }) {
@@ -187,10 +213,19 @@ function OrderItemRow({
       </div>
 
       {item.returnRequest ? (
-        <p className="mt-2 inline-flex items-center gap-1.5 text-footnote text-muted-foreground">
-          <Icon name="package" size={14} />
-          {t(`returnStatus.${item.returnRequest.status}`)}
-        </p>
+        <>
+          <p className="mt-2 inline-flex items-center gap-1.5 text-footnote text-muted-foreground">
+            <Icon name="package" size={14} />
+            {t(`returnStatus.${item.returnRequest.status}`)}
+          </p>
+          {mode === 'seller' ? (
+            <SellerReturnPanel
+              orderId={orderId}
+              returnRequest={item.returnRequest}
+              refundAmount={item.finalPrice}
+            />
+          ) : null}
+        </>
       ) : canReturn ? (
         isOpeningReturn ? (
           <div className="mt-3 flex flex-col gap-2">
@@ -233,6 +268,129 @@ function OrderItemRow({
             {t('actions.openReturn')}
           </Button>
         )
+      ) : null}
+    </div>
+  );
+}
+
+/** The seller's one next step (confirm → out for delivery → delivered), with what it means. */
+function SellerNextStep({ order }: { order: Order }) {
+  const { t } = useOrdersTranslation();
+  const advance = useAdvanceOrder(order.id);
+  const next = nextSellerStatus(order.status);
+  if (!next) return null;
+  const error = getErrorCode(advance.error);
+
+  return (
+    <Card isInset className="flex flex-col gap-3">
+      <p className="text-subhead text-foreground-soft">{t(`sales.nextHint.${order.status}`)}</p>
+      {error ? (
+        <p role="alert" className="text-footnote text-destructive">
+          {t(`errors.${error}`, { defaultValue: t('errors.INVALID_ORDER_TRANSITION') })}
+        </p>
+      ) : null}
+      <Button
+        size="lg"
+        isFullWidth
+        isLoading={advance.isPending}
+        onClick={() => advance.mutate(next)}
+        data-testid="sale-next-step"
+      >
+        {t(`sales.next.${next}`)}
+      </Button>
+    </Card>
+  );
+}
+
+/** Seller side of a return: the buyer's reason and the actions its status allows. */
+function SellerReturnPanel({
+  orderId,
+  returnRequest,
+  refundAmount,
+}: {
+  orderId: string;
+  returnRequest: NonNullable<Order['items'][number]['returnRequest']>;
+  refundAmount: string;
+}) {
+  const { t } = useOrdersTranslation();
+  const { money } = useMoney();
+  const action = useReturnAction(orderId);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [reason, setReason] = useState('');
+  const actions = sellerReturnActions(returnRequest.status);
+  const error = getErrorCode(action.error);
+
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      {returnRequest.reason ? (
+        <p className="text-footnote text-foreground-soft">
+          {t('sales.returns.reason')}: {returnRequest.reason}
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="text-footnote text-destructive">
+          {t(`errors.${error}`, { defaultValue: t('errors.INVALID_RETURN_TRANSITION') })}
+        </p>
+      ) : null}
+      {isRejecting ? (
+        <>
+          <Input
+            label={t('sales.returns.rejectReason')}
+            value={reason}
+            maxLength={500}
+            onChange={(event) => setReason(event.target.value)}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={!reason.trim()}
+              isLoading={action.isPending}
+              onClick={() =>
+                action.mutate(
+                  { returnId: returnRequest.id, action: 'reject', reason: reason.trim() },
+                  { onSuccess: () => setIsRejecting(false) },
+                )
+              }
+            >
+              {t('sales.returns.rejectSubmit')}
+            </Button>
+            <Button variant="plain" size="sm" onClick={() => setIsRejecting(false)}>
+              {t('sales.returns.back')}
+            </Button>
+          </div>
+        </>
+      ) : actions.length ? (
+        <div className="flex flex-wrap gap-2">
+          {actions.map((name) =>
+            name === 'reject' ? (
+              <Button key={name} variant="plain" size="sm" onClick={() => setIsRejecting(true)}>
+                {t('sales.returns.reject')}
+              </Button>
+            ) : (
+              <Button
+                key={name}
+                size="sm"
+                isLoading={action.isPending && action.variables?.action === name}
+                data-testid={`sale-return-${name}`}
+                onClick={() => {
+                  // Recording a refund can't be undone: say how much before sending it.
+                  if (
+                    name === 'refund' &&
+                    !window.confirm(
+                      t('sales.returns.refundConfirm', { amount: money(refundAmount) }),
+                    )
+                  ) {
+                    return;
+                  }
+                  action.mutate({ returnId: returnRequest.id, action: name });
+                }}
+              >
+                {t(`sales.returns.${name}`)}
+              </Button>
+            ),
+          )}
+        </div>
       ) : null}
     </div>
   );

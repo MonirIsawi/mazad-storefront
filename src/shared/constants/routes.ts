@@ -22,6 +22,8 @@ export const ROUTES = {
   sellingStores: '/account/selling/stores',
   sellingProducts: '/account/selling/products',
   sellingAuctions: '/account/selling/auctions',
+  sellingSales: '/account/selling/sales',
+  saleDetail: (id: string) => `/account/selling/sales/${id}`,
   sellingAuctionNew: (productId: string) =>
     `/account/selling/auctions?productId=${encodeURIComponent(productId)}`,
 } as const;

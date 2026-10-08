@@ -51,6 +51,52 @@
     "ORDER_FORBIDDEN": "You can't view this order.",
     "ORDER_STATUS_INVALID": "This order can't be cancelled at its current status.",
     "RETURN_WINDOW_CLOSED": "The 7-day return window has closed.",
-    "RETURN_ALREADY_EXISTS": "There's already a return request for this item."
+    "RETURN_ALREADY_EXISTS": "There's already a return request for this item.",
+    "INVALID_ORDER_TRANSITION": "This order's status has already changed. Refresh to see it.",
+    "INVALID_RETURN_TRANSITION": "This return has already moved on. Refresh to see its current status.",
+    "RETURN_FORBIDDEN": "This item can't be returned.",
+    "RETURN_NOT_FOUND": "This return no longer exists.",
+    "REASON_REQUIRED": "Please add a reason.",
+    "RETURN_REJECTED": "This return was rejected.",
+    "INVALID_REFUND_AMOUNT": "Enter a valid refund amount.",
+    "ORDER_NOT_CANCELLABLE": "This order can't be cancelled at its current status."
+  },
+  "sales": {
+    "title": "Orders received",
+    "emptyTitle": "No orders yet",
+    "empty": "When someone wins or buys one of your auctions, the order appears here.",
+    "buyer": "Buyer",
+    "next": {
+      "CONFIRMED": "Confirm order",
+      "OUT_FOR_DELIVERY": "Mark as out for delivery",
+      "DELIVERED": "Mark as delivered"
+    },
+    "nextHint": {
+      "CREATED": "Confirm the order, then prepare it for delivery.",
+      "CONFIRMED": "Mark it out for delivery when it leaves your store.",
+      "OUT_FOR_DELIVERY": "Mark it delivered once the buyer has it and paid on delivery."
+    },
+    "toast": {
+      "CONFIRMED": "Order confirmed.",
+      "OUT_FOR_DELIVERY": "Marked as out for delivery.",
+      "DELIVERED": "Marked as delivered."
+    },
+    "returns": {
+      "reason": "Buyer's reason",
+      "approve": "Approve return",
+      "reject": "Reject",
+      "rejectReason": "Why are you rejecting it?",
+      "rejectSubmit": "Reject return",
+      "received": "Product received",
+      "refund": "Refund the buyer",
+      "refundConfirm": "Refund {{amount}} to the buyer? This can't be undone.",
+      "back": "Back"
+    },
+    "returnToast": {
+      "approve": "Return approved.",
+      "reject": "Return rejected.",
+      "received": "Marked as received.",
+      "refund": "Refund recorded."
+    }
   }
 }

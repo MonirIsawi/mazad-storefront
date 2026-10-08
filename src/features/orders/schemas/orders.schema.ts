@@ -66,6 +66,10 @@ export const orderSchema = z.object({
     city: z.string(),
   }),
   seller: z.object({ id: z.string(), fullName: z.string(), isVerified: z.boolean() }),
+  // The buyer: included by mazad-api's orderInclude, shown to the seller (Sales).
+  customer: z
+    .object({ id: z.string(), fullName: z.string(), phone: z.string().nullable() })
+    .nullish(),
 });
 
 export const ordersListSchema = z.array(orderSchema);

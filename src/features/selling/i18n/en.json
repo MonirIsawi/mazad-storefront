@@ -1,5 +1,6 @@
 {
   "hub": {
+    "sales": "Orders received",
     "title": "Selling",
     "subtitle": "List an item, manage your stores and track your auctions.",
     "stores": "My stores",
