@@ -107,7 +107,11 @@ export function AuctionDetailPage({
         <div className="mt-4 flex items-end justify-between gap-3">
           <div className="min-w-0">
             <p className="text-caption text-muted-foreground">
-              {data.currentPrice ? t('detail.currentBid') : t('detail.startingPrice')}
+              {!data.currentPrice
+                ? t('detail.startingPrice')
+                : data.status === 'SOLD'
+                  ? t('detail.soldFor')
+                  : t('detail.currentBid')}
             </p>
             {/* Prices are bold near-black, never the accent. */}
             <p className="text-large-title font-extrabold text-foreground tabular-nums">

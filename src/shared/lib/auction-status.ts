@@ -20,5 +20,8 @@ export function getAuctionStatusLabelKey(status: AuctionStatus, endsInMs: number
   if (tone === 'warning') return 'auctionStatus.endingSoon';
   if (tone === 'live') return 'auctionStatus.live';
   if (tone === 'upcoming') return 'auctionStatus.upcoming';
+  // Finished auctions say how they finished where it matters to a buyer: sold or cancelled.
+  if (status === 'SOLD') return 'auctionStatus.sold';
+  if (status === 'CANCELLED') return 'auctionStatus.cancelled';
   return 'auctionStatus.ended';
 }

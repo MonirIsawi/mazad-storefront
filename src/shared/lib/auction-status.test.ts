@@ -23,18 +23,18 @@ describe('auction status badge', () => {
     expect(getAuctionStatusTone('SCHEDULED', 0)).toBe('upcoming');
   });
 
-  it.each<AuctionStatus>([
-    'ENDED',
-    'SOLD',
-    'UNSOLD',
-    'CANCELLED',
-    'PENDING_APPROVAL',
-    'DRAFT',
-    'REJECTED',
-  ])('never shows %s as live or ending soon', (status) => {
+  it.each<[AuctionStatus, string]>([
+    ['ENDED', 'auctionStatus.ended'],
+    ['SOLD', 'auctionStatus.sold'],
+    ['UNSOLD', 'auctionStatus.ended'],
+    ['CANCELLED', 'auctionStatus.cancelled'],
+    ['PENDING_APPROVAL', 'auctionStatus.ended'],
+    ['DRAFT', 'auctionStatus.ended'],
+    ['REJECTED', 'auctionStatus.ended'],
+  ])('never shows %s as live or ending soon (label %s)', (status, label) => {
     for (const endsInMs of [-HOUR, 0, 10 * 60 * 1000, 5 * HOUR]) {
       expect(['live', 'warning']).not.toContain(getAuctionStatusTone(status, endsInMs));
-      expect(getAuctionStatusLabelKey(status, endsInMs)).toBe('auctionStatus.ended');
+      expect(getAuctionStatusLabelKey(status, endsInMs)).toBe(label);
     }
   });
 });

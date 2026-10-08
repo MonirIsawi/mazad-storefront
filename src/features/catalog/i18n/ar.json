@@ -20,6 +20,7 @@
   "detail": {
     "startingPrice": "سعر البدء",
     "currentBid": "أعلى مزايدة",
+    "soldFor": "بيع بمبلغ",
     "bids_zero": "لا مزايدات بعد",
     "bids_one": "مزايدة واحدة",
     "bids_two": "مزايدتان",

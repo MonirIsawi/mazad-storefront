@@ -29,7 +29,9 @@
     "live": "مباشر",
     "endingSoon": "ينتهي قريبًا",
     "upcoming": "قادم",
-    "ended": "منتهٍ"
+    "ended": "منتهٍ",
+    "sold": "مُباع",
+    "cancelled": "ملغى"
   },
   "state": {
     "loading": "جارٍ التحميل…",

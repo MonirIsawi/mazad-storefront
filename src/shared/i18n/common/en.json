@@ -29,7 +29,9 @@
     "live": "Live",
     "endingSoon": "Ending soon",
     "upcoming": "Upcoming",
-    "ended": "Ended"
+    "ended": "Ended",
+    "sold": "Sold",
+    "cancelled": "Cancelled"
   },
   "state": {
     "loading": "Loading…",
