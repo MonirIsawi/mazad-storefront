@@ -13,7 +13,7 @@ import {
   Input,
   SectionHeader,
 } from '@shared/components/ui';
-import { useLocale, useMoney } from '@shared/hooks';
+import { useLocale, useMoney, useSubmitGuard } from '@shared/hooks';
 import { formatDateTime, getErrorCode, joinList, pickLocalizedName } from '@shared/lib';
 import { useOrder } from '../hooks/useOrders';
 import {
@@ -46,6 +46,7 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
   const { money } = useMoney();
   const order = useOrder(id);
   const cancelOrder = useCancelOrder(id);
+  const guard = useSubmitGuard();
 
   if (!isReady || order.isPending) return <PageLoader />;
   if (order.isError || !order.data) {
@@ -159,7 +160,10 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
             isFullWidth
             isLoading={cancelOrder.isPending}
             onClick={() => {
-              if (window.confirm(t('actions.cancelConfirm'))) cancelOrder.mutate(undefined);
+              guard((release) => {
+                if (!window.confirm(t('actions.cancelConfirm'))) return release();
+                cancelOrder.mutate(undefined, { onSettled: release });
+              });
             }}
           >
             {t('actions.cancel')}
@@ -196,6 +200,7 @@ function OrderItemRow({
   const { locale } = useLocale();
   const { money } = useMoney();
   const openReturn = useOpenReturn(orderId);
+  const guard = useSubmitGuard();
   const [isOpeningReturn, setIsOpeningReturn] = useState(false);
   const [reason, setReason] = useState('');
 
@@ -245,9 +250,11 @@ function OrderItemRow({
                 disabled={!reason.trim()}
                 isLoading={openReturn.isPending}
                 onClick={() =>
-                  openReturn.mutate(
-                    { orderItemId: item.id, reason: reason.trim() },
-                    { onSuccess: () => setIsOpeningReturn(false) },
+                  guard((release) =>
+                    openReturn.mutate(
+                      { orderItemId: item.id, reason: reason.trim() },
+                      { onSuccess: () => setIsOpeningReturn(false), onSettled: release },
+                    ),
                   )
                 }
               >
@@ -277,6 +284,7 @@ function OrderItemRow({
 function SellerNextStep({ order }: { order: Order }) {
   const { t } = useOrdersTranslation();
   const advance = useAdvanceOrder(order.id);
+  const guard = useSubmitGuard();
   const next = nextSellerStatus(order.status);
   if (!next) return null;
   const error = getErrorCode(advance.error);
@@ -293,7 +301,7 @@ function SellerNextStep({ order }: { order: Order }) {
         size="lg"
         isFullWidth
         isLoading={advance.isPending}
-        onClick={() => advance.mutate(next)}
+        onClick={() => guard((release) => advance.mutate(next, { onSettled: release }))}
         data-testid="sale-next-step"
       >
         {t(`sales.next.${next}`)}
@@ -315,6 +323,7 @@ function SellerReturnPanel({
   const { t } = useOrdersTranslation();
   const { money } = useMoney();
   const action = useReturnAction(orderId);
+  const guard = useSubmitGuard();
   const [isRejecting, setIsRejecting] = useState(false);
   const [reason, setReason] = useState('');
   const actions = sellerReturnActions(returnRequest.status);
@@ -347,9 +356,11 @@ function SellerReturnPanel({
               disabled={!reason.trim()}
               isLoading={action.isPending}
               onClick={() =>
-                action.mutate(
-                  { returnId: returnRequest.id, action: 'reject', reason: reason.trim() },
-                  { onSuccess: () => setIsRejecting(false) },
+                guard((release) =>
+                  action.mutate(
+                    { returnId: returnRequest.id, action: 'reject', reason: reason.trim() },
+                    { onSuccess: () => setIsRejecting(false), onSettled: release },
+                  ),
                 )
               }
             >
@@ -373,18 +384,23 @@ function SellerReturnPanel({
                 size="sm"
                 isLoading={action.isPending && action.variables?.action === name}
                 data-testid={`sale-return-${name}`}
-                onClick={() => {
-                  // Recording a refund can't be undone: say how much before sending it.
-                  if (
-                    name === 'refund' &&
-                    !window.confirm(
-                      t('sales.returns.refundConfirm', { amount: money(refundAmount) }),
-                    )
-                  ) {
-                    return;
-                  }
-                  action.mutate({ returnId: returnRequest.id, action: name });
-                }}
+                onClick={() =>
+                  guard((release) => {
+                    // Recording a refund can't be undone: say how much before sending it.
+                    if (
+                      name === 'refund' &&
+                      !window.confirm(
+                        t('sales.returns.refundConfirm', { amount: money(refundAmount) }),
+                      )
+                    ) {
+                      return release();
+                    }
+                    action.mutate(
+                      { returnId: returnRequest.id, action: name },
+                      { onSettled: release },
+                    );
+                  })
+                }
               >
                 {t(`sales.returns.${name}`)}
               </Button>

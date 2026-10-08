@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
@@ -172,6 +172,19 @@ describe('SaleDetailPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: label }));
     expect(screen.getByText('Buyer: Ali Buyer')).toBeTruthy();
     expect(api.updateStatus).toHaveBeenCalledWith('o1', next);
+  });
+
+  it('sends one status change for a double click', async () => {
+    api.get.mockResolvedValue(makeSale('CREATED'));
+    api.updateStatus.mockReturnValue(new Promise(() => {}));
+    renderPage(<SaleDetailPage id="o1" />);
+    const button = await screen.findByTestId('sale-next-step');
+    // Two clicks before React re-renders the button as loading.
+    await act(async () => {
+      fireEvent.click(button);
+      fireEvent.click(button);
+    });
+    expect(api.updateStatus).toHaveBeenCalledTimes(1);
   });
 
   it('has no next step once delivered, and never offers the buyer a return', async () => {
