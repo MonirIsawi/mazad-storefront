@@ -20,9 +20,9 @@
   "detail": {
     "startingPrice": "سعر البدء",
     "currentBid": "أعلى مزايدة",
-    "bids_zero": "{{formattedCount}} مزايدات",
-    "bids_one": "{{formattedCount}} مزايدة",
-    "bids_two": "{{formattedCount}} مزايدتان",
+    "bids_zero": "لا مزايدات بعد",
+    "bids_one": "مزايدة واحدة",
+    "bids_two": "مزايدتان",
     "bids_few": "{{formattedCount}} مزايدات",
     "bids_many": "{{formattedCount}} مزايدة",
     "bids_other": "{{formattedCount}} مزايدة",

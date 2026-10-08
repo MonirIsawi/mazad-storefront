@@ -45,6 +45,7 @@
     "cancelReason": "Reason (optional)",
     "rejectedReason": "Rejected: {{reason}}",
     "cancelledReason": "Cancelled: {{reason}}",
+    "bids_zero": "No bids yet",
     "bids_one": "{{count}} bid",
     "bids_other": "{{count}} bids",
     "startsAt": "Starts {{date}}",

@@ -49,7 +49,7 @@
     "cancelReason": "السبب (اختياري)",
     "rejectedReason": "مرفوض: {{reason}}",
     "cancelledReason": "ملغى: {{reason}}",
-    "bids_zero": "{{count, num}} مزايدات",
+    "bids_zero": "لا مزايدات بعد",
     "bids_one": "مزايدة واحدة",
     "bids_two": "مزايدتان",
     "bids_few": "{{count, num}} مزايدات",

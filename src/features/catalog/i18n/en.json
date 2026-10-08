@@ -16,6 +16,7 @@
   "detail": {
     "startingPrice": "Starting price",
     "currentBid": "Current bid",
+    "bids_zero": "No bids yet",
     "bids_one": "{{formattedCount}} bid",
     "bids_other": "{{formattedCount}} bids",
     "endsIn": "Ends in",
