@@ -89,7 +89,8 @@
       "rejectSubmit": "Reject return",
       "received": "Product received",
       "refund": "Refund the buyer",
-      "refundConfirm": "Refund {{amount}} to the buyer? This can't be undone.",
+      "refundConfirm": "Refund {{amount}} to the buyer?",
+      "refundConfirmBody": "This can't be undone.",
       "back": "Back"
     },
     "returnToast": {

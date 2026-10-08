@@ -234,7 +234,9 @@ describe('SaleDetailPage', () => {
     renderPage(<SaleDetailPage id="o1" />);
     await userEvent.click(await screen.findByTestId('sale-return-refund'));
     expect(confirm).toHaveBeenCalledWith(
-      expect.stringMatching(/^Refund (250,000 IQD|٢٥٠,٠٠٠ د\.ع) to the buyer\?/),
+      expect.stringMatching(
+        /^Refund (250,000 IQD|٢٥٠,٠٠٠ د\.ع) to the buyer\? This can't be undone\.$/,
+      ),
     );
     expect(api.returnAction).toHaveBeenCalledTimes(calls);
   });

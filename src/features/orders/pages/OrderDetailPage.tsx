@@ -390,7 +390,7 @@ function SellerReturnPanel({
                     if (
                       name === 'refund' &&
                       !window.confirm(
-                        t('sales.returns.refundConfirm', { amount: money(refundAmount) }),
+                        `${t('sales.returns.refundConfirm', { amount: money(refundAmount) })} ${t('sales.returns.refundConfirmBody')}`,
                       )
                     ) {
                       return release();

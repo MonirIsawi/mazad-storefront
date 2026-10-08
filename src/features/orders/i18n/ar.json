@@ -89,7 +89,8 @@
       "rejectSubmit": "رفض الإرجاع",
       "received": "تم استلام المنتج",
       "refund": "ردّ المبلغ للمشتري",
-      "refundConfirm": "ردّ {{amount}} للمشتري؟ لا يمكن التراجع عن ذلك.",
+      "refundConfirm": "ردّ {{amount}} للمشتري؟",
+      "refundConfirmBody": "لا يمكن التراجع عن ذلك.",
       "back": "رجوع"
     },
     "returnToast": {
