@@ -250,7 +250,7 @@ function WinCard({
             <Icon name="clock" size={14} />
             {hasExpired
               ? t('card.expired')
-              : `${t('card.deadline')} ${formatDuration(remainingMs)}`}
+              : `${t('card.deadline')} ${formatDuration(remainingMs, locale)}`}
           </span>
           <Button
             variant="plain"

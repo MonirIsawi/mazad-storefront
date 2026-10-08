@@ -97,7 +97,7 @@ export function AuctionDetailPage({
           {isLive && endsInMs > 0 ? (
             <span className="inline-flex items-center gap-1 text-footnote text-muted-foreground tabular-nums">
               <Icon name="clock" size={14} />
-              {formatDuration(endsInMs)}
+              {formatDuration(endsInMs, locale)}
             </span>
           ) : null}
         </div>

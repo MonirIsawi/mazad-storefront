@@ -127,7 +127,7 @@ function MyBidRow({ item }: { item: MyBidItem }) {
           </span>
           {item.auction.status === 'LIVE' && endsInMs > 0 ? (
             <span className="text-caption-2 text-muted-foreground tabular-nums">
-              {formatDuration(endsInMs)}
+              {formatDuration(endsInMs, locale)}
             </span>
           ) : null}
         </div>

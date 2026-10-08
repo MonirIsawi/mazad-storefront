@@ -77,7 +77,7 @@ export function AuctionCard({ auction }: AuctionCardProps) {
                 )}
               >
                 <Icon name="clock" size={12} />
-                {formatDuration(endsInMs)}
+                {formatDuration(endsInMs, locale)}
               </span>
             ) : null}
           </div>
