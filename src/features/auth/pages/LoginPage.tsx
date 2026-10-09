@@ -12,7 +12,7 @@ export function LoginPage() {
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 py-12">
+    <div className="mx-auto flex max-w-sm flex-col gap-6 px-gutter py-12">
       <h1 className="text-2xl font-bold text-foreground">{t('login.title')}</h1>
       <LoginForm />
       <p className="text-center text-sm text-muted-foreground">
