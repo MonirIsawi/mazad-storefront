@@ -28,14 +28,15 @@ type DetailTab = 'details' | 'bids' | 'seller';
 
 export interface AuctionDetailPageProps {
   id: string;
-  biddingPanel?: ReactNode;
+  /** The bid panel, given the auction's seller (a seller can't bid on their own auction). */
+  renderBiddingPanel?: (sellerId: string) => ReactNode;
   watchlistToggle?: ReactNode;
   renderSellerFollowToggle?: (sellerId: string) => ReactNode;
 }
 
 export function AuctionDetailPage({
   id,
-  biddingPanel,
+  renderBiddingPanel,
   watchlistToggle,
   renderSellerFollowToggle,
 }: AuctionDetailPageProps) {
@@ -124,7 +125,9 @@ export function AuctionDetailPage({
           </span>
         </div>
 
-        {biddingPanel ? <div className="mt-4">{biddingPanel}</div> : null}
+        {renderBiddingPanel ? (
+          <div className="mt-4">{renderBiddingPanel(data.seller.id)}</div>
+        ) : null}
 
         <SegmentedControl
           className="mt-5"

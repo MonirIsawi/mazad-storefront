@@ -15,9 +15,11 @@ import { closedMessageKey } from '../lib/closed-message';
 
 export interface BidPanelProps {
   auctionId: string;
+  /** The viewer is this auction's seller: nothing to bid (mazad-api OWN_AUCTION_BID). */
+  isOwnAuction?: boolean;
 }
 
-export function BidPanel({ auctionId }: BidPanelProps) {
+export function BidPanel({ auctionId, isOwnAuction = false }: BidPanelProps) {
   const { t, isReady } = useBiddingTranslation();
   const isAuthenticated = useIsAuthenticated();
   const pricing = useAuctionPricing(auctionId);
@@ -46,6 +48,17 @@ export function BidPanel({ auctionId }: BidPanelProps) {
         <Link href={ROUTES.login} className={buttonVariants({ size: 'lg', isFullWidth: true })}>
           {t('panel.signInToBid')}
         </Link>
+      </BottomActionBar>
+    );
+  }
+
+  // The seller looking at their own live auction: say so instead of a bid they can't place.
+  if (isOwnAuction) {
+    return (
+      <BottomActionBar>
+        <span className="w-full py-3 text-center text-subhead text-muted-foreground">
+          {t('panel.ownAuction')}
+        </span>
       </BottomActionBar>
     );
   }
