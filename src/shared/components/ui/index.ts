@@ -1,5 +1,6 @@
 export { Button, buttonVariants, type ButtonProps, type ButtonVariantProps } from './Button';
 export { Input, type InputProps } from './Input';
+export { PasswordInput } from './PasswordInput';
 export { Select, type SelectProps, type SelectOption } from './Select';
 export { Textarea, type TextareaProps } from './Textarea';
 export { SearchField, type SearchFieldProps } from './SearchField';

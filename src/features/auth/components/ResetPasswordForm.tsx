@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@shared/components/ui';
+import { Button, Input, PasswordInput } from '@shared/components/ui';
 import { resetPasswordSchema } from '../schemas/auth.schema';
 import type { ResetPasswordValues } from '../types/auth.types';
 import { useSignupOtp } from '../hooks/useSignupOtp';
@@ -118,9 +118,8 @@ export function ResetPasswordForm() {
         />
       ) : null}
       {step === 'password' ? (
-        <Input
+        <PasswordInput
           label={t('reset.newPassword')}
-          type="password"
           autoComplete="new-password"
           autoFocus
           error={fieldError(errors.newPassword?.message)}
@@ -128,9 +127,8 @@ export function ResetPasswordForm() {
         />
       ) : null}
       {step === 'password' ? (
-        <Input
+        <PasswordInput
           label={t('reset.confirmPassword')}
-          type="password"
           autoComplete="new-password"
           error={fieldError(errors.confirmPassword?.message)}
           {...register('confirmPassword')}

@@ -27,7 +27,7 @@ describe('LoginForm', () => {
     // A valid password keeps this test isolated to the phone field — an empty form would
     // raise both errors at once and findByRole('alert') requires exactly one match.
     await userEvent.type(screen.getByLabelText(/phone/i), 'not-a-phone');
-    await userEvent.type(screen.getByLabelText(/password/i), 'validpassword123');
+    await userEvent.type(screen.getByLabelText('Password'), 'validpassword123');
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/valid phone/i);

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@shared/components/ui';
+import { Button, Input, PasswordInput } from '@shared/components/ui';
 import { ROUTES } from '@shared/constants';
 import { getErrorCode } from '@shared/lib';
 import { loginSchema } from '../schemas/auth.schema';
@@ -35,9 +35,8 @@ export function LoginForm() {
         error={errors.phone ? t(errors.phone.message ?? '') : undefined}
         {...register('phone')}
       />
-      <Input
+      <PasswordInput
         label={t('fields.password')}
-        type="password"
         autoComplete="current-password"
         error={errors.password ? t(errors.password.message ?? '') : undefined}
         {...register('password')}

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@shared/components/ui';
+import { Button, Input, PasswordInput } from '@shared/components/ui';
 import { registerSchema } from '../schemas/auth.schema';
 import type { RegisterValues } from '../types/auth.types';
 import { useRegister } from '../hooks/useRegister';
@@ -97,9 +97,8 @@ export function RegisterForm() {
         error={fieldError(errors.phone?.message)}
         {...register('phone')}
       />
-      <Input
+      <PasswordInput
         label={t('fields.password')}
-        type="password"
         autoComplete="new-password"
         readOnly={isVerifying}
         error={fieldError(errors.password?.message)}

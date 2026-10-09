@@ -3,7 +3,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@shared/components/ui';
+import { Button, PasswordInput } from '@shared/components/ui';
 import { deleteAccountSchema } from '../schemas/auth.schema';
 import { resolveDeletionFailure } from '../lib/account-deletion';
 import type { DeleteAccountValues } from '../types/auth.types';
@@ -53,9 +53,8 @@ export function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
         ))}
       </ul>
 
-      <Input
+      <PasswordInput
         label={t('fields.password')}
-        type="password"
         autoComplete="current-password"
         hint={t('deleteAccount.passwordHint')}
         error={errors.password ? t(errors.password.message ?? '') : undefined}

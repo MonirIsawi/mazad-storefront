@@ -25,6 +25,10 @@
   },
   "theme": { "light": "Light", "dark": "Dark", "label": "Appearance" },
   "locale": { "en": "English", "ar": "العربية", "label": "Language" },
+  "password": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
   "auctionStatus": {
     "live": "Live",
     "endingSoon": "Ending soon",
