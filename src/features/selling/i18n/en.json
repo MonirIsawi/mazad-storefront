@@ -20,6 +20,7 @@
     "deleteConfirm": "Delete this store? This cannot be undone."
   },
   "products": {
+    "lockedInAuction": "Locked while it is in an auction. Manage it from My auctions.",
     "title": "My products",
     "add": "Add product",
     "edit": "Edit product",

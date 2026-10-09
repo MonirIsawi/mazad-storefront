@@ -10,6 +10,8 @@ import { Badge, Button, Card, CardContent, Icon, Skeleton } from '@shared/compon
 import { useLocale } from '@shared/hooks';
 import { pickLocalizedName, resolveAssetUrl } from '@shared/lib';
 import { useProducts, useDeleteProduct } from '../hooks/useProducts';
+import { useSellerAuctions } from '../hooks/useSellerAuctions';
+import { productAuctionState } from '../lib/auction-permissions';
 import { useStores } from '../hooks/useStores';
 import { useSellingTranslation } from '../hooks/useSellingTranslation';
 import { ProductForm } from '../components/ProductForm';
@@ -27,6 +29,8 @@ export function SellerProductsPage({ categories = [] }: SellerProductsPageProps)
   const products = useProducts();
   const stores = useStores();
   const deleteProduct = useDeleteProduct();
+  // What each product may offer depends on its auctions (frozen while one runs, sold).
+  const auctions = useSellerAuctions();
 
   // 'new', a product id being edited, or nothing.
   const [editing, setEditing] = useState<string | null>(null);
@@ -51,6 +55,7 @@ export function SellerProductsPage({ categories = [] }: SellerProductsPageProps)
       );
     }
 
+    const state = productAuctionState(product.id, auctions.data ?? []);
     const cover = product.images.find((image) => image.isCover) ?? product.images[0];
     const coverUrl = resolveAssetUrl(cover?.url);
 
@@ -85,15 +90,21 @@ export function SellerProductsPage({ categories = [] }: SellerProductsPageProps)
             <Badge tone="neutral" className="shrink-0">
               {t('products.blocked')}
             </Badge>
+          ) : state.status ? (
+            <Badge tone={state.status === 'LIVE' ? 'live' : 'neutral'} className="shrink-0">
+              {t(`status.${state.status}`)}
+            </Badge>
           ) : null}
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => setEditing(product.id)}>
-            {t('products.edit')}
-          </Button>
+          {state.canEdit ? (
+            <Button size="sm" variant="outline" onClick={() => setEditing(product.id)}>
+              {t('products.edit')}
+            </Button>
+          ) : null}
           {/* A blocked product can't be auctioned — mazad-api rejects it at auction creation. */}
-          {!product.isBlocked ? (
+          {!product.isBlocked && state.canAuction ? (
             <Link
               href={ROUTES.sellingAuctionNew(product.id)}
               className="inline-flex h-9 items-center rounded-sm bg-primary-tint px-3.5 text-footnote font-semibold text-primary-text"
@@ -101,17 +112,22 @@ export function SellerProductsPage({ categories = [] }: SellerProductsPageProps)
               {t('products.createAuction')}
             </Link>
           ) : null}
-          <Button
-            size="sm"
-            variant="destructive"
-            isLoading={deleteProduct.isPending && deleteProduct.variables === product.id}
-            onClick={() => {
-              if (window.confirm(t('products.deleteConfirm'))) deleteProduct.mutate(product.id);
-            }}
-          >
-            {t('products.delete')}
-          </Button>
+          {state.canDelete ? (
+            <Button
+              size="sm"
+              variant="destructive"
+              isLoading={deleteProduct.isPending && deleteProduct.variables === product.id}
+              onClick={() => {
+                if (window.confirm(t('products.deleteConfirm'))) deleteProduct.mutate(product.id);
+              }}
+            >
+              {t('products.delete')}
+            </Button>
+          ) : null}
         </div>
+        {state.status && !state.canEdit && state.status !== 'SOLD' ? (
+          <p className="text-footnote text-muted-foreground">{t('products.lockedInAuction')}</p>
+        ) : null}
       </Card>
     );
   };

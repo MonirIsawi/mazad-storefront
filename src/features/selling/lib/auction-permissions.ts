@@ -53,3 +53,51 @@ export function getSellerAuctionTone(
       return 'neutral';
   }
 }
+
+/** mazad-api NON_TERMINAL_AUCTION_STATUSES: the product can't be edited or deleted (PRODUCT_FROZEN). */
+const FREEZING_STATUSES: readonly SellerAuctionStatus[] = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'REJECTED',
+  'SCHEDULED',
+  'LIVE',
+  'ENDED',
+];
+
+/** mazad-api AuctionsService.create: a new auction needs every earlier one to be terminal. */
+const BLOCKS_NEW_AUCTION: readonly SellerAuctionStatus[] = [
+  'DRAFT',
+  'PENDING_APPROVAL',
+  'REJECTED',
+  'SCHEDULED',
+  'LIVE',
+];
+
+export type ProductAuctionState = {
+  /** The auction that decides what the product card offers (shown as its badge), if any. */
+  status: SellerAuctionStatus | null;
+  canEdit: boolean;
+  canDelete: boolean;
+  canAuction: boolean;
+};
+
+/**
+ * What a product card may offer, given the seller's auctions: a product in a running auction is
+ * frozen (edit/delete → PRODUCT_FROZEN), can't get a second auction (PRODUCT_ALREADY_AUCTIONED),
+ * and a sold product is not put up again.
+ */
+export function productAuctionState(
+  productId: string,
+  auctions: readonly Pick<SellerAuction, 'status' | 'product'>[],
+): ProductAuctionState {
+  const own = auctions.filter((auction) => auction.product?.id === productId);
+  const freezing = own.find((auction) => FREEZING_STATUSES.includes(auction.status));
+  const isSold = own.some((auction) => auction.status === 'SOLD');
+  const status = freezing?.status ?? (isSold ? 'SOLD' : null);
+  return {
+    status,
+    canEdit: !freezing && !isSold,
+    canDelete: !freezing,
+    canAuction: !isSold && !own.some((auction) => BLOCKS_NEW_AUCTION.includes(auction.status)),
+  };
+}
