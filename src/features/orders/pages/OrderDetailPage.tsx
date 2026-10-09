@@ -14,7 +14,7 @@ import {
   SectionHeader,
 } from '@shared/components/ui';
 import { useLocale, useMoney, useSubmitGuard } from '@shared/hooks';
-import { formatDateTime, getErrorCode, joinList, pickLocalizedName } from '@shared/lib';
+import { formatDateTime, getErrorCode, joinList, pickLocalizedName, telHref } from '@shared/lib';
 import { useOrder } from '../hooks/useOrders';
 import {
   useAdvanceOrder,
@@ -127,7 +127,7 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
                 <p className="text-muted-foreground">{data.shipDetails}</p>
               ) : null}
               {data.shipPhone ? (
-                <p className="text-muted-foreground tabular-nums">{data.shipPhone}</p>
+                <DeliveryPhone phone={data.shipPhone} isCallable={isSeller} />
               ) : null}
               {data.note ? (
                 <p className="text-muted-foreground">
@@ -409,5 +409,30 @@ function SellerReturnPanel({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * The delivery phone the buyer gave. The seller (who delivers, cash on delivery) can tap it to
+ * call; the buyer sees their own number as plain text.
+ */
+function DeliveryPhone({ phone, isCallable }: { phone: string; isCallable: boolean }) {
+  const { t } = useOrdersTranslation();
+  const href = isCallable ? telHref(phone) : null;
+  if (!href)
+    return (
+      <p className="text-muted-foreground tabular-nums" dir="ltr">
+        {phone}
+      </p>
+    );
+  return (
+    <a
+      href={href}
+      dir="ltr"
+      aria-label={`${t('sales.callBuyer')} ${phone}`}
+      className="self-start font-semibold text-primary-text tabular-nums underline-offset-2 hover:underline"
+    >
+      {phone}
+    </a>
   );
 }

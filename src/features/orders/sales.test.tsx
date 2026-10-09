@@ -11,7 +11,7 @@ import { ordersApi } from './api/orders.api';
 import ordersAr from './i18n/ar.json';
 import ordersEn from './i18n/en.json';
 import { isOpenSale, nextSellerStatus, sellerReturnActions } from './lib/seller-orders';
-import { SaleDetailPage } from './pages/OrderDetailPage';
+import { OrderDetailPage, SaleDetailPage } from './pages/OrderDetailPage';
 import { SalesPage } from './pages/OrdersPage';
 import type { Order, OrderStatus } from './types/orders.types';
 
@@ -185,6 +185,20 @@ describe('SaleDetailPage', () => {
       fireEvent.click(button);
     });
     expect(api.updateStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the seller call the delivery phone the buyer gave', async () => {
+    api.get.mockResolvedValue(makeSale('CONFIRMED'));
+    renderPage(<SaleDetailPage id="o1" />);
+    const link = await screen.findByRole('link', { name: 'Call the buyer +9647701234567' });
+    expect(link.getAttribute('href')).toBe('tel:+9647701234567');
+  });
+
+  it("shows the buyer's own phone as text on their order", async () => {
+    api.get.mockResolvedValue(makeSale('CONFIRMED'));
+    renderPage(<OrderDetailPage id="o1" />);
+    expect(await screen.findByText('+9647701234567')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /Call the buyer/ })).toBeNull();
   });
 
   it('has no next step once delivered, and never offers the buyer a return', async () => {

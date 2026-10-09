@@ -66,6 +66,7 @@
     "emptyTitle": "No orders yet",
     "empty": "When someone wins or buys one of your auctions, the order appears here.",
     "buyer": "Buyer",
+    "callBuyer": "Call the buyer",
     "next": {
       "CONFIRMED": "Confirm order",
       "OUT_FOR_DELIVERY": "Mark as out for delivery",
