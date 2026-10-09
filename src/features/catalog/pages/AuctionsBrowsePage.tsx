@@ -93,7 +93,8 @@ export function AuctionsBrowsePage() {
           />
         ) : null}
 
-        {auctions.data ? (
+        {/* No count line at zero: the empty state below already says there's nothing. */}
+        {auctions.data && auctions.data.meta.total > 0 ? (
           <p className="text-footnote text-muted-foreground">
             {t('browse.results', {
               count: auctions.data.meta.total,
