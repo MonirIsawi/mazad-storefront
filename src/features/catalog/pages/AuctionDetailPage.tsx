@@ -278,5 +278,7 @@ function ShareButton({
     if (outcome === 'unavailable') toast.error(failedMessage);
   };
 
-  return <IconButton name="share-2" label={label} tone="glass" onClick={() => void handleShare()} />;
+  return (
+    <IconButton name="share-2" label={label} tone="glass" onClick={() => void handleShare()} />
+  );
 }
