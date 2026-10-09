@@ -30,6 +30,9 @@
     "noBids": "No bids yet.",
     "similar": "Similar auctions",
     "notFound": "Auction not found.",
+    "notFoundMessage": "It may have been removed, or the link is out of date.",
+    "browseAuctions": "Browse auctions",
+    "loadError": "Couldn't load this auction.",
     "title": "Auction",
     "share": "Share",
     "tabs": {

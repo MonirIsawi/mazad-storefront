@@ -5,14 +5,24 @@ import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
-import { PageLoader, ErrorState } from '@shared/components/feedback';
-import { Badge, Card, CardContent, Icon, IconButton, SectionHeader } from '@shared/components/ui';
+import { EmptyState, PageLoader, ErrorState } from '@shared/components/feedback';
+import {
+  Badge,
+  Card,
+  CardContent,
+  Icon,
+  IconButton,
+  SectionHeader,
+  buttonVariants,
+} from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { AuctionRail } from '@shared/components/cards';
 import { useCountdown, useLocale, useMoney } from '@shared/hooks';
 import {
   formatDuration,
   getAuctionStatusLabelKey,
+  getErrorCode,
+  getErrorStatus,
   getAuctionStatusTone,
   getImageTintStyle,
   pickLocalizedName,
@@ -54,7 +64,28 @@ export function AuctionDetailPage({
 
   if (!isReady || auction.isPending) return <PageLoader />;
   if (auction.isError || !auction.data) {
-    return <ErrorState message={t('detail.notFound')} onRetry={() => void auction.refetch()} />;
+    // A definite 404 won't change on retry: offer a way on instead. Retry stays for network and
+    // server failures, which can.
+    const isNotFound =
+      getErrorCode(auction.error) === 'AUCTION_NOT_FOUND' || getErrorStatus(auction.error) === 404;
+    if (isNotFound) {
+      return (
+        <EmptyState
+          icon="search"
+          title={t('detail.notFound')}
+          message={t('detail.notFoundMessage')}
+          action={
+            <Link
+              href={ROUTES.auctions}
+              className={`mt-2 ${buttonVariants({ variant: 'tinted' })}`}
+            >
+              {t('detail.browseAuctions')}
+            </Link>
+          }
+        />
+      );
+    }
+    return <ErrorState message={t('detail.loadError')} onRetry={() => void auction.refetch()} />;
   }
 
   const data = auction.data;
