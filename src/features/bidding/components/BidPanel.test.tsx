@@ -68,3 +68,49 @@ describe('BidPanel: who can bid', () => {
     expect(screen.queryByText(/Buy now/)).toBeNull();
   });
 });
+
+describe('BidPanel: the winner of a closed auction', () => {
+  const sold = async () =>
+    vi.mocked(biddingApi.getAuctionPricing).mockResolvedValue({
+      id: 'auction-1',
+      status: 'SOLD',
+      startingPrice: '100000.00',
+      minIncrement: '5000.00',
+      currentPrice: '150000.00',
+      buyNowPrice: null,
+      endsAt: '2026-01-01T00:00:00.000Z',
+    });
+
+  function renderWinner(winner: { orderId: string | null } | null) {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <I18nextProvider i18n={i18n}>
+          <BidPanel auctionId="auction-1" winner={winner} />
+        </I18nextProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('takes the winner to the order the win became', async () => {
+    await sold();
+    renderWinner({ orderId: 'o1' });
+    const link = await screen.findByRole('link', { name: 'You won · View order' });
+    expect(link.getAttribute('href')).toBe('/account/orders/o1');
+    expect(screen.queryByText(/Bidding is closed/)).toBeNull();
+  });
+
+  it('points to the wins list while the order is still being created', async () => {
+    await sold();
+    renderWinner({ orderId: null });
+    const link = await screen.findByRole('link', { name: 'You won · See your wins' });
+    expect(link.getAttribute('href')).toBe('/account/wins');
+  });
+
+  it('tells everyone else that bidding is closed', async () => {
+    await sold();
+    renderWinner(null);
+    expect(await screen.findByText(/Bidding is closed/)).toBeTruthy();
+    expect(screen.queryByTestId('won-view-order')).toBeNull();
+  });
+});

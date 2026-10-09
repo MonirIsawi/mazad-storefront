@@ -17,9 +17,14 @@ export interface BidPanelProps {
   auctionId: string;
   /** The viewer is this auction's seller: nothing to bid (mazad-api OWN_AUCTION_BID). */
   isOwnAuction?: boolean;
+  /**
+   * The viewer won this auction (from GET /me/wins, composed by the route): its order, or null
+   * while auto-fulfilment is still creating it. Absent for everyone else.
+   */
+  winner?: { orderId: string | null } | null;
 }
 
-export function BidPanel({ auctionId, isOwnAuction = false }: BidPanelProps) {
+export function BidPanel({ auctionId, isOwnAuction = false, winner = null }: BidPanelProps) {
   const { t, isReady } = useBiddingTranslation();
   const isAuthenticated = useIsAuthenticated();
   const pricing = useAuctionPricing(auctionId);
@@ -30,6 +35,21 @@ export function BidPanel({ auctionId, isOwnAuction = false }: BidPanelProps) {
 
   if (pricing.isError || !pricing.data) {
     return <ErrorState message={t('panel.loadError')} onRetry={() => void pricing.refetch()} />;
+  }
+
+  // The winner of a closed auction: the way to what the win became, not just "bidding is closed".
+  if (pricing.data.status !== 'LIVE' && winner) {
+    return (
+      <BottomActionBar>
+        <Link
+          href={winner.orderId ? ROUTES.orderDetail(winner.orderId) : ROUTES.wins}
+          className={buttonVariants({ size: 'lg', isFullWidth: true })}
+          data-testid="won-view-order"
+        >
+          {t(winner.orderId ? 'panel.wonViewOrder' : 'panel.wonViewWins')}
+        </Link>
+      </BottomActionBar>
+    );
   }
 
   if (pricing.data.status !== 'LIVE') {

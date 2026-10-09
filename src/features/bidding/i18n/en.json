@@ -2,6 +2,8 @@
   "panel": {
     "notLive": "Bidding is closed for this auction.",
     "ownAuction": "This is your auction. Buyers bid on it here.",
+    "wonViewOrder": "You won · View order",
+    "wonViewWins": "You won · See your wins",
     "notStarted": "Bidding hasn't started yet.",
     "loadError": "Couldn't load bidding details.",
     "signInToBid": "Sign in to place a bid"

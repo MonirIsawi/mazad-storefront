@@ -38,8 +38,11 @@ type DetailTab = 'details' | 'bids' | 'seller';
 
 export interface AuctionDetailPageProps {
   id: string;
-  /** The bid panel, given the auction's seller (a seller can't bid on their own auction). */
-  renderBiddingPanel?: (sellerId: string) => ReactNode;
+  /**
+   * The bid panel, given the auction's seller (a seller can't bid on their own auction) and status
+   * (a closed auction may have been won by the viewer).
+   */
+  renderBiddingPanel?: (auction: { sellerId: string; status: string }) => ReactNode;
   watchlistToggle?: ReactNode;
   renderSellerFollowToggle?: (sellerId: string) => ReactNode;
 }
@@ -157,7 +160,9 @@ export function AuctionDetailPage({
         </div>
 
         {renderBiddingPanel ? (
-          <div className="mt-4">{renderBiddingPanel(data.seller.id)}</div>
+          <div className="mt-4">
+            {renderBiddingPanel({ sellerId: data.seller.id, status: data.status })}
+          </div>
         ) : null}
 
         <SegmentedControl
