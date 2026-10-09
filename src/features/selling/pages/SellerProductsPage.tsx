@@ -87,11 +87,14 @@ export function SellerProductsPage({ categories = [] }: SellerProductsPageProps)
           </div>
 
           {product.isBlocked ? (
-            <Badge tone="neutral" className="shrink-0">
+            <Badge tone="neutral" className="shrink-0 self-start">
               {t('products.blocked')}
             </Badge>
           ) : state.status ? (
-            <Badge tone={state.status === 'LIVE' ? 'live' : 'neutral'} className="shrink-0">
+            <Badge
+              tone={state.status === 'LIVE' ? 'live' : 'neutral'}
+              className="shrink-0 self-start"
+            >
               {t(`status.${state.status}`)}
             </Badge>
           ) : null}
