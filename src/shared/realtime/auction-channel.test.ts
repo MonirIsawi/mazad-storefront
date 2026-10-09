@@ -35,9 +35,14 @@ class FakeSocket {
     this.handlers.clear();
     return this;
   }
+  connects = 0;
   disconnect() {
     this.disconnected = true;
     this.connected = false;
+    return this;
+  }
+  connect() {
+    this.connects += 1;
     return this;
   }
   /** Server side happenings. */
@@ -57,11 +62,27 @@ class FakeSocket {
   }
 }
 
+/** The browser's online/offline events, fired by hand. */
+function fakeNetwork() {
+  const listeners = { online: new Set<() => void>(), offline: new Set<() => void>() };
+  const on = (kind: 'online' | 'offline') => (listener: () => void) => {
+    listeners[kind].add(listener);
+    return () => listeners[kind].delete(listener);
+  };
+  return {
+    signals: { onOnline: on('online'), onOffline: on('offline') },
+    goOnline: () => listeners.online.forEach((l) => l()),
+    goOffline: () => listeners.offline.forEach((l) => l()),
+    count: () => listeners.online.size + listeners.offline.size,
+  };
+}
+
 function setup() {
   const socket = new FakeSocket();
   const connect = vi.fn(() => socket as unknown as Socket);
-  const channel = createAuctionChannel(connect, 'http://api.test/realtime');
-  return { socket, connect, channel };
+  const network = fakeNetwork();
+  const channel = createAuctionChannel(connect, 'http://api.test/realtime', network.signals);
+  return { socket, connect, channel, network };
 }
 
 afterEach(() => {
@@ -143,6 +164,70 @@ describe('auction channel', () => {
     socket.fire('auction:extended');
     expect(a1).toHaveBeenCalledExactlyOnceWith('auction:bid_placed');
     expect(a2).not.toHaveBeenCalled();
+  });
+});
+
+describe('auction channel: network drops', () => {
+  it('stops trusting the socket the moment the browser goes offline', () => {
+    const { socket, channel, network } = setup();
+    const live: boolean[] = [];
+    channel.subscribe(
+      'a1',
+      () => {},
+      (v) => live.push(v),
+    );
+    socket.serverConnect();
+    expect(live.at(-1)).toBe(true);
+    // The socket still "looks" connected (no ping timeout yet), but the network is gone.
+    network.goOffline();
+    expect(live.at(-1)).toBe(false);
+  });
+
+  it('back online: refetches at once and opens a fresh connection that re-joins', () => {
+    const { socket, channel, network } = setup();
+    const signals: string[] = [];
+    channel.subscribe(
+      'a1',
+      (e) => signals.push(e),
+      () => {},
+    );
+    socket.serverConnect();
+    const joinsBefore = socket.joins();
+    network.goOffline();
+    network.goOnline();
+    expect(signals).toContain('realtime:resync');
+    expect(socket.disconnected).toBe(true);
+    expect(socket.connects).toBe(1);
+    socket.serverConnect();
+    expect(socket.joins()).toBe(joinsBefore + 1);
+  });
+
+  it('refetches after any reconnect (events were missed), but not on the first connect', () => {
+    const { socket, channel } = setup();
+    const signals: string[] = [];
+    channel.subscribe(
+      'a1',
+      (e) => signals.push(e),
+      () => {},
+    );
+    socket.serverConnect();
+    expect(signals).toEqual([]);
+    socket.serverDisconnect();
+    socket.serverConnect();
+    expect(signals).toEqual(['realtime:resync']);
+  });
+
+  it('stops listening to the network once nothing is followed', () => {
+    const { socket, channel, network } = setup();
+    const release = channel.subscribe(
+      'a1',
+      () => {},
+      () => {},
+    );
+    socket.serverConnect();
+    expect(network.count()).toBe(2);
+    release();
+    expect(network.count()).toBe(0);
   });
 });
 

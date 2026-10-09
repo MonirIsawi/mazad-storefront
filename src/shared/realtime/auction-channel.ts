@@ -19,7 +19,13 @@ export const AUCTION_EVENTS = [
 ] as const;
 
 export type AuctionEventName = (typeof AUCTION_EVENTS)[number];
-type EventListener = (event: AuctionEventName) => void;
+/**
+ * What subscribers hear: a server event, or `realtime:resync` when events may have been missed
+ * (back online, or a reconnect after a drop), so they refetch at once instead of waiting for the
+ * next reconciliation poll.
+ */
+export type ChannelSignal = AuctionEventName | 'realtime:resync';
+type EventListener = (event: ChannelSignal) => void;
 type LiveListener = (live: boolean) => void;
 
 interface Room {
@@ -32,6 +38,21 @@ interface Room {
 /** socket.io-client's `io`, injectable for tests. */
 type Connect = (url: string, options: Parameters<typeof io>[1]) => Socket;
 
+/** The browser's online/offline signals, injectable for tests. Each returns an unsubscribe. */
+export interface NetworkSignals {
+  onOnline: (listener: () => void) => () => void;
+  onOffline: (listener: () => void) => () => void;
+}
+
+export function browserNetwork(): NetworkSignals {
+  const on = (event: 'online' | 'offline') => (listener: () => void) => {
+    if (typeof window === 'undefined') return () => {};
+    window.addEventListener(event, listener);
+    return () => window.removeEventListener(event, listener);
+  };
+  return { onOnline: on('online'), onOffline: on('offline') };
+}
+
 /** Origin of NEXT_PUBLIC_API_URL + the gateway namespace; null when unusable (no realtime then). */
 export function realtimeUrl(apiUrl = process.env.NEXT_PUBLIC_API_URL): string | null {
   if (!apiUrl) return null;
@@ -42,9 +63,19 @@ export function realtimeUrl(apiUrl = process.env.NEXT_PUBLIC_API_URL): string | 
   }
 }
 
-export function createAuctionChannel(connect: Connect = io, url = realtimeUrl()) {
+export function createAuctionChannel(
+  connect: Connect = io,
+  url = realtimeUrl(),
+  network: NetworkSignals = browserNetwork(),
+) {
   const rooms = new Map<string, Room>();
   let socket: Socket | null = null;
+  let hasConnected = false;
+  let stopNetwork: (() => void) | null = null;
+
+  function resync() {
+    rooms.forEach((room) => room.onEvent.forEach((listener) => listener('realtime:resync')));
+  }
 
   function setJoined(room: Room, joined: boolean) {
     if (room.joined === joined) return;
@@ -71,9 +102,29 @@ export function createAuctionChannel(connect: Connect = io, url = realtimeUrl())
       reconnectionDelayMax: 15_000,
       timeout: 10_000,
     });
-    // Rooms do not survive a reconnect (new server-side socket): join them again every time.
-    socket.on('connect', () => rooms.forEach((_room, auctionId) => join(auctionId)));
+    // Rooms do not survive a reconnect (new server-side socket): join them again every time, and
+    // after a drop refetch too, since events sent meanwhile were lost.
+    socket.on('connect', () => {
+      rooms.forEach((_room, auctionId) => join(auctionId));
+      if (hasConnected) resync();
+      hasConnected = true;
+    });
     socket.on('disconnect', () => rooms.forEach((room) => setJoined(room, false)));
+
+    // A short network drop can leave a socket that still looks connected until its ping times out
+    // (tens of seconds), missing every event meanwhile. Offline: stop trusting it (callers poll
+    // fast). Back online: refetch now and open a fresh connection instead of waiting.
+    const offOffline = network.onOffline(() => rooms.forEach((room) => setJoined(room, false)));
+    const offOnline = network.onOnline(() => {
+      resync();
+      if (!socket) return;
+      socket.disconnect();
+      socket.connect();
+    });
+    stopNetwork = () => {
+      offOffline();
+      offOnline();
+    };
     for (const name of AUCTION_EVENTS) {
       socket.on(name, (payload?: { auctionId?: unknown }) => {
         const auctionId = typeof payload?.auctionId === 'string' ? payload.auctionId : null;
@@ -119,6 +170,9 @@ export function createAuctionChannel(connect: Connect = io, url = realtimeUrl())
         socket.removeAllListeners();
         socket.disconnect();
         socket = null;
+        stopNetwork?.();
+        stopNetwork = null;
+        hasConnected = false;
       }
     };
   }
