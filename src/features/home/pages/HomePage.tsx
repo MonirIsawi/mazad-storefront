@@ -79,14 +79,18 @@ export function HomePage({ categoryRail, unreadNotificationCount = 0 }: HomePage
           <ErrorState onRetry={() => void feed.refetch()} />
         ) : (
           <div className="flex flex-col gap-5">
-            <FeedSection
-              title={t('sections.endingSoon')}
-              auctions={feed.data?.endingSoon ?? []}
-              emptyMessage={t('empty.endingSoon')}
-              actionLabel={t('viewAll')}
-              actionHref={`${ROUTES.auctions}?status=live&endingSoon=true`}
-              isLoading={feed.isPending}
-            />
+            {/* Only while something ends soon: an empty "nothing ending" block pushed the live
+                auctions below the fold (as on mobile). */}
+            {feed.isPending || (feed.data?.endingSoon.length ?? 0) > 0 ? (
+              <FeedSection
+                title={t('sections.endingSoon')}
+                auctions={feed.data?.endingSoon ?? []}
+                emptyMessage={t('empty.endingSoon')}
+                actionLabel={t('viewAll')}
+                actionHref={`${ROUTES.auctions}?status=live&endingSoon=true`}
+                isLoading={feed.isPending}
+              />
+            ) : null}
             <FeedSection
               title={t('sections.live')}
               auctions={feed.data?.live ?? []}
