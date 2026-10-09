@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next';
-import { siteUrl } from '@shared/seo';
+import { isNoIndex, siteUrl } from '@shared/seo';
 
 /** Account, checkout-adjacent and auth pages are per-user; nothing there belongs in an index. */
 export default function robots(): MetadataRoute.Robots {
+  // A staging/beta deployment stays out of every index.
+  if (isNoIndex()) return { rules: { userAgent: '*', disallow: '/' } };
   const base = siteUrl();
   return {
     rules: {

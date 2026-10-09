@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
-import { SITE_NAME, siteUrl } from '@shared/seo';
+import { SITE_NAME, isNoIndex, siteUrl } from '@shared/seo';
 import { AppProviders, AppShell } from './providers';
 import './styles/globals.css';
 
@@ -12,6 +12,8 @@ const site = siteUrl();
 export const metadata: Metadata = {
   // Absolute Open Graph/canonical URLs only when NEXT_PUBLIC_SITE_URL is configured.
   ...(site ? { metadataBase: site } : {}),
+  // Staging/beta (NEXT_PUBLIC_NOINDEX=true): no page of this deployment belongs in an index.
+  ...(isNoIndex() ? { robots: { index: false, follow: false } } : {}),
   title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
   description: SITE_DESCRIPTION,
   openGraph: {

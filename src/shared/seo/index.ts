@@ -5,6 +5,7 @@ export {
   SITE_NAME,
   auctionJsonLd,
   auctionMetadata,
+  isNoIndex,
   sellerMetadata,
   siteUrl,
   storeMetadata,

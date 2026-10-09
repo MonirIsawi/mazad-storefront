@@ -33,6 +33,14 @@ export function siteUrl(): URL | undefined {
   }
 }
 
+/**
+ * NEXT_PUBLIC_NOINDEX=true keeps a whole deployment out of search engines (the staging beta, whose
+ * demo data must not be indexed): robots.txt disallows everything and every page says noindex.
+ */
+export function isNoIndex(): boolean {
+  return process.env.NEXT_PUBLIC_NOINDEX === 'true';
+}
+
 function truncate(text: string, max = DESCRIPTION_MAX): string {
   const clean = text.replace(/\s+/g, ' ').trim();
   return clean.length <= max ? clean : `${clean.slice(0, max - 1).trimEnd()}…`;
