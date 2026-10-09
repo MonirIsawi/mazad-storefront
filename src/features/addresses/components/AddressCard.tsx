@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, CardContent, Badge } from '@shared/components/ui';
-import { getErrorCode } from '@shared/lib';
+import { getErrorCode, isolatePhone } from '@shared/lib';
 import { useDeleteAddress } from '../hooks/useDeleteAddress';
 import { useAddressesTranslation } from '../hooks/useAddressesTranslation';
 import { AddressForm } from './AddressForm';
@@ -44,7 +44,7 @@ export function AddressCard({ address }: AddressCardProps) {
           <p className="text-sm text-muted-foreground">{address.details}</p>
         ) : null}
         {address.contactPhone ? (
-          <p className="text-sm text-muted-foreground">{address.contactPhone}</p>
+          <p className="text-sm text-muted-foreground">{isolatePhone(address.contactPhone)}</p>
         ) : null}
 
         {errorCode ? (

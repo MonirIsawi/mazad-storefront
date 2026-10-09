@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { telHref } from './phone';
+import { isolatePhone, telHref } from './phone';
 
 describe('telHref', () => {
   it('dials the number as shown, without separators', () => {
@@ -15,5 +15,11 @@ describe('telHref', () => {
     expect(telHref('call me')).toBeNull();
     expect(telHref('12345')).toBeNull();
     expect(telHref('+1234567890123456')).toBeNull();
+  });
+});
+
+describe('isolatePhone', () => {
+  it('wraps the number in a left-to-right isolate so the plus stays in front in Arabic', () => {
+    expect(isolatePhone('+9647701234567')).toBe('⁦+9647701234567⁩');
   });
 });

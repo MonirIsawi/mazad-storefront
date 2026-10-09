@@ -22,4 +22,4 @@ export {
   type AuctionStatusTone,
 } from './auction-status';
 export { newIdempotencyKey } from './idempotency';
-export { telHref } from './phone';
+export { isolatePhone, telHref } from './phone';

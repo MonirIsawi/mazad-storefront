@@ -7,6 +7,7 @@ import { ScreenHeader } from '@shared/components/layout';
 import { Badge, Button, Card, Icon } from '@shared/components/ui';
 import { ListRow } from '@shared/components/ios';
 import { useLocale, useTheme } from '@shared/hooks';
+import { isolatePhone } from '@shared/lib';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useLogout } from '../hooks/useLogout';
@@ -34,7 +35,9 @@ export function AccountPage() {
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <p className="truncate text-title-3 font-bold text-foreground">{user.fullName}</p>
-            <p className="text-footnote text-muted-foreground tabular-nums">{user.phone}</p>
+            <p className="text-footnote text-muted-foreground tabular-nums">
+              {user.phone ? isolatePhone(user.phone) : null}
+            </p>
           </div>
           {user.isVerified ? (
             <Badge tone="live" className="shrink-0">
