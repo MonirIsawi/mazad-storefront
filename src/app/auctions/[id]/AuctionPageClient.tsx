@@ -1,13 +1,14 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useCurrentUser } from '@features/auth';
 import { AuctionDetailPage } from '@features/catalog';
 import { BidPanel } from '@features/bidding';
 import { WatchlistToggle } from '@features/watchlist';
 import { FollowSellerButton } from '@features/sellers';
 import { useWins } from '@features/wins';
+import { useIsAuthenticated } from '@shared/hooks';
 
 /** Statuses after which nobody bids any more and the viewer may be the winner. */
 const CLOSED = new Set(['ENDED', 'SOLD', 'UNSOLD']);
@@ -28,6 +29,7 @@ export function AuctionBidding({
   status: string;
 }) {
   const me = useCurrentUser();
+  const isAuthenticated = useIsAuthenticated();
   const isClosed = CLOSED.has(status);
   const wins = useWins(isClosed);
   const win = wins.data?.find(
@@ -38,10 +40,14 @@ export function AuctionBidding({
   const orderId = win?.orderItem?.orderId ?? null;
   const refetchWins = wins.refetch;
 
-  // Closed while the page was open (realtime): the win may be new.
+  // Closed while the page was open (realtime): the win may be new, and a cached list would miss
+  // it. Only then, and only signed in: refetch() ignores `enabled`, so a signed-out visitor would
+  // get a 401. A page opened already closed fetches through the query itself.
+  const wasClosed = useRef(isClosed);
   useEffect(() => {
-    if (isClosed) void refetchWins();
-  }, [isClosed, refetchWins]);
+    if (isClosed && !wasClosed.current && isAuthenticated) void refetchWins();
+    wasClosed.current = isClosed;
+  }, [isClosed, isAuthenticated, refetchWins]);
   // Won, but auto-fulfilment hasn't created the order yet: look again shortly, then stop.
   useEffect(() => {
     if (!win || orderId) return undefined;

@@ -12,6 +12,8 @@ vi.mock('@features/wins', () => ({ useWins: (enabled?: boolean) => useWins(enabl
 vi.mock('@features/catalog', () => ({ AuctionDetailPage: () => null }));
 vi.mock('@features/watchlist', () => ({ WatchlistToggle: () => null }));
 vi.mock('@features/sellers', () => ({ FollowSellerButton: () => null }));
+const auth = vi.hoisted(() => ({ signedIn: true }));
+vi.mock('@shared/hooks', () => ({ useIsAuthenticated: () => auth.signedIn }));
 
 const win = (auctionId: string, orderId: string | null, status = 'CONFIRMED') => ({
   auctionId,
@@ -25,6 +27,7 @@ beforeEach(() => {
   bidPanel.mockClear();
   useWins.mockClear();
   wins.refetch.mockClear();
+  auth.signedIn = true;
 });
 
 describe('AuctionBidding (route composition)', () => {
@@ -41,14 +44,29 @@ describe('AuctionBidding (route composition)', () => {
     expect(lastProps().winner).toBeNull();
   });
 
-  it('only looks the wins up once the auction is closed, and refetches then', () => {
+  it('only looks the wins up once the auction is closed, and refetches when it closes while open', () => {
     wins.data = undefined;
-    render(<AuctionBidding auctionId="a1" sellerId="seller-1" status="LIVE" />);
+    const view = render(<AuctionBidding auctionId="a1" sellerId="seller-1" status="LIVE" />);
     expect(useWins).toHaveBeenLastCalledWith(false);
     expect(wins.refetch).not.toHaveBeenCalled();
+    view.rerender(<AuctionBidding auctionId="a1" sellerId="seller-1" status="SOLD" />);
+    expect(useWins).toHaveBeenLastCalledWith(true);
+    expect(wins.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('a page opened on a closed auction lets the query fetch, without a second request', () => {
+    wins.data = undefined;
     render(<AuctionBidding auctionId="a1" sellerId="seller-1" status="SOLD" />);
     expect(useWins).toHaveBeenLastCalledWith(true);
-    expect(wins.refetch).toHaveBeenCalled();
+    expect(wins.refetch).not.toHaveBeenCalled();
+  });
+
+  it('never asks for wins signed out, even when the auction closes while open (no 401)', () => {
+    auth.signedIn = false;
+    wins.data = undefined;
+    const view = render(<AuctionBidding auctionId="a1" sellerId="seller-1" status="LIVE" />);
+    view.rerender(<AuctionBidding auctionId="a1" sellerId="seller-1" status="SOLD" />);
+    expect(wins.refetch).not.toHaveBeenCalled();
   });
 
   it('the seller of the auction is never the winner and gets the own-auction state', () => {
