@@ -1,5 +1,6 @@
 'use client';
 
+import '@shared/lib/zod-jitless';
 import type { ReactNode } from 'react';
 import { ErrorBoundary } from '@shared/components/feedback';
 import { Toaster } from '@shared/components/ui';

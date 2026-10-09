@@ -20,6 +20,11 @@ describe('storefront security headers', () => {
     expect(directive(csp, 'img-src')).toContain('https://mazad-api-production-e5a8.up.railway.app');
   });
 
+  it('loads the Cairo web font (Google Fonts stylesheet + font files)', () => {
+    expect(directive(csp, 'style-src')).toContain('https://fonts.googleapis.com');
+    expect(directive(csp, 'font-src')).toContain('https://fonts.gstatic.com');
+  });
+
   it('never allows eval, plugins or framing', () => {
     expect(csp).not.toContain('unsafe-eval');
     expect(directive(csp, 'object-src')).toBe("object-src 'none'");

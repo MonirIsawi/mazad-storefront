@@ -4,10 +4,13 @@
  * The CSP is as tight as the current app allows:
  * - connect-src: this origin plus mazad-api over https and wss (REST + Socket.IO).
  * - img-src: this origin (next/image), the API's asset host, and Unsplash (demo seed photos).
+ * - style-src/font-src: Google Fonts (globals.css imports the Cairo stylesheet, which loads its
+ *   font files from fonts.gstatic.com).
  * - script-src keeps 'unsafe-inline': the App Router streams its payload through inline
  *   <script> tags, and layout.tsx has an inline theme/locale script plus JSON-LD on auction pages.
  *   Removing it needs a per-request nonce (middleware), which would make every page dynamic.
- *   There is no 'unsafe-eval': production Next.js doesn't need it.
+ *   There is no 'unsafe-eval': production Next.js doesn't need it, and zod runs jitless
+ *   (shared/lib/zod-jitless.ts) so it doesn't probe for it.
  * - frame-ancestors 'none' (and X-Frame-Options DENY for old browsers): no framing at all.
  */
 
@@ -32,8 +35,8 @@ export function contentSecurityPolicy(apiUrl?: string, assetBaseUrl?: string): s
     `connect-src ${list("'self'", api?.origin, socket)}`,
     `img-src ${list("'self'", 'data:', 'blob:', assets?.origin, 'https://images.unsplash.com')}`,
     "script-src 'self' 'unsafe-inline'",
-    "style-src 'self' 'unsafe-inline'",
-    "font-src 'self' data:",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
