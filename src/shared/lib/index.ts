@@ -23,3 +23,4 @@ export {
 } from './auction-status';
 export { newIdempotencyKey } from './idempotency';
 export { isolatePhone, telHref } from './phone';
+export { shareLink, type ShareOutcome } from './share';

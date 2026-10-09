@@ -35,6 +35,8 @@
     "loadError": "Couldn't load this auction.",
     "title": "Auction",
     "share": "Share",
+    "linkCopied": "Link copied",
+    "shareUnavailable": "Couldn't share. Copy the address from the address bar.",
     "tabs": {
       "details": "Details",
       "bids": "Bids",

@@ -17,7 +17,7 @@ import {
 } from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { AuctionRail } from '@shared/components/cards';
-import { useCountdown, useLocale, useMoney } from '@shared/hooks';
+import { useCountdown, useLocale, useMoney, useToast } from '@shared/hooks';
 import {
   formatDuration,
   getAuctionStatusLabelKey,
@@ -27,6 +27,7 @@ import {
   getImageTintStyle,
   pickLocalizedName,
   resolveAssetUrl,
+  shareLink,
 } from '@shared/lib';
 import { useCatalogTranslation } from '../hooks/useCatalogTranslation';
 import { useAuction } from '../hooks/useAuction';
@@ -117,7 +118,11 @@ export function AuctionDetailPage({
         <div className="absolute inset-x-3 top-3 flex items-center justify-between">
           <BackButton label={tCommon('nav.back')} />
           <div className="flex items-center gap-2">
-            <ShareButton label={t('detail.share')} />
+            <ShareButton
+              label={t('detail.share')}
+              copiedMessage={t('detail.linkCopied')}
+              failedMessage={t('detail.shareUnavailable')}
+            />
             {watchlistToggle}
           </div>
         </div>
@@ -257,14 +262,21 @@ function BackButton({ label }: { label: string }) {
   );
 }
 
-function ShareButton({ label }: { label: string }) {
-  const handleShare = () => {
-    if (typeof navigator !== 'undefined' && 'share' in navigator) {
-      void navigator.share({ url: window.location.href }).catch(() => {
-        // The user dismissing the sheet rejects the promise — not an error worth surfacing.
-      });
-    }
+function ShareButton({
+  label,
+  copiedMessage,
+  failedMessage,
+}: {
+  label: string;
+  copiedMessage: string;
+  failedMessage: string;
+}) {
+  const toast = useToast();
+  const handleShare = async () => {
+    const outcome = await shareLink(window.location.href);
+    if (outcome === 'copied') toast.success(copiedMessage);
+    if (outcome === 'unavailable') toast.error(failedMessage);
   };
 
-  return <IconButton name="share-2" label={label} tone="glass" onClick={handleShare} />;
+  return <IconButton name="share-2" label={label} tone="glass" onClick={() => void handleShare()} />;
 }
