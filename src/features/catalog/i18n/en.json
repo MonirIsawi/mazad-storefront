@@ -42,7 +42,35 @@
       "bids": "Bids",
       "seller": "Seller"
     },
-    "yourBid": "Your bid"
+    "yourBid": "Your bid",
+    "photoCount": "{{index, num}} / {{total, num}}",
+    "photoLabel": "{{name}}, photo {{index, num}} of {{total, num}}",
+    "startsIn": "Starts in",
+    "endedAt": "Ended {{time}}",
+    "description": "Description",
+    "noDescription": "The seller added no description.",
+    "category": "Category",
+    "starts": "Starts",
+    "ends": "Ends",
+    "extended_one": "Extended by {{count, num}} minute because of late bids.",
+    "extended_other": "Extended by {{count, num}} minutes because of late bids.",
+    "payment": "Payment",
+    "paymentCodOrCard": "Cash on delivery or card",
+    "paymentCod": "Cash on delivery",
+    "paymentHint": "You choose how to pay after you win, when you confirm the order — not when you bid.",
+    "returns": "Returns",
+    "returnsValue_one": "Within {{count, num}} day of delivery",
+    "returnsValue_other": "Within {{count, num}} days of delivery",
+    "returnsHint": "Request a return from the order if the item is not as described.",
+    "verifiedSeller": "Verified seller",
+    "rating": "Rating",
+    "ratingValue_one": "★ {{average}} ({{count, num}} review)",
+    "ratingValue_other": "★ {{average}} ({{count, num}} reviews)",
+    "city": "City",
+    "photoOpen": "Open photo {{index, num}} of {{total, num}} full size",
+    "photoPrevious": "Previous photo",
+    "photoNext": "Next photo",
+    "photoShow": "Show photo {{index, num}} of {{total, num}}"
   },
   "condition": {
     "NEW": "New",
@@ -55,5 +83,11 @@
     "activeAuctions": "Auctions from this store",
     "notFound": "Store not found.",
     "title": "Store"
+  },
+  "conditionHint": {
+    "NEW": "Unused, in its original packaging.",
+    "LIKE_NEW": "Used briefly; no visible wear.",
+    "OPEN_BOX": "Unused, but the box has been opened.",
+    "USED": "Used, with signs of use the seller describes."
   }
 }

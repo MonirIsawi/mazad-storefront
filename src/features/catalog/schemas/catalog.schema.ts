@@ -66,6 +66,17 @@ const auctionCategorySchema = z.object({
   nameAr: z.string(),
 });
 
+/** Every photo in display order: the cover first, then by sortOrder. */
+function orderedImageUrls(images: z.infer<typeof productImageSchema>[]): string[] {
+  const sorted = [...images].sort((a, b) => a.sortOrder - b.sortOrder);
+  const cover = sorted.find((image) => image.isCover);
+  const ordered = cover ? [cover, ...sorted.filter((image) => image !== cover)] : sorted;
+  return ordered.flatMap((image) => {
+    const url = resolveAssetUrl(image.url);
+    return url ? [url] : [];
+  });
+}
+
 function pickCoverImageUrl(images: z.infer<typeof productImageSchema>[]): string | null {
   if (images.length === 0) return null;
   const cover = images.find((image) => image.isCover);
@@ -87,10 +98,14 @@ const auctionProductSchema = z
     images: z.array(productImageSchema),
     variants: z.array(productVariantSchema).optional(),
     category: auctionCategorySchema.optional(),
+    // Detail only; mazad-api already falls back to the other language when one is empty.
+    descriptionEn: z.string().optional(),
+    descriptionAr: z.string().optional(),
   })
   .transform((product) => ({
     ...product,
     coverImage: resolveAssetUrl(pickCoverImageUrl(product.images)),
+    imageUrls: orderedImageUrls(product.images),
   }));
 
 const auctionSellerSchema = z.object({
@@ -121,6 +136,14 @@ export const auctionSchema = z.object({
   product: auctionProductSchema,
   seller: auctionSellerSchema,
   store: auctionStoreSchema,
+  // The server's next-bid rule and what the detail adds for buyers (optional: older API builds).
+  minNextBid: z.string().optional(),
+  bidIncrement: z.string().optional(),
+  saleCancelled: z.boolean().optional(),
+  paymentMethods: z.array(z.string()).optional(),
+  returnWindowDays: z.number().optional(),
+  sellerRating: z.object({ average: z.number().nullable(), count: z.number() }).optional(),
+  serverTime: z.string().optional(),
 });
 
 export const paginationMetaSchema = z.object({

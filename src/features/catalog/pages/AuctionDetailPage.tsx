@@ -19,6 +19,7 @@ import { SegmentedControl } from '@shared/components/ios';
 import { AuctionRail } from '@shared/components/cards';
 import { useCountdown, useLocale, useMoney, useToast } from '@shared/hooks';
 import {
+  formatDateTime,
   formatDuration,
   getAuctionStatusLabelKey,
   getErrorCode,
@@ -34,6 +35,8 @@ import { useAuction } from '../hooks/useAuction';
 import { useAuctionBids } from '../hooks/useAuctionBids';
 import { useSimilarAuctions } from '../hooks/useSimilarAuctions';
 import { BidHistoryList } from '../components/BidHistoryList';
+import { DetailGallery } from '../components/DetailGallery';
+import type { Auction } from '../types/catalog.types';
 
 type DetailTab = 'details' | 'bids' | 'seller';
 
@@ -65,6 +68,9 @@ export function AuctionDetailPage({
   const similar = useSimilarAuctions(id);
   // Ticks every second on the shared interval, anchored to the server clock (ADR-013).
   const endsInMs = useCountdown(auction.data?.endsAt);
+  const startsInMs = useCountdown(
+    auction.data?.status === 'SCHEDULED' ? auction.data.startsAt : undefined,
+  );
 
   if (!isReady || auction.isPending) return <PageLoader />;
   if (auction.isError || !auction.data) {
@@ -98,6 +104,8 @@ export function AuctionDetailPage({
   const price = data.currentPrice ?? data.startingPrice;
   const tone = getAuctionStatusTone(data.status, endsInMs);
   const isLive = data.status === 'LIVE';
+  const isOver = data.status === 'ENDED' || data.status === 'SOLD' || data.status === 'UNSOLD';
+  const photos = data.product.imageUrls.length > 0 ? data.product.imageUrls : [];
 
   return (
     // Clears the pinned bottom action bar the bidding panel renders.
@@ -107,7 +115,9 @@ export function AuctionDetailPage({
         className="relative h-52 w-full"
         style={coverImage ? undefined : getImageTintStyle(data.product.id)}
       >
-        {coverImage ? (
+        {photos.length > 0 ? (
+          <DetailGallery images={photos} name={name} />
+        ) : coverImage ? (
           <Image src={coverImage} alt={name} fill sizes="100vw" className="object-cover" priority />
         ) : (
           <span className="absolute inset-0 flex items-center justify-center text-foreground/22">
@@ -138,6 +148,20 @@ export function AuctionDetailPage({
             <span className="inline-flex items-center gap-1 text-footnote text-muted-foreground tabular-nums">
               <Icon name="clock" size={14} />
               {formatDuration(endsInMs, locale)}
+            </span>
+          ) : null}
+          {data.status === 'SCHEDULED' && startsInMs > 0 ? (
+            <span
+              className="inline-flex items-center gap-1 text-footnote text-muted-foreground tabular-nums"
+              data-testid="detail-starts-in"
+            >
+              <Icon name="clock" size={14} />
+              {t('detail.startsIn')} {formatDuration(startsInMs, locale)}
+            </span>
+          ) : null}
+          {isOver ? (
+            <span className="text-footnote text-muted-foreground" data-testid="detail-ended-at">
+              {t('detail.endedAt', { time: formatDateTime(data.endsAt, locale) })}
             </span>
           ) : null}
         </div>
@@ -185,13 +209,7 @@ export function AuctionDetailPage({
         <Card className="mt-3">
           <CardContent className="flex flex-col gap-3 text-subhead">
             {tab === 'details' ? (
-              <>
-                <DetailRow
-                  label={t('detail.condition')}
-                  value={t(`condition.${data.product.condition}`)}
-                />
-                <DetailRow label={t('detail.deliveryFee')} value={money(data.store.deliveryFee)} />
-              </>
+              <AuctionFacts auction={data} />
             ) : tab === 'bids' ? (
               bids.data ? (
                 <BidHistoryList bids={bids.data} />
@@ -214,6 +232,25 @@ export function AuctionDetailPage({
                     </span>
                   }
                 />
+                {/* Verified only when the seller is; a rating only once there are reviews. */}
+                {data.seller.isVerified ? (
+                  <div>
+                    <Badge tone="live">{t('detail.verifiedSeller')}</Badge>
+                  </div>
+                ) : null}
+                {data.sellerRating &&
+                data.sellerRating.count > 0 &&
+                data.sellerRating.average != null ? (
+                  <DetailRow
+                    label={t('detail.rating')}
+                    value={t('detail.ratingValue', {
+                      average: data.sellerRating.average.toLocaleString(
+                        locale === 'ar' ? 'ar' : 'en-US',
+                      ),
+                      count: data.sellerRating.count,
+                    })}
+                  />
+                ) : null}
                 <DetailRow
                   label={t('detail.store')}
                   value={
@@ -225,6 +262,7 @@ export function AuctionDetailPage({
                     </Link>
                   }
                 />
+                <DetailRow label={t('detail.city')} value={data.store.city} />
               </>
             )}
           </CardContent>
@@ -238,6 +276,79 @@ export function AuctionDetailPage({
         ) : null}
       </div>
     </div>
+  );
+}
+
+/** The description in the reading language; the API fills an empty one from the other. */
+function localizedDescription(auction: Auction, locale: 'en' | 'ar'): string {
+  const { descriptionAr, descriptionEn } = auction.product;
+  const text = locale === 'ar' ? descriptionAr || descriptionEn : descriptionEn || descriptionAr;
+  return text?.trim() ?? '';
+}
+
+/**
+ * Everything a buyer checks before bidding: description, condition (explained), category, when
+ * it starts and ends (and how much late bids extended it), delivery fee, how to pay (chosen at
+ * checkout, not when bidding), and returns. Never the seller's phone, street or location.
+ */
+function AuctionFacts({ auction }: { auction: Auction }) {
+  const { t } = useCatalogTranslation();
+  const { locale } = useLocale();
+  const { money } = useMoney();
+  const description = localizedDescription(auction, locale);
+  const extendedMinutes = Math.round(
+    (new Date(auction.endsAt).getTime() - new Date(auction.originalEndsAt).getTime()) / 60_000,
+  );
+  const acceptsCard = auction.paymentMethods?.includes('CARD') ?? false;
+  return (
+    <>
+      <div className="flex flex-col gap-1">
+        <span className="text-muted-foreground">{t('detail.description')}</span>
+        <p
+          className="whitespace-pre-wrap text-body text-foreground"
+          data-testid="detail-description"
+        >
+          {description || t('detail.noDescription')}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <DetailRow
+          label={t('detail.condition')}
+          value={t(`condition.${auction.product.condition}`)}
+        />
+        <span className="text-footnote text-muted-foreground">
+          {t(`conditionHint.${auction.product.condition}`)}
+        </span>
+      </div>
+      {auction.product.category ? (
+        <DetailRow
+          label={t('detail.category')}
+          value={pickLocalizedName(auction.product.category, locale)}
+        />
+      ) : null}
+      <DetailRow label={t('detail.starts')} value={formatDateTime(auction.startsAt, locale)} />
+      <DetailRow label={t('detail.ends')} value={formatDateTime(auction.endsAt, locale)} />
+      {extendedMinutes > 0 ? (
+        <span className="text-footnote text-muted-foreground" data-testid="detail-extended">
+          {t('detail.extended', { count: extendedMinutes })}
+        </span>
+      ) : null}
+      <DetailRow label={t('detail.deliveryFee')} value={money(auction.store.deliveryFee)} />
+      <div className="flex flex-col gap-1">
+        <DetailRow
+          label={t('detail.payment')}
+          value={t(acceptsCard ? 'detail.paymentCodOrCard' : 'detail.paymentCod')}
+        />
+        <span className="text-footnote text-muted-foreground">{t('detail.paymentHint')}</span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <DetailRow
+          label={t('detail.returns')}
+          value={t('detail.returnsValue', { count: auction.returnWindowDays ?? 7 })}
+        />
+        <span className="text-footnote text-muted-foreground">{t('detail.returnsHint')}</span>
+      </div>
+    </>
   );
 }
 
