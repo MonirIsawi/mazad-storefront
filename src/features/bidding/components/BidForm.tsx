@@ -41,7 +41,8 @@ export function BidForm({ auction }: BidFormProps) {
   const amount = Math.max(chosenAmount, minimumBid);
   // The floor rose above what the user picked: the next tap only adopts the new amount, so a bid
   // is never sent for more than the user had in front of them when they decided.
-  const priceMoved = chosenAmount < minimumBid;
+  // A rise the user caused (their own bid, or their auto-bid answering someone) is not a conflict.
+  const priceMoved = chosenAmount < minimumBid && !standing?.leading;
   const buyNowPrice = parseMoney(auction.buyNowPrice);
   const reachesBuyNow = buyNowPrice != null && amount >= buyNowPrice;
 
@@ -59,8 +60,16 @@ export function BidForm({ auction }: BidFormProps) {
     placeBid.mutate(
       { amount, idempotencyKey: intent.current.key },
       {
-        onSuccess: () => {
+        onSuccess: (response) => {
           intent.current = null;
+          // The next decision starts from the minimum after this bid, not the amount just placed.
+          const next = computeMinimumBid({
+            currentPrice: response.auction.currentPrice,
+            startingPrice: auction.startingPrice,
+            minIncrement: auction.minIncrement,
+            minNextBid: response.auction.minNextBid,
+          });
+          if (next != null) setChosenAmount(next);
         },
       },
     );

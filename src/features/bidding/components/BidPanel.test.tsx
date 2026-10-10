@@ -119,6 +119,28 @@ describe('BidPanel: the server says what happened', () => {
     );
   });
 
+  it('after your own bid, starts from the new minimum without a "price moved" warning', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(standing({ leading: true }));
+    vi.mocked(biddingApi.placeBid).mockResolvedValue({
+      id: 'b1',
+      auctionId: 'auction-1',
+      amount: '100000.00',
+      createdAt: '2026-10-10T10:00:00.000Z',
+      leading: true,
+      auction: {
+        currentPrice: '100000.00',
+        bidCount: 1,
+        endsAt: '2030-01-01T00:00:00.000Z',
+        status: 'LIVE',
+        minNextBid: '105000.00',
+      },
+    });
+    renderPanel(false);
+    await userEvent.click(await screen.findByRole('button', { name: /Place bid/ }));
+    expect((await screen.findAllByText(/105,000/)).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/minimum bid rose/i)).toBeNull();
+  });
+
   it('shows an auto-bid set earlier, and its exhaustion', async () => {
     vi.mocked(biddingApi.getMyStanding).mockResolvedValue(
       standing({ autoBid: { maxAmount: '120000.00', exhausted: true } }),
