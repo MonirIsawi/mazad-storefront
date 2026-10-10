@@ -1,4 +1,5 @@
 import { httpClient } from '@shared/api';
+import { normalizePhone } from '@shared/lib/phone';
 import {
   authResponseSchema,
   authUserSchema,
@@ -17,7 +18,10 @@ import type {
 
 export const authApi = {
   requestOtp: async (phone: string, purpose: OtpPurpose): Promise<OtpRequestResult> => {
-    const response = await httpClient.post<unknown>('/auth/otp/request', { phone, purpose });
+    const response = await httpClient.post<unknown>('/auth/otp/request', {
+      phone: normalizePhone(phone),
+      purpose,
+    });
     return otpRequestResultSchema.parse(response.data);
   },
 
@@ -25,20 +29,26 @@ export const authApi = {
   register: async (values: RegisterValues): Promise<AuthResponse> => {
     const response = await httpClient.post<unknown>('/auth/register', {
       ...values,
+      phone: normalizePhone(values.phone),
       platform: 'web',
     });
     return authResponseSchema.parse(response.data);
   },
 
   login: async (values: LoginValues): Promise<AuthResponse> => {
-    const response = await httpClient.post<unknown>('/auth/login', { ...values, platform: 'web' });
+    // Canonical +9647… however it was typed (07…, Arabic digits); the API reads the same forms.
+    const response = await httpClient.post<unknown>('/auth/login', {
+      ...values,
+      phone: normalizePhone(values.phone),
+      platform: 'web',
+    });
     return authResponseSchema.parse(response.data);
   },
 
   /** PASSWORD_RESET: the API verifies and consumes the code and returns a reset token, not a session. */
   verifyResetCode: async (phone: string, code: string): Promise<ResetTokenResult> => {
     const response = await httpClient.post<unknown>('/auth/otp/verify', {
-      phone,
+      phone: normalizePhone(phone),
       code,
       purpose: 'PASSWORD_RESET',
     });

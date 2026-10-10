@@ -22,5 +22,5 @@ export {
   type AuctionStatusTone,
 } from './auction-status';
 export { newIdempotencyKey } from './idempotency';
-export { isolatePhone, telHref } from './phone';
+export { isolatePhone, normalizePhone, parsePhone, telHref, toAsciiDigits } from './phone';
 export { shareLink, type ShareOutcome } from './share';

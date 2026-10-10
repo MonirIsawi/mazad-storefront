@@ -1,9 +1,11 @@
 import { z } from 'zod';
+import { parsePhone } from '@shared/lib/phone';
 
+// Anything mazad-api reads as a phone: 07…, +964…, Arabic digits, spaces and dashes included.
 const phoneSchema = z
   .string()
   .trim()
-  .regex(/^\+?[0-9]{10,15}$/, 'errors.field.phoneInvalid');
+  .refine((value) => parsePhone(value) !== null, 'errors.field.phoneInvalid');
 
 const passwordSchema = z.string().min(8, 'errors.field.passwordMin');
 
