@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
 import { ErrorState, EmptyState, PageLoader } from '@shared/components/feedback';
 import { ScreenHeader } from '@shared/components/layout';
-import { SearchField } from '@shared/components/ui';
+import { Chip, SearchField } from '@shared/components/ui';
 import { AuctionGrid, AuctionGridSkeleton } from '@shared/components/cards';
 import { useMoney } from '@shared/hooks';
 import { useCatalogTranslation } from '../hooks/useCatalogTranslation';
@@ -14,9 +14,10 @@ import { useCategories } from '../hooks/useCategories';
 import { useAuctions } from '../hooks/useAuctions';
 import { CategoryChips } from '../components/CategoryChips';
 import { StatusFilter } from '../components/StatusFilter';
-import type { AuctionStatusFilter } from '../types/catalog.types';
+import type { AuctionStatusFilter, CatalogSort } from '../types/catalog.types';
 
 const STATUS_VALUES: AuctionStatusFilter[] = ['live', 'upcoming', 'ended'];
+const SORT_VALUES: CatalogSort[] = ['endingSoon', 'newest', 'priceLow'];
 
 function parseStatus(value: string | null): AuctionStatusFilter | undefined {
   return STATUS_VALUES.find((status) => status === value);
@@ -35,6 +36,8 @@ export function AuctionsBrowsePage() {
   const categoryId = searchParams.get('categoryId') ?? undefined;
   const status = parseStatus(searchParams.get('status'));
   const appliedQuery = searchParams.get('q') ?? '';
+  // Absent = the server's default (live ending soonest, then upcoming, finished last).
+  const sort = SORT_VALUES.find((value) => value === searchParams.get('sort'));
 
   // The search box is the one exception — keystrokes shouldn't each become a history entry, so
   // it holds its own draft and commits on submit.
@@ -52,6 +55,7 @@ export function AuctionsBrowsePage() {
     categoryId,
     status,
     q: appliedQuery || undefined,
+    ...(sort ? { sort } : {}),
     limit: 24,
   });
 
@@ -85,6 +89,17 @@ export function AuctionsBrowsePage() {
         </form>
 
         <StatusFilter selected={status} onSelect={(value) => setFilter('status', value)} />
+        <div className="flex gap-2 overflow-x-auto" role="group" aria-label={t('browse.sortLabel')}>
+          {SORT_VALUES.map((value) => (
+            <Chip
+              key={value}
+              isActive={(sort ?? 'endingSoon') === value}
+              onClick={() => setFilter('sort', value === 'endingSoon' ? undefined : value)}
+            >
+              {t(`browse.sort.${value}`)}
+            </Chip>
+          ))}
+        </div>
         {categories.data ? (
           <CategoryChips
             categories={categories.data}

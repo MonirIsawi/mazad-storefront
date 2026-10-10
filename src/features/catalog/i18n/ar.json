@@ -15,6 +15,12 @@
       "live": "مباشر",
       "upcoming": "قادم",
       "ended": "منتهٍ"
+    },
+    "sortLabel": "الترتيب",
+    "sort": {
+      "endingSoon": "الأقرب انتهاءً",
+      "newest": "الأحدث",
+      "priceLow": "الأقل سعرًا"
     }
   },
   "detail": {

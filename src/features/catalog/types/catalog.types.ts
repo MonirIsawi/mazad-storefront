@@ -29,5 +29,8 @@ export interface AuctionListParams {
   endingSoon?: boolean;
   page?: number;
   limit?: number;
-  sort?: 'endsAt' | 'startsAt' | 'currentPrice';
+  /** endingSoon (the server's default browse order), newest, priceLow; the rest are legacy. */
+  sort?: CatalogSort | 'endsAt' | 'startsAt' | 'currentPrice';
 }
+
+export type CatalogSort = 'endingSoon' | 'newest' | 'priceLow';

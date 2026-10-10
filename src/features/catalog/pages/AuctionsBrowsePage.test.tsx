@@ -35,4 +35,19 @@ describe('AuctionsBrowsePage: no results', () => {
     expect(await screen.findByText('No auctions match your filters.')).toBeTruthy();
     expect(screen.queryByText(/\b0 results\b/)).toBeNull();
   });
+
+  it('offers the sorts; ending soonest is the default and sends nothing', async () => {
+    vi.mocked(catalogApi.getCategories).mockResolvedValue([]);
+    vi.mocked(catalogApi.listAuctions).mockResolvedValue({
+      data: [],
+      meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
+    } as never);
+    renderWithQuery(<AuctionsBrowsePage />);
+    expect(await screen.findByRole('button', { name: 'Ending soonest' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Lowest price' })).toBeTruthy();
+    expect(vi.mocked(catalogApi.listAuctions).mock.calls[0]![0]).not.toHaveProperty('sort');
+  });
 });

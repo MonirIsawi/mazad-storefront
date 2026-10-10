@@ -11,6 +11,12 @@
       "live": "Live",
       "upcoming": "Upcoming",
       "ended": "Ended"
+    },
+    "sortLabel": "Sort",
+    "sort": {
+      "endingSoon": "Ending soonest",
+      "newest": "Newest",
+      "priceLow": "Lowest price"
     }
   },
   "detail": {

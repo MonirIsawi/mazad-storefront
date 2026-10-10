@@ -32,6 +32,11 @@ const TYPE_ICON: Record<NotificationType, IconName> = {
   WATCHED_AUCTION_STARTING: 'heart',
   ADMIN_AUCTION_PENDING: 'bell',
   ADMIN_RETURN_REQUESTED: 'bell',
+  PAYMENT_STATUS_CHANGED: 'credit-card',
+  AUCTION_CANCELLED: 'x',
+  AUCTION_LOST: 'gavel',
+  AUCTION_LIVE: 'gavel',
+  AUCTION_UNSOLD: 'gavel',
 };
 
 export function NotificationsPage() {
