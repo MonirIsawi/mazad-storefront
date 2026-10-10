@@ -63,6 +63,7 @@ export function BidForm({ auction }: BidFormProps) {
         onSuccess: (response) => {
           intent.current = null;
           // The next decision starts from the minimum after this bid, not the amount just placed.
+          if (!response?.auction) return;
           const next = computeMinimumBid({
             currentPrice: response.auction.currentPrice,
             startingPrice: auction.startingPrice,
