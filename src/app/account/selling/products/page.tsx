@@ -12,7 +12,10 @@ import { SellerProductsPage, type SellingCategoryOption } from '@features/sellin
 function flattenCategories(nodes: CategoryNode[], parentName?: string): SellingCategoryOption[] {
   return nodes.flatMap((node) => {
     const name = parentName ? `${parentName} › ${node.name}` : node.name;
-    return [{ id: node.id, name }, ...flattenCategories(node.children, name)];
+    return [
+      { id: node.id, name, isLeaf: node.children.length === 0 },
+      ...flattenCategories(node.children, name),
+    ];
   });
 }
 

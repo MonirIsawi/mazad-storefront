@@ -7,6 +7,7 @@ import { formatDateTime, getErrorCode, pickLocalizedName } from '@shared/lib';
 import {
   canCancelAuction,
   canEditAuction,
+  canRelistAuction,
   canSubmitAuction,
   getSellerAuctionTone,
 } from '../lib/auction-permissions';
@@ -17,10 +18,12 @@ import type { SellerAuction } from '../types/selling.types';
 export interface SellerAuctionCardProps {
   auction: SellerAuction;
   onEdit: (auction: SellerAuction) => void;
+  /** "List again", pre-filled from this listing. */
+  onRelist?: (auction: SellerAuction) => void;
 }
 
 /** One row of "My listings": status, the money, and only the actions this state actually allows. */
-export function SellerAuctionCard({ auction, onEdit }: SellerAuctionCardProps) {
+export function SellerAuctionCard({ auction, onEdit, onRelist }: SellerAuctionCardProps) {
   const { t } = useSellingTranslation();
   const { t: tCommon } = useTranslation('common');
   const { locale } = useLocale();
@@ -87,7 +90,18 @@ export function SellerAuctionCard({ auction, onEdit }: SellerAuctionCardProps) {
 
         {canSubmitAuction(auction.status) ? (
           <Button size="sm" isLoading={isMutating} onClick={() => submitAuction.mutate(auction.id)}>
-            {t('auctions.submit')}
+            {t('auctions.publish')}
+          </Button>
+        ) : null}
+
+        {onRelist && canRelistAuction(auction) ? (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onRelist(auction)}
+            data-testid="auction-relist"
+          >
+            {t('auctions.relist')}
           </Button>
         ) : null}
 

@@ -20,10 +20,12 @@ export function useCreateAuction() {
   const { t } = useSellingTranslation();
 
   return useMutation({
-    mutationFn: (values: AuctionFormValues) => sellingApi.createAuction(values),
-    onSuccess: () => {
+    // `silent`: publishing goes on to submit, whose toast says what happened.
+    mutationFn: ({ values }: { values: AuctionFormValues; silent?: boolean }) =>
+      sellingApi.createAuction(values),
+    onSuccess: (_auction, { silent }) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.selling.auctions });
-      toast.success(t('toast.auctionCreated'));
+      if (!silent) toast.success(t('toast.auctionDraftSaved'));
     },
   });
 }
@@ -34,11 +36,11 @@ export function useUpdateAuction() {
   const { t } = useSellingTranslation();
 
   return useMutation({
-    mutationFn: ({ id, values }: { id: string; values: AuctionFormValues }) =>
+    mutationFn: ({ id, values }: { id: string; values: AuctionFormValues; silent?: boolean }) =>
       sellingApi.updateAuction(id, values),
-    onSuccess: () => {
+    onSuccess: (_auction, { silent }) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.selling.auctions });
-      toast.success(t('toast.auctionUpdated'));
+      if (!silent) toast.success(t('toast.auctionUpdated'));
     },
   });
 }
@@ -50,9 +52,16 @@ export function useSubmitAuction() {
 
   return useMutation({
     mutationFn: (id: string) => sellingApi.submitAuction(id),
-    onSuccess: () => {
+    onSuccess: (auction) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.selling.auctions });
-      toast.success(t('toast.auctionSubmitted'));
+      // Published at once, or waiting for Mazad's review: say which.
+      toast.success(
+        t(
+          auction.status === 'PENDING_APPROVAL'
+            ? 'toast.auctionSentForReview'
+            : 'toast.auctionPublished',
+        ),
+      );
     },
   });
 }

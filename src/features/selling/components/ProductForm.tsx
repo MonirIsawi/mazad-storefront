@@ -50,7 +50,6 @@ export function ProductForm({ product, stores, categories, onDone, onCancel }: P
           marketPrice: product.marketPrice ? Number(product.marketPrice) : undefined,
         }
       : {
-          condition: 'USED',
           storeId: stores.find((store) => store.isDefault)?.id ?? stores[0]?.id ?? '',
         },
   });
@@ -68,22 +67,28 @@ export function ProductForm({ product, stores, categories, onDone, onCancel }: P
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
-      <Select
-        label={t('fields.store')}
-        placeholder={t('form.selectStore')}
-        options={stores.map((store) => ({
-          value: store.id,
-          label: pickLocalizedName(store, locale),
-        }))}
-        // A product cannot change stores after creation — UpdateProductDto has no storeId.
-        disabled={Boolean(product)}
-        error={errors.storeId ? t(errors.storeId.message ?? '') : undefined}
-        {...register('storeId')}
-      />
+      {/* One store (the usual case): nothing to choose, it is preselected. */}
+      {stores.length === 1 && !product ? null : (
+        <Select
+          label={t('fields.store')}
+          placeholder={t('form.selectStore')}
+          options={stores.map((store) => ({
+            value: store.id,
+            label: pickLocalizedName(store, locale),
+          }))}
+          // A product cannot change stores after creation — UpdateProductDto has no storeId.
+          disabled={Boolean(product)}
+          error={errors.storeId ? t(errors.storeId.message ?? '') : undefined}
+          {...register('storeId')}
+        />
+      )}
       <Select
         label={t('fields.category')}
         placeholder={t('form.selectCategory')}
-        options={categories.map((category) => ({ value: category.id, label: category.name }))}
+        // Only the most specific categories; a product's own stays listed even if it isn't one.
+        options={categories
+          .filter((category) => category.isLeaf !== false || category.id === product?.category.id)
+          .map((category) => ({ value: category.id, label: category.name }))}
         error={errors.categoryId ? t(errors.categoryId.message ?? '') : undefined}
         {...register('categoryId')}
       />

@@ -33,6 +33,22 @@ export function canCancelAuction(auction: Pick<SellerAuction, 'status' | 'bidCou
 }
 
 /** Statuses where the auction is done and nothing further can be done to it. */
+/** A sale that stands (a cancelled sale's product is free again). */
+export function isSaleFinal(auction: Pick<SellerAuction, 'status' | 'saleCancelled'>): boolean {
+  return auction.status === 'SOLD' && !auction.saleCancelled;
+}
+
+/** "List again": unsold, cancelled, or a sale that was cancelled (the API refuses a standing sale). */
+export function canRelistAuction(
+  auction: Pick<SellerAuction, 'status' | 'saleCancelled'>,
+): boolean {
+  return (
+    auction.status === 'UNSOLD' ||
+    auction.status === 'CANCELLED' ||
+    (auction.status === 'SOLD' && auction.saleCancelled === true)
+  );
+}
+
 export function isAuctionSettled(status: SellerAuctionStatus): boolean {
   return status === 'SOLD' || status === 'UNSOLD' || status === 'CANCELLED' || status === 'ENDED';
 }
@@ -88,11 +104,12 @@ export type ProductAuctionState = {
  */
 export function productAuctionState(
   productId: string,
-  auctions: readonly Pick<SellerAuction, 'status' | 'product'>[],
+  auctions: readonly Pick<SellerAuction, 'status' | 'product' | 'saleCancelled'>[],
 ): ProductAuctionState {
   const own = auctions.filter((auction) => auction.product?.id === productId);
   const freezing = own.find((auction) => FREEZING_STATUSES.includes(auction.status));
-  const isSold = own.some((auction) => auction.status === 'SOLD');
+  // A cancelled sale doesn't count: its product can be listed again.
+  const isSold = own.some(isSaleFinal);
   const status = freezing?.status ?? (isSold ? 'SOLD' : null);
   return {
     status,

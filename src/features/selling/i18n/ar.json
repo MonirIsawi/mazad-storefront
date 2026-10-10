@@ -60,7 +60,17 @@
     "startsAt": "يبدأ {{date}}",
     "endsAt": "ينتهي {{date}}",
     "notEditable": "يمكن تعديل المسودات والمزادات المرفوضة فقط.",
-    "lockedWithBids": "لا يمكن إلغاء مزاد مباشر تلقّى مزايدات."
+    "lockedWithBids": "لا يمكن إلغاء مزاد مباشر تلقّى مزايدات.",
+    "publish": "نشر",
+    "relist": "اعرضه مجددًا",
+    "saleCancelled": "أُلغي البيع؛ يمكنك عرضه مجددًا.",
+    "durationTitle": "المدة",
+    "durationDays_zero": "{{count, num}} أيام",
+    "durationDays_one": "يوم واحد",
+    "durationDays_two": "يومان",
+    "durationDays_few": "{{count, num}} أيام",
+    "durationDays_many": "{{count, num}} يومًا",
+    "durationDays_other": "{{count, num}} يوم"
   },
   "status": {
     "DRAFT": "مسودة",
@@ -105,7 +115,12 @@
     "photos": "الصور",
     "addPhoto": "إضافة صورة",
     "removePhoto": "حذف الصورة",
-    "coverPhoto": "الغلاف"
+    "coverPhoto": "الغلاف",
+    "startingPriceHint": "بالدينار الكامل، 1,000 د.ع على الأقل.",
+    "incrementLadder": "ترتفع المزايدات بخطوات تحددها مزاد: 1,000 د.ع تحت 100,000؛ و5,000 حتى مليون؛ و25,000 حتى 10 ملايين؛ و100,000 فما فوق.",
+    "startNow": "ابدأ الآن",
+    "startLater": "جدولة",
+    "oneLanguageHint": "العربية أو الإنجليزية تكفي؛ تُعرض اللغة الأخرى بالنص نفسه حتى تضيفها."
   },
   "form": {
     "save": "حفظ",
@@ -113,7 +128,9 @@
     "cancel": "إلغاء",
     "selectStore": "اختر متجرًا",
     "selectCategory": "اختر فئة",
-    "selectProduct": "اختر منتجًا"
+    "selectProduct": "اختر منتجًا",
+    "publish": "نشر",
+    "saveDraft": "حفظ كمسودة"
   },
   "toast": {
     "storeCreated": "تمت إضافة المتجر",
@@ -127,7 +144,10 @@
     "auctionCreated": "تم إنشاء المزاد",
     "auctionUpdated": "تم تحديث المزاد",
     "auctionSubmitted": "تم الإرسال للمراجعة",
-    "auctionCancelled": "تم إلغاء المزاد"
+    "auctionCancelled": "تم إلغاء المزاد",
+    "auctionDraftSaved": "حُفظت المسودة. انشرها عندما تكون جاهزًا.",
+    "auctionPublished": "تم النشر. مزادك معروض الآن على مزاد.",
+    "auctionSentForReview": "أُرسل للمراجعة. يُعرض بعد موافقة مزاد."
   },
   "errors": {
     "field": {
@@ -144,7 +164,18 @@
       "minIncrementInvalid": "يجب أن تكون أقل زيادة أكبر من صفر",
       "startsAtRequired": "اختر وقت البدء",
       "endsAtRequired": "اختر وقت الانتهاء",
-      "endsBeforeStarts": "يجب أن يكون وقت الانتهاء بعد وقت البدء"
+      "endsBeforeStarts": "يجب أن يكون وقت الانتهاء بعد وقت البدء",
+      "wholeDinars": "استخدم الدينار الكامل دون كسور.",
+      "startingPriceMin": "يجب ألا تقل المزايدة الافتتاحية عن 1,000 د.ع.",
+      "startInPast": "فات وقت البدء. اختر وقتًا لاحقًا أو ابدأ الآن.",
+      "durationTooShort": "يجب أن يستمر المزاد ساعة على الأقل.",
+      "durationTooLong": "لا يمكن أن يستمر المزاد أكثر من 14 يومًا.",
+      "nameOneLanguage": "أعطِ المنتج اسمًا بالعربية أو بالإنجليزية.",
+      "descriptionOneLanguage": "صِف المنتج بالعربية أو بالإنجليزية.",
+      "conditionRequired": "اختر حالة المنتج.",
+      "photoRequired": "أضف صورة واحدة على الأقل لهذا المنتج قبل النشر.",
+      "buyNowNotAboveStart": "يجب أن يكون سعر الشراء الفوري أعلى من سعر الافتتاح",
+      "buyNowInvalid": "أدخل سعر شراء فوري صحيحًا"
     },
     "STORE_NOT_FOUND": "هذا المتجر لم يعد موجودًا.",
     "DEFAULT_STORE_PROTECTED": "لا يمكن حذف متجرك الافتراضي.",
@@ -158,6 +189,24 @@
     "INVALID_AUCTION_DATES": "يجب أن يكون وقت الانتهاء بعد وقت البدء.",
     "INVALID_FILE_TYPE": "الصور المسموحة هي JPEG وPNG وWebP فقط.",
     "FILE_TOO_LARGE": "حجم الصورة يتجاوز 5 ميغابايت.",
-    "UPLOAD_LIMIT_EXCEEDED": "لقد بلغت حد الرفع اليومي."
+    "UPLOAD_LIMIT_EXCEEDED": "لقد بلغت حد الرفع اليومي.",
+    "STARTING_PRICE_TOO_LOW": "يجب ألا تقل المزايدة الافتتاحية عن 1,000 د.ع.",
+    "BUY_NOW_TOO_LOW": "يجب أن يكون سعر الشراء الفوري أعلى من المزايدة الافتتاحية.",
+    "INVALID_AMOUNT": "استخدم الدينار الكامل دون كسور.",
+    "PRODUCT_ALREADY_SOLD": "بيع هذا المنتج. يمكن إعادة عرضه فقط إذا أُلغي البيع.",
+    "AUCTION_NOT_AVAILABLE": "هذا المنتج أو المتجر غير متاح على مزاد حاليًا.",
+    "dates": {
+      "START_IN_PAST": "فات وقت البدء. اختر وقتًا لاحقًا أو ابدأ الآن.",
+      "END_IN_PAST": "فات وقت الانتهاء. اختر وقت انتهاء جديدًا.",
+      "TOO_SHORT": "يجب أن يستمر المزاد ساعة على الأقل.",
+      "TOO_LONG": "لا يمكن أن يستمر المزاد أكثر من 14 يومًا.",
+      "END_TOO_SOON": "ينتهي هذا الإعلان قريبًا جدًا ولا يمكن نشره. عدّل مواعيده أولًا."
+    }
+  },
+  "conditionHint": {
+    "NEW": "غير مستعمل، في تغليفه الأصلي.",
+    "LIKE_NEW": "استُعمل لفترة قصيرة، بلا آثار استعمال ظاهرة.",
+    "OPEN_BOX": "غير مستعمل، لكن العلبة مفتوحة.",
+    "USED": "مستعمل، مع آثار استعمال تصفها في الوصف."
   }
 }

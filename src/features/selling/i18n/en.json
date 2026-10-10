@@ -53,7 +53,13 @@
     "startsAt": "Starts {{date}}",
     "endsAt": "Ends {{date}}",
     "notEditable": "Only drafts and rejected listings can be edited.",
-    "lockedWithBids": "A live listing with bids can no longer be cancelled."
+    "lockedWithBids": "A live listing with bids can no longer be cancelled.",
+    "publish": "Publish",
+    "relist": "List again",
+    "saleCancelled": "The sale was cancelled; you can list it again.",
+    "durationTitle": "Duration",
+    "durationDays_one": "{{count}} day",
+    "durationDays_other": "{{count}} days"
   },
   "status": {
     "DRAFT": "Draft",
@@ -98,7 +104,12 @@
     "photos": "Photos",
     "addPhoto": "Add photo",
     "removePhoto": "Remove photo",
-    "coverPhoto": "Cover"
+    "coverPhoto": "Cover",
+    "startingPriceHint": "Whole dinars, at least 1,000 IQD.",
+    "incrementLadder": "Bids go up in steps set by Mazad: 1,000 IQD under 100,000; 5,000 up to 1 million; 25,000 up to 10 million; 100,000 above.",
+    "startNow": "Start now",
+    "startLater": "Schedule",
+    "oneLanguageHint": "Arabic or English is enough; the other language shows the same text until you add it."
   },
   "form": {
     "save": "Save",
@@ -106,7 +117,9 @@
     "cancel": "Cancel",
     "selectStore": "Choose a store",
     "selectCategory": "Choose a category",
-    "selectProduct": "Choose a product"
+    "selectProduct": "Choose a product",
+    "publish": "Publish",
+    "saveDraft": "Save draft"
   },
   "toast": {
     "storeCreated": "Store added",
@@ -120,7 +133,10 @@
     "auctionCreated": "Listing created",
     "auctionUpdated": "Listing updated",
     "auctionSubmitted": "Submitted for approval",
-    "auctionCancelled": "Listing cancelled"
+    "auctionCancelled": "Listing cancelled",
+    "auctionDraftSaved": "Draft saved. Publish it when you are ready.",
+    "auctionPublished": "Published. Your auction is on Mazad.",
+    "auctionSentForReview": "Sent for review. It goes live once Mazad approves it."
   },
   "errors": {
     "field": {
@@ -137,7 +153,18 @@
       "minIncrementInvalid": "Minimum raise must be above zero",
       "startsAtRequired": "Choose a start time",
       "endsAtRequired": "Choose an end time",
-      "endsBeforeStarts": "The end time must be after the start time"
+      "endsBeforeStarts": "The end time must be after the start time",
+      "wholeDinars": "Use whole dinars (no fractions).",
+      "startingPriceMin": "The opening bid must be at least 1,000 IQD.",
+      "startInPast": "The start time has passed. Choose a later time or start now.",
+      "durationTooShort": "An auction must run for at least an hour.",
+      "durationTooLong": "An auction can run for at most 14 days.",
+      "nameOneLanguage": "Give the product a name in Arabic or English.",
+      "descriptionOneLanguage": "Describe the product in Arabic or English.",
+      "conditionRequired": "Choose the condition.",
+      "photoRequired": "Add at least one photo to this product before publishing.",
+      "buyNowNotAboveStart": "The buy now price must be higher than the opening bid",
+      "buyNowInvalid": "Enter a valid buy now price"
     },
     "STORE_NOT_FOUND": "That store no longer exists.",
     "DEFAULT_STORE_PROTECTED": "Your default store cannot be deleted.",
@@ -151,6 +178,24 @@
     "INVALID_AUCTION_DATES": "The end time must be after the start time.",
     "INVALID_FILE_TYPE": "Only JPEG, PNG and WebP images are allowed.",
     "FILE_TOO_LARGE": "That image is larger than 5 MB.",
-    "UPLOAD_LIMIT_EXCEEDED": "You have reached today's upload limit."
+    "UPLOAD_LIMIT_EXCEEDED": "You have reached today's upload limit.",
+    "STARTING_PRICE_TOO_LOW": "The opening bid must be at least 1,000 IQD.",
+    "BUY_NOW_TOO_LOW": "The buy now price must be higher than the opening bid.",
+    "INVALID_AMOUNT": "Use whole dinars (no fractions).",
+    "PRODUCT_ALREADY_SOLD": "This product was sold. Only a cancelled sale can be listed again.",
+    "AUCTION_NOT_AVAILABLE": "This product or store is not available on Mazad right now.",
+    "dates": {
+      "START_IN_PAST": "The start time has passed. Choose a later time or start now.",
+      "END_IN_PAST": "The end time has passed. Choose a new end time.",
+      "TOO_SHORT": "An auction must run for at least an hour.",
+      "TOO_LONG": "An auction can run for at most 14 days.",
+      "END_TOO_SOON": "This listing ends too soon to publish. Edit its dates first."
+    }
+  },
+  "conditionHint": {
+    "NEW": "Unused, in its original packaging.",
+    "LIKE_NEW": "Used briefly; no visible wear.",
+    "OPEN_BOX": "Unused, but the box has been opened.",
+    "USED": "Used, with signs of use you describe in the description."
   }
 }

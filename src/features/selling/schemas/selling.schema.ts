@@ -77,6 +77,8 @@ export const sellerAuctionSchema = z.object({
   maxExtensions: z.number().nullable().optional(),
   rejectionReason: z.string().nullable(),
   cancelReason: z.string().nullable(),
+  // SOLD, but the order was cancelled: the product may be listed again (mazad-api saleCancelled).
+  saleCancelled: z.boolean().optional(),
   product: z
     .object({
       id: z.string(),
@@ -112,27 +114,50 @@ export const storeFormSchema = z.object({
   deliveryFee: z.coerce.number('errors.field.deliveryFeeInvalid').min(0),
 });
 
-export const productFormSchema = z.object({
-  storeId: z.string().min(1, 'errors.field.storeRequired'),
-  categoryId: z.string().min(1, 'errors.field.categoryRequired'),
-  nameEn: z.string().trim().min(1, 'errors.field.nameEnRequired').max(300),
-  nameAr: z.string().trim().min(1, 'errors.field.nameArRequired').max(300),
-  descriptionEn: z.string().trim().min(1, 'errors.field.descriptionEnRequired'),
-  descriptionAr: z.string().trim().min(1, 'errors.field.descriptionArRequired'),
-  condition: z.enum(PRODUCT_CONDITIONS),
-  // Optional in the DTO; an empty field must send nothing rather than 0, which would advertise
-  // a market price of zero on the detail page.
-  marketPrice: z
-    .union([z.literal(''), z.coerce.number().min(0)])
-    .optional()
-    .transform((value) => (value === '' || value === undefined ? undefined : value)),
-});
+// One language is enough: a name and a description in Arabic or English, and the empty side is
+// filled from the other (buyers reading the other language still see something).
+export const productFormSchema = z
+  .object({
+    storeId: z.string().min(1, 'errors.field.storeRequired'),
+    categoryId: z.string().min(1, 'errors.field.categoryRequired'),
+    nameEn: z.string().trim().max(300),
+    nameAr: z.string().trim().max(300),
+    descriptionEn: z.string().trim(),
+    descriptionAr: z.string().trim(),
+    // Chosen on purpose: no default, so "Used" is never claimed for a new item by accident.
+    condition: z.enum(PRODUCT_CONDITIONS, 'errors.field.conditionRequired'),
+    // Optional in the DTO; an empty field must send nothing rather than 0, which would advertise
+    // a market price of zero on the detail page.
+    marketPrice: z
+      .union([z.literal(''), z.coerce.number().min(0)])
+      .optional()
+      .transform((value) => (value === '' || value === undefined ? undefined : value)),
+  })
+  .superRefine((values, ctx) => {
+    if (!values.nameAr && !values.nameEn) {
+      ctx.addIssue({ code: 'custom', path: ['nameAr'], message: 'errors.field.nameOneLanguage' });
+    }
+    if (!values.descriptionAr && !values.descriptionEn) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['descriptionAr'],
+        message: 'errors.field.descriptionOneLanguage',
+      });
+    }
+  })
+  .transform((values) => ({
+    ...values,
+    nameAr: values.nameAr || values.nameEn,
+    nameEn: values.nameEn || values.nameAr,
+    descriptionAr: values.descriptionAr || values.descriptionEn,
+    descriptionEn: values.descriptionEn || values.descriptionAr,
+  }));
 
 export const auctionFormSchema = z
   .object({
     productId: z.string().min(1, 'errors.field.productRequired'),
     startingPrice: z.coerce.number('errors.field.startingPriceInvalid').min(0),
-    minIncrement: z.coerce.number('errors.field.minIncrementInvalid').min(0.01),
+    // No minIncrement: mazad-api sets the raise from its price ladder.
     // datetime-local gives "2026-08-11T18:30" with no zone; toIsoFromLocalInput converts.
     startsAt: z.string().min(1, 'errors.field.startsAtRequired'),
     endsAt: z.string().min(1, 'errors.field.endsAtRequired'),

@@ -26,8 +26,13 @@ export function SellerAuctionsPage({ initialProductId }: SellerAuctionsPageProps
 
   if (!isReady) return <PageLoader />;
 
+  // "relist:<id>": a new listing pre-filled from an ended one.
+  const relistId = editing?.startsWith('relist:') ? editing.slice('relist:'.length) : null;
+  const relistFrom = relistId
+    ? auctions.data?.find((auction) => auction.id === relistId)
+    : undefined;
   const editingAuction =
-    editing && editing !== 'new'
+    editing && editing !== 'new' && !relistId
       ? auctions.data?.find((auction) => auction.id === editing)
       : undefined;
 
@@ -40,7 +45,9 @@ export function SellerAuctionsPage({ initialProductId }: SellerAuctionsPageProps
           <Card>
             <CardContent>
               <AuctionForm
+                key={editing}
                 auction={editingAuction}
+                relistFrom={relistFrom}
                 products={products.data ?? []}
                 initialProductId={editing === 'new' ? initialProductId : undefined}
                 onDone={() => setEditing(null)}
@@ -72,6 +79,7 @@ export function SellerAuctionsPage({ initialProductId }: SellerAuctionsPageProps
                   key={auction.id}
                   auction={auction}
                   onEdit={(next) => setEditing(next.id)}
+                  onRelist={(from) => setEditing(`relist:${from.id}`)}
                 />
               ))
             )}

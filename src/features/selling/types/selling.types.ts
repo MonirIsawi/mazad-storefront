@@ -37,4 +37,6 @@ export type SellerAuctionStatus = (typeof SELLER_AUCTION_STATUSES)[number];
 export interface SellingCategoryOption {
   id: string;
   name: string;
+  /** No subcategories: the only kind a product should be filed under. */
+  isLeaf?: boolean;
 }
