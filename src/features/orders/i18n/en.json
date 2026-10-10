@@ -16,7 +16,13 @@
     "store": "Store",
     "note": "Note",
     "placedAt": "Placed",
-    "cancelReason": "Cancellation reason"
+    "cancelReason": "Cancellation reason",
+    "cancelledBy": {
+      "BUYER": "Cancelled by the buyer",
+      "SELLER": "Cancelled by the seller",
+      "ADMIN": "Cancelled by Mazad",
+      "SYSTEM": "Cancelled automatically"
+    }
   },
   "status": {
     "CREATED": "Pending",
@@ -59,7 +65,9 @@
     "REASON_REQUIRED": "Please add a reason.",
     "RETURN_REJECTED": "This return was rejected.",
     "INVALID_REFUND_AMOUNT": "Enter a valid refund amount.",
-    "ORDER_NOT_CANCELLABLE": "This order can't be cancelled at its current status."
+    "ORDER_NOT_CANCELLABLE": "This order can't be cancelled at its current status.",
+    "CASH_CONFIRMATION_REQUIRED": "Confirm the cash you received from the buyer first.",
+    "CASH_AMOUNT_MISMATCH": "The cash received must equal the order total."
   },
   "sales": {
     "title": "Orders received",
@@ -99,6 +107,10 @@
       "reject": "Return rejected.",
       "received": "Marked as received.",
       "refund": "Refund recorded."
+    },
+    "deliver": {
+      "cashConfirm": "Did you receive {{amount}} from the buyer? Confirm only once you have the full amount; the order is then marked delivered and paid.",
+      "paidConfirm": "This order was already paid by card. Mark it as delivered?"
     }
   },
   "payment": {

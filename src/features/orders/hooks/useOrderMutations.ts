@@ -54,8 +54,9 @@ export function useAdvanceOrder(orderId: string) {
   const refresh = useRefreshOrder(orderId);
 
   return useMutation({
-    mutationFn: (status: OrderStatus) => ordersApi.updateStatus(orderId, status),
-    onSuccess: (_data, status) => {
+    mutationFn: ({ status, cashReceived }: { status: OrderStatus; cashReceived?: number }) =>
+      ordersApi.updateStatus(orderId, status, cashReceived),
+    onSuccess: (_data, { status }) => {
       toast.success(t(`sales.toast.${status}`));
       refresh();
     },

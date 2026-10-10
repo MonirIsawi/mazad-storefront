@@ -31,9 +31,16 @@ export const ordersApi = {
     return ordersListSchema.parse(response.data);
   },
 
-  /** Seller: CREATED → CONFIRMED → OUT_FOR_DELIVERY → DELIVERED (mazad-api SELLER_TRANSITIONS). */
-  updateStatus: async (id: string, status: OrderStatus): Promise<void> => {
-    await httpClient.post(`/orders/${id}/status`, { status });
+  /**
+   * Seller: CREATED → CONFIRMED → OUT_FOR_DELIVERY → DELIVERED (mazad-api SELLER_TRANSITIONS).
+   * Delivering an unpaid cash-on-delivery order needs `cashReceived`, the exact total the seller
+   * confirmed (CASH_CONFIRMATION_REQUIRED / CASH_AMOUNT_MISMATCH otherwise).
+   */
+  updateStatus: async (id: string, status: OrderStatus, cashReceived?: number): Promise<void> => {
+    await httpClient.post(
+      `/orders/${id}/status`,
+      cashReceived != null ? { status, cashReceived } : { status },
+    );
   },
 
   /** Seller side of a return: approve, reject (reason required), product received, refund. */

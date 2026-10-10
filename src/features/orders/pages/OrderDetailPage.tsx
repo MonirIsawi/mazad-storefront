@@ -24,6 +24,7 @@ import {
 } from '../hooks/useOrderMutations';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
 import { OrderPaymentSection } from '../components/OrderPaymentSection';
+import { useOrderPayments } from '../hooks/usePayments';
 import { nextSellerStatus, sellerReturnActions } from '../lib/seller-orders';
 import type { Order, OrderStatus } from '../types/orders.types';
 import type { OrdersMode } from './OrdersPage';
@@ -141,10 +142,15 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
           </Card>
         </section>
 
-        {data.status === 'CANCELLED' && data.cancelReason ? (
-          <p className="text-footnote text-muted-foreground">
-            {t('detail.cancelReason')}: {data.cancelReason}
-          </p>
+        {data.status === 'CANCELLED' ? (
+          <div className="text-footnote text-muted-foreground" data-testid="order-cancelled-by">
+            {data.cancelledBy ? <p>{t(`detail.cancelledBy.${data.cancelledBy}`)}</p> : null}
+            {data.cancelReason ? (
+              <p>
+                {t('detail.cancelReason')}: {data.cancelReason}
+              </p>
+            ) : null}
+          </div>
         ) : null}
 
         {isSeller ? <SellerNextStep order={data} /> : null}
@@ -286,11 +292,27 @@ function OrderItemRow({
 /** The seller's one next step (confirm → out for delivery → delivered), with what it means. */
 function SellerNextStep({ order }: { order: Order }) {
   const { t } = useOrdersTranslation();
+  const { money } = useMoney();
   const advance = useAdvanceOrder(order.id);
+  const payments = useOrderPayments(order.id);
   const guard = useSubmitGuard();
   const next = nextSellerStatus(order.status);
   if (!next) return null;
   const error = getErrorCode(advance.error);
+
+  // Delivering an unpaid cash-on-delivery order records the cash as collected: the seller
+  // confirms the exact amount first (one accidental click must not mark money as received).
+  const deliver = (release: () => void) => {
+    const isPaid = Boolean(payments.data?.paidAt);
+    const question = isPaid
+      ? t('sales.deliver.paidConfirm')
+      : t('sales.deliver.cashConfirm', { amount: money(order.total) });
+    if (!window.confirm(question)) return release();
+    advance.mutate(
+      { status: 'DELIVERED', cashReceived: isPaid ? undefined : Number(order.total) },
+      { onSettled: release },
+    );
+  };
 
   return (
     <Card isInset className="flex flex-col gap-3">
@@ -304,7 +326,13 @@ function SellerNextStep({ order }: { order: Order }) {
         size="lg"
         isFullWidth
         isLoading={advance.isPending}
-        onClick={() => guard((release) => advance.mutate(next, { onSettled: release }))}
+        onClick={() =>
+          guard((release) =>
+            next === 'DELIVERED'
+              ? deliver(release)
+              : advance.mutate({ status: next }, { onSettled: release }),
+          )
+        }
         data-testid="sale-next-step"
       >
         {t(`sales.next.${next}`)}

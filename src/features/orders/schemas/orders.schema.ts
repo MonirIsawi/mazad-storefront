@@ -53,6 +53,8 @@ export const orderSchema = z.object({
   shipPhone: z.string().nullable(),
   note: z.string().nullable(),
   cancelReason: z.string().nullable(),
+  // Who cancelled (mazad-api Order.cancelledBy); absent from older API builds.
+  cancelledBy: z.enum(['BUYER', 'SELLER', 'ADMIN', 'SYSTEM']).nullish(),
   createdAt: z.string(),
   confirmedAt: z.string().nullable(),
   shippedAt: z.string().nullable(),

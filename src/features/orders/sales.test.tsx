@@ -164,14 +164,44 @@ describe('SaleDetailPage', () => {
   it.each<[OrderStatus, string, OrderStatus]>([
     ['CREATED', 'Confirm order', 'CONFIRMED'],
     ['CONFIRMED', 'Mark as out for delivery', 'OUT_FOR_DELIVERY'],
-    ['OUT_FOR_DELIVERY', 'Mark as delivered', 'DELIVERED'],
   ])('%s: offers "%s" and sends %s', async (status, label, next) => {
     api.get.mockResolvedValue(makeSale(status));
     api.updateStatus.mockResolvedValue(undefined);
     renderPage(<SaleDetailPage id="o1" />);
     await userEvent.click(await screen.findByRole('button', { name: label }));
     expect(screen.getByText('Buyer: Ali Buyer')).toBeTruthy();
-    expect(api.updateStatus).toHaveBeenCalledWith('o1', next);
+    expect(api.updateStatus).toHaveBeenCalledWith('o1', next, undefined);
+  });
+
+  it('OUT_FOR_DELIVERY: confirms the exact cash received before Delivered, and sends it', async () => {
+    const sale = makeSale('OUT_FOR_DELIVERY');
+    api.get.mockResolvedValue(sale);
+    api.updateStatus.mockResolvedValue(undefined);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    renderPage(<SaleDetailPage id="o1" />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Mark as delivered' }));
+    expect(confirm.mock.calls[0]![0]).toMatch(/^Did you receive .+ from the buyer\?/);
+    expect(api.updateStatus).toHaveBeenCalledWith('o1', 'DELIVERED', Number(sale.total));
+    confirm.mockRestore();
+  });
+
+  it('OUT_FOR_DELIVERY: sends nothing when the seller has not received the cash', async () => {
+    api.get.mockResolvedValue(makeSale('OUT_FOR_DELIVERY'));
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    renderPage(<SaleDetailPage id="o1" />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Mark as delivered' }));
+    expect(api.updateStatus).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
+
+  it('says who cancelled an order', async () => {
+    api.get.mockResolvedValue({
+      ...makeSale('CANCELLED'),
+      cancelledBy: 'SELLER',
+      cancelReason: null,
+    });
+    renderPage(<SaleDetailPage id="o1" />);
+    expect(await screen.findByText('Cancelled by the seller')).toBeTruthy();
   });
 
   it('sends one status change for a double click', async () => {
