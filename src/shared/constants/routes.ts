@@ -7,6 +7,8 @@ export const ROUTES = {
   register: '/register',
   resetPassword: '/reset-password',
   account: '/account',
+  help: '/help',
+  helpTopic: (topic: string) => `/help/${topic}`,
   addressesList: '/account/addresses',
   myBids: '/account/bids',
   watchlistList: '/account/watchlist',

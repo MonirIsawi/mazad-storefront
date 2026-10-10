@@ -38,7 +38,8 @@
     "signOut": "Sign out",
     "wins": "My wins",
     "orders": "My orders",
-    "payments": "Payment history"
+    "payments": "Payment history",
+    "help": "Help & policies"
   },
   "deleteAccount": {
     "title": "Delete account",

@@ -68,6 +68,10 @@ export function AccountPage() {
           />
         </Card>
 
+        <Card hasShadow className="overflow-hidden">
+          <ListRow icon="eye" title={t('account.help')} href={ROUTES.help} isLast />
+        </Card>
+
         {/* Preferences toggle in place rather than pushing a screen — one tap, no navigation. */}
         <Card hasShadow className="overflow-hidden">
           <ListRow
