@@ -38,7 +38,8 @@ export function useOrderPayments(orderId: string) {
     queryFn: () => paymentsApi.forOrder(orderId),
     enabled: isAuthenticated && Boolean(orderId),
     refetchOnWindowFocus: true,
-    refetchInterval: (current) => (isAwaitingConfirmation(current.state.data) ? PAYMENT_POLL_MS : false),
+    refetchInterval: (current) =>
+      isAwaitingConfirmation(current.state.data) ? PAYMENT_POLL_MS : false,
     refetchIntervalInBackground: false,
   });
 

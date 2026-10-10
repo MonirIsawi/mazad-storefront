@@ -8,7 +8,9 @@ import { z } from 'zod';
 export const paymentStatusSchema = z
   .enum(['PENDING', 'PAID', 'FAILED', 'PARTIALLY_REFUNDED', 'REFUNDED', 'CANCELLED'])
   .catch('PENDING');
-export const paymentMethodSchema = z.enum(['CASH_ON_DELIVERY', 'SWIFTPAY']).catch('CASH_ON_DELIVERY');
+export const paymentMethodSchema = z
+  .enum(['CASH_ON_DELIVERY', 'SWIFTPAY'])
+  .catch('CASH_ON_DELIVERY');
 
 export const paymentSchema = z.object({
   id: z.string(),
@@ -48,7 +50,12 @@ export const myPaymentsSchema = z.object({
       }),
     }),
   ),
-  meta: z.object({ page: z.number(), limit: z.number(), total: z.number(), totalPages: z.number() }),
+  meta: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+  }),
 });
 
 /** GET /payments/methods */

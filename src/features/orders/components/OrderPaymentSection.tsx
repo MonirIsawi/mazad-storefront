@@ -18,13 +18,7 @@ import type { Order, OrderStatus } from '../types/orders.types';
 const PAYABLE: OrderStatus[] = ['CREATED', 'CONFIRMED', 'OUT_FOR_DELIVERY'];
 
 type PaymentState =
-  | 'paid'
-  | 'paidCash'
-  | 'refunded'
-  | 'partiallyRefunded'
-  | 'awaiting'
-  | 'failed'
-  | 'unpaid';
+  'paid' | 'paidCash' | 'refunded' | 'partiallyRefunded' | 'awaiting' | 'failed' | 'unpaid';
 
 /** What the order's payments add up to, from the server's records only. */
 export function paymentStateOf(data: OrderPayments | undefined): PaymentState {
@@ -168,7 +162,9 @@ export function OrderPaymentSection({ order, mode }: { order: Order; mode: 'buye
               {choice === 'swiftpay' ? (
                 <>
                   {isTestMode ? (
-                    <p className="text-footnote font-semibold text-warning">{t('payment.testMode')}</p>
+                    <p className="text-footnote font-semibold text-warning">
+                      {t('payment.testMode')}
+                    </p>
                   ) : null}
                   <Button
                     size="lg"

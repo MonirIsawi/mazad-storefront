@@ -64,7 +64,9 @@ export function PaymentsPage() {
                 </div>
                 <p className="truncate text-footnote text-muted-foreground">
                   {t('payment.history.order')} {payment.order.orderNumber}
-                  {payment.order.store ? ` · ${pickLocalizedName(payment.order.store, locale)}` : ''}
+                  {payment.order.store
+                    ? ` · ${pickLocalizedName(payment.order.store, locale)}`
+                    : ''}
                 </p>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-caption text-muted-foreground">

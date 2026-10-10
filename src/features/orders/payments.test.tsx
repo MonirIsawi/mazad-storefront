@@ -79,7 +79,9 @@ const payments = (list: Payment[], paidPaymentId: string | null = null): OrderPa
 });
 
 function renderUi(ui: ReactNode) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>{ui}</I18nextProvider>
@@ -97,7 +99,10 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   setSessionTokens({ accessToken: 'access', refreshToken: 'refresh' });
-  api.methods.mockResolvedValue({ cashOnDelivery: { enabled: true }, swiftpay: { enabled: true, mode: 'test', currency: 'IQD' } });
+  api.methods.mockResolvedValue({
+    cashOnDelivery: { enabled: true },
+    swiftpay: { enabled: true, mode: 'test', currency: 'IQD' },
+  });
 });
 
 afterEach(() => {
@@ -107,13 +112,26 @@ afterEach(() => {
 
 describe('payment state comes only from the server records', () => {
   it('reads paid, cash, refunded, awaiting, failed and unpaid', () => {
-    expect(paymentStateOf(payments([payment({ status: 'PAID', open: false }), cod], 'p1'))).toBe('paid');
-    expect(paymentStateOf(payments([payment({ id: 'cod', method: 'CASH_ON_DELIVERY', status: 'PAID', open: false })], 'cod'))).toBe('paidCash');
-    expect(paymentStateOf(payments([payment({ status: 'REFUNDED', open: false })], 'p1'))).toBe('refunded');
+    expect(paymentStateOf(payments([payment({ status: 'PAID', open: false }), cod], 'p1'))).toBe(
+      'paid',
+    );
+    expect(
+      paymentStateOf(
+        payments(
+          [payment({ id: 'cod', method: 'CASH_ON_DELIVERY', status: 'PAID', open: false })],
+          'cod',
+        ),
+      ),
+    ).toBe('paidCash');
+    expect(paymentStateOf(payments([payment({ status: 'REFUNDED', open: false })], 'p1'))).toBe(
+      'refunded',
+    );
     expect(paymentStateOf(payments([payment({}), cod]))).toBe('awaiting');
     // An expired page (open false) is not "awaiting": the buyer can start again.
     expect(paymentStateOf(payments([payment({ open: false }), cod]))).toBe('unpaid');
-    expect(paymentStateOf(payments([payment({ status: 'FAILED', open: false }), cod]))).toBe('failed');
+    expect(paymentStateOf(payments([payment({ status: 'FAILED', open: false }), cod]))).toBe(
+      'failed',
+    );
     expect(paymentStateOf(payments([cod]))).toBe('unpaid');
   });
 });
@@ -121,7 +139,17 @@ describe('payment state comes only from the server records', () => {
 describe('paymentsApi', () => {
   it('calls the documented mazad-api routes', async () => {
     const post = vi.spyOn(httpClient, 'post').mockResolvedValue({
-      data: { paymentId: 'p1', orderId: 'o1', status: 'PENDING', amount: '50000', currency: 'IQD', checkoutUrl: 'https://swiftpayiq.com/pay?slug=x', expiresAt: null, mode: 'test', reused: false },
+      data: {
+        paymentId: 'p1',
+        orderId: 'o1',
+        status: 'PENDING',
+        amount: '50000',
+        currency: 'IQD',
+        checkoutUrl: 'https://swiftpayiq.com/pay?slug=x',
+        expiresAt: null,
+        mode: 'test',
+        reused: false,
+      },
     });
     const get = vi.spyOn(httpClient, 'get').mockResolvedValue({ data: payments([cod]) });
     await realApi.startSwiftPay('o1');
@@ -149,8 +177,15 @@ describe('OrderPaymentSection (buyer)', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window);
     api.forOrder.mockResolvedValueOnce(payments([cod]));
     api.startSwiftPay.mockResolvedValue({
-      paymentId: 'p1', orderId: 'o1', status: 'PENDING', amount: '50000', currency: 'IQD',
-      checkoutUrl: 'https://swiftpayiq.com/pay?slug=abc', expiresAt: null, mode: 'test', reused: false,
+      paymentId: 'p1',
+      orderId: 'o1',
+      status: 'PENDING',
+      amount: '50000',
+      currency: 'IQD',
+      checkoutUrl: 'https://swiftpayiq.com/pay?slug=abc',
+      expiresAt: null,
+      mode: 'test',
+      reused: false,
     });
     api.forOrder.mockResolvedValue(payments([payment({}), cod]));
 
@@ -170,7 +205,10 @@ describe('OrderPaymentSection (buyer)', () => {
     vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window);
     api.forOrder.mockResolvedValue(payments([cod]));
     api.startSwiftPay.mockRejectedValue(
-      Object.assign(new Error('x'), { isAxiosError: true, response: { status: 503, data: { errorCode: 'ELECTRONIC_PAYMENT_DISABLED' } } }),
+      Object.assign(new Error('x'), {
+        isAxiosError: true,
+        response: { status: 503, data: { errorCode: 'ELECTRONIC_PAYMENT_DISABLED' } },
+      }),
     );
     renderUi(<OrderPaymentSection order={order()} mode="buyer" />);
     await userEvent.click(await screen.findByLabelText(/Electronic payment via SwiftPayIQ/));
@@ -223,7 +261,15 @@ describe('PaymentsPage', () => {
   it('lists the buyer payment history linking to each order', async () => {
     api.mine.mockResolvedValue({
       data: [
-        { ...payment({ status: 'PAID', open: false, paidAt: '2026-10-10T10:05:00.000Z' }), order: { id: 'o1', orderNumber: 'ORD-2026-PAY', status: 'CREATED', store: { id: 's1', nameEn: 'Store', nameAr: 'متجر' } } },
+        {
+          ...payment({ status: 'PAID', open: false, paidAt: '2026-10-10T10:05:00.000Z' }),
+          order: {
+            id: 'o1',
+            orderNumber: 'ORD-2026-PAY',
+            status: 'CREATED',
+            store: { id: 's1', nameEn: 'Store', nameAr: 'متجر' },
+          },
+        },
       ],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
     });
