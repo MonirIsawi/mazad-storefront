@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useToastStore } from '@shared/store';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import i18n, { addNamespaceBundle } from '@shared/i18n';
@@ -17,6 +19,8 @@ vi.mock('../api/bidding.api', () => ({
     placeBid: vi.fn(),
     buyNow: vi.fn(),
     listMyBids: vi.fn(),
+    getMyStanding: vi.fn(),
+    cancelAutoBid: vi.fn(),
   },
 }));
 
@@ -53,6 +57,78 @@ beforeEach(() => {
 
 afterEach(() => {
   setSessionTokens(null);
+});
+
+const standing = (overrides: Record<string, unknown> = {}) => ({
+  auctionId: 'auction-1',
+  status: 'LIVE',
+  leading: false,
+  myHighestBid: null,
+  minNextBid: '100000.00',
+  autoBid: null,
+  ...overrides,
+});
+
+describe('BidPanel: the server says what happened', () => {
+  it('uses the server minimum and shows the leader', async () => {
+    vi.mocked(biddingApi.getAuctionPricing).mockResolvedValue({
+      id: 'auction-1',
+      status: 'LIVE',
+      startingPrice: '50000.00',
+      minIncrement: '1000.00',
+      currentPrice: '99000.00',
+      buyNowPrice: null,
+      endsAt: '2030-01-01T00:00:00.000Z',
+      minNextBid: '100000.00',
+      bidIncrement: '1000.00',
+    });
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(
+      standing({ leading: true, myHighestBid: '99000.00' }),
+    );
+    renderPanel(false);
+    expect(await screen.findByTestId('bid-leading')).toBeTruthy();
+    expect(screen.getAllByText(/100,000/).length).toBeGreaterThan(0);
+  });
+
+  it('says plainly when an automatic bid countered the bid at once', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(standing());
+    vi.mocked(biddingApi.placeBid).mockResolvedValue({
+      id: 'b1',
+      auctionId: 'auction-1',
+      amount: '100000.00',
+      createdAt: '2026-10-10T10:00:00.000Z',
+      leading: false,
+      outbidByAutoBid: true,
+      auction: {
+        currentPrice: '105000.00',
+        bidCount: 2,
+        endsAt: '2030-01-01T00:00:00.000Z',
+        status: 'LIVE',
+        minNextBid: '110000.00',
+      },
+    });
+    renderPanel(false);
+    await userEvent.click(await screen.findByRole('button', { name: /Place bid/ }));
+    expect(useToastStore.getState().toasts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          variant: 'error',
+          message: "Another bidder's automatic bid is higher — you were outbid.",
+        }),
+      ]),
+    );
+  });
+
+  it('shows an auto-bid set earlier, and its exhaustion', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(
+      standing({ autoBid: { maxAmount: '120000.00', exhausted: true } }),
+    );
+    renderPanel(false);
+    expect(await screen.findByTestId('auto-bid-active')).toHaveTextContent(
+      'The price passed your auto-bid limit of 120,000',
+    );
+    expect(screen.getByRole('button', { name: 'Change' })).toBeTruthy();
+  });
 });
 
 describe('BidPanel: who can bid', () => {

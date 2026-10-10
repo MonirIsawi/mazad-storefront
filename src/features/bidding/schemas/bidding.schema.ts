@@ -14,11 +14,14 @@ const bidAuctionSummarySchema = z.object({
   bidCount: z.number(),
   endsAt: z.string(),
   status: z.string(),
+  // The server's rule for the next bid (optional: older API builds don't send them).
+  minNextBid: z.string().optional(),
+  bidIncrement: z.string().optional(),
+  leaderMaskedName: z.string().nullable().optional(),
 });
 
-// mazad-api can silently substitute another bidder's auto-bid counter-offer into this response's
-// top-level id/amount when proxy bidding resolves in the same transaction — only `auction.*` is
-// guaranteed to reflect the caller's own action. See usePlaceBid's onSuccess.
+// id/amount are the caller's own bid. `leading` false with `outbidByAutoBid` means another
+// bidder's auto-bid countered it in the same transaction (auction.* shows the result).
 export const bidResponseSchema = z.object({
   id: z.string(),
   auctionId: z.string(),
@@ -26,6 +29,20 @@ export const bidResponseSchema = z.object({
   createdAt: z.string(),
   auction: bidAuctionSummarySchema,
   buyNow: z.boolean().optional(),
+  leading: z.boolean().optional(),
+  outbidByAutoBid: z.boolean().optional(),
+  extended: z.boolean().optional(),
+  extensionMinutes: z.number().nullable().optional(),
+});
+
+/** GET /auctions/:id/me: the signed-in user's standing, so a reopened page shows the same. */
+export const myStandingSchema = z.object({
+  auctionId: z.string(),
+  status: z.string(),
+  leading: z.boolean(),
+  myHighestBid: z.string().nullable(),
+  minNextBid: z.string(),
+  autoBid: z.object({ maxAmount: z.string(), exhausted: z.boolean() }).nullable(),
 });
 
 export const autoBidResponseSchema = z.object({
@@ -51,6 +68,8 @@ export const auctionPricingSchema = z.object({
   currentPrice: z.string().nullable(),
   buyNowPrice: z.string().nullable(),
   endsAt: z.string(),
+  minNextBid: z.string().optional(),
+  bidIncrement: z.string().optional(),
 });
 
 const myBidWinSchema = z.object({

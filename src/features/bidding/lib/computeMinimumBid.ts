@@ -4,6 +4,8 @@ export interface MinimumBidInput {
   currentPrice: string | null;
   startingPrice: string;
   minIncrement: string;
+  /** The server's own answer (mazad-api follows a price ladder): used whenever present. */
+  minNextBid?: string;
 }
 
 /**
@@ -16,7 +18,11 @@ export function computeMinimumBid({
   currentPrice,
   startingPrice,
   minIncrement,
+  minNextBid,
 }: MinimumBidInput): number | null {
+  // The server's minimum (its increment ladder) wins; the fixed-increment rule is the fallback.
+  const fromServer = minNextBid != null ? toMinorUnits(minNextBid) : null;
+  if (fromServer != null) return fromMinorUnits(fromServer);
   if (currentPrice == null) {
     const starting = toMinorUnits(startingPrice);
     return starting == null ? null : fromMinorUnits(starting);

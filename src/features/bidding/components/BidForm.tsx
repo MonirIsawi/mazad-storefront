@@ -10,6 +10,7 @@ import { useMoney } from '@shared/hooks';
 import { ROUTES } from '@shared/constants';
 import { computeMinimumBid } from '../lib/computeMinimumBid';
 import { usePlaceBid } from '../hooks/usePlaceBid';
+import { useMyStanding } from '../hooks/useMyStanding';
 import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 import type { AuctionPricing } from '../types/bidding.types';
 
@@ -27,9 +28,11 @@ export function BidForm({ auction }: BidFormProps) {
   const { t: tCommon } = useTranslation('common');
   const { money } = useMoney();
   const placeBid = usePlaceBid(auction.id);
+  const standing = useMyStanding(auction.id);
 
   const minimumBid = computeMinimumBid(auction) ?? 0;
-  const increment = parseMoney(auction.minIncrement) ?? 1;
+  // The raise at this price level (the server's ladder), else the auction's fixed increment.
+  const increment = parseMoney(auction.bidIncrement ?? auction.minIncrement) ?? 1;
   const [chosenAmount, setChosenAmount] = useState(minimumBid);
 
   // Another bidder raising the price moves the floor under us. Clamping during render rather
@@ -84,6 +87,23 @@ export function BidForm({ auction }: BidFormProps) {
         <p className="text-caption text-muted-foreground">
           {t('form.minimumHint', { amount: money(String(minimumBid)) })}
         </p>
+        {standing?.leading ? (
+          <p
+            role="status"
+            className="text-footnote font-semibold text-success"
+            data-testid="bid-leading"
+          >
+            {t('form.leading')}
+          </p>
+        ) : standing?.myHighestBid ? (
+          <p
+            role="status"
+            className="text-footnote font-semibold text-warning"
+            data-testid="bid-outbid"
+          >
+            {t('form.outbid')}
+          </p>
+        ) : null}
         {priceMoved ? (
           <p role="status" className="text-footnote font-semibold text-warning">
             {t('form.priceMoved', { amount: money(String(minimumBid)) })}

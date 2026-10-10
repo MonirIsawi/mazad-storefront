@@ -23,6 +23,7 @@ export function useSetAutoBid(auctionId: string) {
       void queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.bidding.auctionPricing(auctionId),
       });
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.bidding.myStanding(auctionId) });
     },
   });
 }

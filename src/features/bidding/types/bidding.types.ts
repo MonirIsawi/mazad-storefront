@@ -7,6 +7,7 @@ import type {
   auctionPricingSchema,
   myBidItemSchema,
   myBidsListSchema,
+  myStandingSchema,
   placeBidFormSchema,
   autoBidFormSchema,
 } from '../schemas/bidding.schema';
@@ -18,6 +19,7 @@ export type AutoBidCancelResponse = z.infer<typeof autoBidCancelResponseSchema>;
 export type AuctionPricing = z.infer<typeof auctionPricingSchema>;
 export type MyBidItem = z.infer<typeof myBidItemSchema>;
 export type MyBidsList = z.infer<typeof myBidsListSchema>;
+export type MyStanding = z.infer<typeof myStandingSchema>;
 export type PlaceBidFormValues = z.infer<typeof placeBidFormSchema>;
 export type AutoBidFormValues = z.infer<typeof autoBidFormSchema>;
 

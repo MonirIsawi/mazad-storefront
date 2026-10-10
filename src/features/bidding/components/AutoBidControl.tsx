@@ -9,6 +9,8 @@ import { getErrorCode } from '@shared/lib';
 import { autoBidFormSchema } from '../schemas/bidding.schema';
 import { useSetAutoBid } from '../hooks/useSetAutoBid';
 import { useCancelAutoBid } from '../hooks/useCancelAutoBid';
+import { useMyStanding } from '../hooks/useMyStanding';
+import { useMoney } from '@shared/hooks';
 import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 import type { AutoBidFormValues } from '../types/bidding.types';
 
@@ -16,13 +18,16 @@ export interface AutoBidControlProps {
   auctionId: string;
 }
 
-// mazad-api has no GET for "my current auto-bid on this auction" — state here reflects only
-// this session's own mutation responses and resets on reload (documented v1 limitation, see the
-// interactive-features plan).
+/**
+ * Collapsed "Set up auto-bid", the maximum field, or "Auto-bid active up to X" with Change and
+ * Turn off. The active state is the server's (GET /auctions/:id/me), so it survives a reload, and
+ * says when the price has passed the maximum.
+ */
 export function AutoBidControl({ auctionId }: AutoBidControlProps) {
   const { t } = useBiddingTranslation();
   const { t: tCommon } = useTranslation('common');
-  const [active, setActive] = useState<{ maxAmount: string } | null>(null);
+  const { money } = useMoney();
+  const active = useMyStanding(auctionId)?.autoBid ?? null;
   const [isExpanded, setIsExpanded] = useState(false);
   const setAutoBid = useSetAutoBid(auctionId);
   const cancelAutoBid = useCancelAutoBid(auctionId);
@@ -36,27 +41,34 @@ export function AutoBidControl({ auctionId }: AutoBidControlProps) {
 
   const onSubmit = handleSubmit((values) => {
     setAutoBid.mutate(values.maxAmount, {
-      onSuccess: (result) => {
-        setActive({ maxAmount: result.maxAmount });
-        setIsExpanded(false);
-      },
+      onSuccess: () => setIsExpanded(false),
     });
   });
 
-  if (active) {
+  if (active && !isExpanded) {
     return (
-      <div className="flex items-center justify-between gap-2 text-sm">
-        <span className="text-foreground-soft">
-          {t('autoBid.active', { amount: active.maxAmount })}
-        </span>
-        <Button
-          variant="plain"
-          size="sm"
-          isLoading={cancelAutoBid.isPending}
-          onClick={() => cancelAutoBid.mutate(undefined, { onSuccess: () => setActive(null) })}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <span
+          className={active.exhausted ? 'text-destructive' : 'text-foreground-soft'}
+          data-testid="auto-bid-active"
         >
-          {t('autoBid.cancel')}
-        </Button>
+          {t(active.exhausted ? 'autoBid.exhausted' : 'autoBid.active', {
+            amount: money(active.maxAmount),
+          })}
+        </span>
+        <span className="flex gap-1">
+          <Button variant="plain" size="sm" onClick={() => setIsExpanded(true)}>
+            {t('autoBid.change')}
+          </Button>
+          <Button
+            variant="plain"
+            size="sm"
+            isLoading={cancelAutoBid.isPending}
+            onClick={() => cancelAutoBid.mutate(undefined)}
+          >
+            {t('autoBid.cancel')}
+          </Button>
+        </span>
       </div>
     );
   }

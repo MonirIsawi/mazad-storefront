@@ -21,14 +21,18 @@
     "confirmNewAmount": "Bid {{amount}}",
     "bidBuysNow": "This amount reaches the buy-now price: placing it buys the item now.",
     "confirmBuyNow": "Confirm purchase for {{amount}}",
-    "buyNowConfirmHint": "Buying now ends the auction. You pay {{amount}} plus delivery."
+    "buyNowConfirmHint": "Buying now ends the auction. You pay {{amount}} plus delivery.",
+    "leading": "You're the highest bidder.",
+    "outbid": "You were outbid. Bid again to take the lead."
   },
   "autoBid": {
     "setUp": "Set up auto-bid",
     "maxAmount": "Maximum bid",
     "submit": "Start auto-bid",
     "cancel": "Turn off",
-    "active": "Auto-bid active up to {{amount}}"
+    "active": "Auto-bid active up to {{amount}}",
+    "change": "Change",
+    "exhausted": "The price passed your auto-bid limit of {{amount}}."
   },
   "myBids": {
     "title": "My bids",
@@ -55,7 +59,11 @@
     "bidPlaced": "Bid placed",
     "boughtNow": "Purchase confirmed.",
     "autoBidSet": "Auto-bid set.",
-    "autoBidCancelled": "Auto-bid turned off."
+    "autoBidCancelled": "Auto-bid turned off.",
+    "outbidByAutoBid": "Another bidder's automatic bid is higher — you were outbid.",
+    "nextMinimum": "Next bid: at least {{amount}}",
+    "extended_one": "Extended by {{count, num}} minute because of a late bid.",
+    "extended_other": "Extended by {{count, num}} minutes because of a late bid."
   },
   "errors": {
     "field": {
@@ -75,6 +83,8 @@
     "BID_AMOUNT_TAKEN": "That exact amount was just taken — try a higher bid.",
     "BUY_NOW_NOT_AVAILABLE": "Buy-now isn't available for this auction.",
     "AUTO_BID_TOO_LOW": "Your maximum needs to be higher than the current price.",
-    "AUTO_BID_NOT_FOUND": "You don't have an active auto-bid to cancel."
+    "AUTO_BID_NOT_FOUND": "You don't have an active auto-bid to cancel.",
+    "INVALID_AMOUNT": "Bids are in whole dinars.",
+    "AUCTION_NOT_AVAILABLE": "This auction is no longer available."
   }
 }

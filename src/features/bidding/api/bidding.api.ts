@@ -5,6 +5,7 @@ import {
   autoBidCancelResponseSchema,
   auctionPricingSchema,
   myBidsListSchema,
+  myStandingSchema,
 } from '../schemas/bidding.schema';
 import type {
   BidResponse,
@@ -13,6 +14,7 @@ import type {
   AuctionPricing,
   MyBidsList,
   MyBidsParams,
+  MyStanding,
 } from '../types/bidding.types';
 
 export const biddingApi = {
@@ -54,6 +56,12 @@ export const biddingApi = {
   cancelAutoBid: async (auctionId: string): Promise<AutoBidCancelResponse> => {
     const response = await httpClient.delete<unknown>(`/auctions/${auctionId}/auto-bid`);
     return autoBidCancelResponseSchema.parse(response.data);
+  },
+
+  /** The signed-in user's standing on one auction: leading, highest bid, auto-bid. */
+  getMyStanding: async (auctionId: string): Promise<MyStanding> => {
+    const response = await httpClient.get<unknown>(`/auctions/${auctionId}/me`);
+    return myStandingSchema.parse(response.data);
   },
 
   listMyBids: async (params: MyBidsParams): Promise<MyBidsList> => {
