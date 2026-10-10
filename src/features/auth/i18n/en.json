@@ -37,7 +37,8 @@
     "following": "Sellers you follow",
     "signOut": "Sign out",
     "wins": "My wins",
-    "orders": "My orders"
+    "orders": "My orders",
+    "payments": "Payment history"
   },
   "deleteAccount": {
     "title": "Delete account",
