@@ -23,6 +23,7 @@ import {
   useReturnAction,
 } from '../hooks/useOrderMutations';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
+import { OrderPaymentSection } from '../components/OrderPaymentSection';
 import { nextSellerStatus, sellerReturnActions } from '../lib/seller-orders';
 import type { Order, OrderStatus } from '../types/orders.types';
 import type { OrdersMode } from './OrdersPage';
@@ -115,6 +116,8 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
             </CardContent>
           </Card>
         </section>
+
+        <OrderPaymentSection order={data} mode={mode} />
 
         <section>
           <SectionHeader title={t('detail.delivery')} />

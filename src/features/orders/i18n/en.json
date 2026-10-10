@@ -100,5 +100,65 @@
       "received": "Marked as received.",
       "refund": "Refund recorded."
     }
+  },
+  "payment": {
+    "title": "Payment",
+    "methodLabel": "Payment method",
+    "cod": "Cash on delivery",
+    "codHint": "Pay the seller in cash when the order arrives.",
+    "swiftpay": "Electronic payment via SwiftPayIQ",
+    "swiftpayHint": "Pay now with an Iraqi card (QiCard, local Mastercard or Visa) on SwiftPayIQ's secure page.",
+    "amountDue": "Amount due",
+    "payNow": "Pay {{amount}}",
+    "continue": "Continue to the payment page",
+    "refresh": "Check payment status",
+    "retry": "Try again",
+    "testMode": "Test mode: no real money is charged.",
+    "openedHint": "The payment page opened in a new tab. Come back here when you're done: this page updates by itself once SwiftPayIQ confirms.",
+    "state": {
+      "awaiting": "Waiting for SwiftPayIQ to confirm your payment",
+      "awaitingHint": "Returning from the payment page doesn't confirm it; SwiftPayIQ notifies Mazad directly. This usually takes a few seconds.",
+      "paid": "Paid electronically",
+      "paidHint": "Nothing to pay on delivery.",
+      "paidCash": "Paid on delivery",
+      "failed": "The payment didn't go through",
+      "failedHint": "No money was taken. You can try again or pay cash on delivery.",
+      "refunded": "Payment refunded",
+      "partiallyRefunded": "Payment partly refunded",
+      "unpaid": "Cash on delivery"
+    },
+    "seller": {
+      "paid": "The buyer paid electronically. Do not collect cash on delivery.",
+      "cod": "Cash on delivery: collect the total when you deliver.",
+      "refunded": "The buyer's electronic payment was refunded."
+    },
+    "status": {
+      "PENDING": "Waiting",
+      "PAID": "Paid",
+      "FAILED": "Failed",
+      "PARTIALLY_REFUNDED": "Partly refunded",
+      "REFUNDED": "Refunded",
+      "CANCELLED": "Closed"
+    },
+    "method": {
+      "CASH_ON_DELIVERY": "Cash on delivery",
+      "SWIFTPAY": "SwiftPayIQ"
+    },
+    "history": {
+      "title": "Payment history",
+      "emptyTitle": "No payments yet",
+      "empty": "Electronic payments and cash payments of your orders show up here.",
+      "order": "Order"
+    },
+    "errors": {
+      "ELECTRONIC_PAYMENT_DISABLED": "Electronic payment isn't available right now. You can pay cash on delivery.",
+      "ORDER_ALREADY_PAID": "This order is already paid.",
+      "ORDER_NOT_PAYABLE": "This order can no longer be paid electronically.",
+      "ORDER_AMOUNT_NOT_PAYABLE": "This order's amount can't be paid electronically. You can pay cash on delivery.",
+      "CHECKOUT_IN_PROGRESS": "The payment page is being prepared. Try again in a moment.",
+      "PAYMENT_PROVIDER_UNAVAILABLE": "Electronic payment is temporarily unavailable. Try again later or pay cash on delivery.",
+      "PAYMENT_PROVIDER_REJECTED": "The payment provider couldn't open a payment page. Try again later or pay cash on delivery.",
+      "generic": "Couldn't open the payment page. Try again."
+    }
   }
 }

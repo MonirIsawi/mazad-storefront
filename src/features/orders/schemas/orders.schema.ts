@@ -58,6 +58,8 @@ export const orderSchema = z.object({
   shippedAt: z.string().nullable(),
   deliveredAt: z.string().nullable(),
   cancelledAt: z.string().nullable(),
+  // Set once the order is paid (cash on delivery or SwiftPayIQ); older APIs omit it.
+  paidAt: z.string().nullish(),
   items: z.array(orderItemSchema),
   store: z.object({
     id: z.string(),

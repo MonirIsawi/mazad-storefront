@@ -36,6 +36,11 @@ export const QUERY_KEYS = {
     detail: (id: string) => ['orders', 'detail', id] as const,
     sales: ['orders', 'sales'] as const,
   },
+  payments: {
+    methods: ['payments', 'methods'] as const,
+    order: (orderId: string) => ['payments', 'order', orderId] as const,
+    mine: ['payments', 'mine'] as const,
+  },
   notifications: {
     list: ['notifications', 'list'] as const,
     unreadCount: ['notifications', 'unreadCount'] as const,

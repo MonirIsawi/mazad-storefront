@@ -56,6 +56,7 @@ export function AccountPage() {
           <ListRow icon="gavel" title={t('account.myBids')} href={ROUTES.myBids} />
           <ListRow icon="badge-check" title={t('account.wins')} href={ROUTES.wins} />
           <ListRow icon="package" title={t('account.orders')} href={ROUTES.orders} />
+          <ListRow icon="credit-card" title={t('account.payments')} href={ROUTES.payments} />
           <ListRow icon="heart" title={t('account.watchlist')} href={ROUTES.watchlistList} />
           <ListRow icon="store" title={t('account.following')} href={ROUTES.following} />
           <ListRow icon="map-pin" title={t('account.addresses')} href={ROUTES.addressesList} />

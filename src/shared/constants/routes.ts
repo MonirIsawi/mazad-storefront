@@ -16,6 +16,7 @@ export const ROUTES = {
   wins: '/account/wins',
   orders: '/account/orders',
   orderDetail: (id: string) => `/account/orders/${id}`,
+  payments: '/account/payments',
   // The seller's own side, hung off the account screen rather than a sixth tab (five is the
   // HIG ceiling — see AppTabBar).
   selling: '/account/selling',
