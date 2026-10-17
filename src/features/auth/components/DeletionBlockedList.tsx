@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Icon } from '@shared/components/ui';
 import { DELETION_BLOCKER_LINKS } from '../lib/account-deletion';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
@@ -9,29 +10,35 @@ export function DeletionBlockedList({ reasons }: { reasons: string[] }) {
   const { t } = useAuthTranslation();
 
   return (
-    <div role="alert" className="flex flex-col gap-2 text-footnote">
+    <div role="alert" className="grid gap-2.5 rounded-lg bg-destructive-soft p-4 text-sm">
       <p className="font-semibold text-destructive">{t('deleteAccount.blocked.title')}</p>
-      <ul className="flex list-disc flex-col gap-1.5 ps-5 text-foreground-soft">
+      <ul className="grid gap-2 text-foreground">
         {reasons.map((reason) => {
           const link = DELETION_BLOCKER_LINKS[reason];
           return (
-            <li key={reason}>
-              {t(`deleteAccount.reasons.${reason}`, {
-                defaultValue: t('deleteAccount.reasons.unknown'),
-              })}
-              {link ? (
-                <>
-                  {' '}
-                  <Link href={link.href} className="font-semibold text-primary-text">
-                    {t(link.labelKey)}
-                  </Link>
-                </>
-              ) : null}
+            <li key={reason} className="flex gap-2">
+              <Icon name="x-circle" size={18} className="mt-0.5 shrink-0 text-destructive" />
+              <span>
+                {t(`deleteAccount.reasons.${reason}`, {
+                  defaultValue: t('deleteAccount.reasons.unknown'),
+                })}
+                {link ? (
+                  <>
+                    {' '}
+                    <Link
+                      href={link.href}
+                      className="font-semibold text-gold underline underline-offset-2 light:text-gold-lo"
+                    >
+                      {t(link.labelKey)}
+                    </Link>
+                  </>
+                ) : null}
+              </span>
             </li>
           );
         })}
       </ul>
-      <p className="text-muted-foreground">{t('deleteAccount.blocked.hint')}</p>
+      <p className="text-foreground-soft">{t('deleteAccount.blocked.hint')}</p>
     </div>
   );
 }

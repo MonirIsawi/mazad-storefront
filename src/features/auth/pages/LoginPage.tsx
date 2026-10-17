@@ -1,10 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { ROUTES } from '@shared/constants';
 import { PageLoader } from '@shared/components/feedback';
 import { LegalLinks } from '../components/LegalLinks';
 import { LoginForm } from '../components/LoginForm';
+import { AuthShell } from '../components/shell/AuthShell';
+import { AuthHeading } from '../components/shell/AuthHeading';
+import { AuthSwitchLine } from '../components/shell/AuthSwitchLine';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
 export function LoginPage() {
@@ -13,16 +15,15 @@ export function LoginPage() {
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-gutter py-12">
-      <h1 className="text-2xl font-bold text-foreground">{t('login.title')}</h1>
+    <AuthShell backHref={ROUTES.home}>
+      <AuthHeading title={t('login.title')} intro={t('login.intro')} />
       <LoginForm />
-      <p className="text-center text-sm text-muted-foreground">
-        {t('login.noAccount')}{' '}
-        <Link href={ROUTES.register} className="font-medium text-accent hover:underline">
-          {t('login.createAccount')}
-        </Link>
-      </p>
+      <AuthSwitchLine
+        question={t('login.noAccount')}
+        linkLabel={t('login.createAccount')}
+        href={ROUTES.register}
+      />
       <LegalLinks />
-    </div>
+    </AuthShell>
   );
 }

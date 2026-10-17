@@ -1,24 +1,34 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input, PasswordInput } from '@shared/components/ui';
+import { Button, PasswordInput } from '@shared/components/ui';
+import { normalizePhone } from '@shared/lib';
 import { resetPasswordSchema } from '../schemas/auth.schema';
 import type { ResetPasswordValues } from '../types/auth.types';
 import { useSignupOtp } from '../hooks/useSignupOtp';
 import { usePasswordReset } from '../hooks/usePasswordReset';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
+import { useCodeSentLine } from '../hooks/useCodeSentLine';
 import { resolveAuthErrorCode } from '../lib/auth-errors';
+import { withIraqiPrefix } from '../lib/phone-prefix';
+import { AuthHeading } from './shell/AuthHeading';
+import { StepBar } from './shell/StepBar';
+import { PhoneField } from './fields/PhoneField';
+import { FormAlert } from './fields/FormAlert';
 import { SignupCodeStep } from './SignupCodeStep';
+import { CodeStepActions } from './CodeStepActions';
+
+const STEP_NUMBER = { phone: 1, code: 2, password: 3 } as const;
 
 /**
- * Password reset, one form in three steps (docs/api/authentication.md, "Password reset"):
- * phone → "send code" (POST /auth/otp/request, purpose PASSWORD_RESET), code → "verify"
- * (POST /auth/otp/verify → single-use reset token), new password → "save"
- * (POST /auth/password/reset, typed twice). The phone is locked once a code is pending, so the token is for
- * exactly the number the code went to.
+ * Password reset, one form in three steps (docs/api/authentication.md, "Password reset"), each
+ * named in words above the bar: phone → "send code" (POST /auth/otp/request, PASSWORD_RESET),
+ * code → "verify" (POST /auth/otp/verify → single-use reset token), new password → "save"
+ * (POST /auth/password/reset, typed twice). The phone stays mounted and locked once a code is
+ * pending, so the token is for exactly the number the code went to.
  */
 export function ResetPasswordForm() {
   const { t } = useAuthTranslation();
@@ -32,11 +42,14 @@ export function ResetPasswordForm() {
     trigger,
     getValues,
     resetField,
+    control,
     formState: { errors },
   } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { phone: '', code: '', newPassword: '', confirmPassword: '' },
   });
+  const code = useWatch({ control, name: 'code' }) ?? '';
+  const sentLine = useCodeSentLine(otp.sent);
 
   const step = resetToken ? 'password' : otp.sent ? 'code' : 'phone';
   const fieldError = (key?: string) => (key ? t(key) : undefined);
@@ -66,7 +79,8 @@ export function ResetPasswordForm() {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (step === 'phone') {
-      if (await trigger('phone')) sendCode(getValues('phone').trim(), false);
+      if (await trigger('phone'))
+        sendCode(normalizePhone(withIraqiPrefix(getValues('phone'))), false);
       return;
     }
     if (step === 'code') {
@@ -84,6 +98,11 @@ export function ResetPasswordForm() {
   };
 
   const errorCode = resolveAuthErrorCode(save.error ?? verify.error ?? otp.mutation.error);
+  const heading = {
+    phone: { title: t('reset.title'), intro: t('reset.intro') },
+    code: { title: t('reset.codeTitle'), intro: sentLine },
+    password: { title: t('reset.passwordTitle'), intro: t('reset.passwordIntro') },
+  }[step];
   const submitLabel = {
     phone: t('register.sendCode'),
     code: t('reset.verify'),
@@ -96,57 +115,66 @@ export function ResetPasswordForm() {
   }[step];
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-      <Input
-        label={t('fields.phone')}
-        type="tel"
-        autoComplete="tel"
-        placeholder={t('fields.phonePlaceholder')}
-        readOnly={step !== 'phone'}
-        error={fieldError(errors.phone?.message)}
-        {...register('phone')}
-      />
+    <form onSubmit={onSubmit} noValidate className="grid gap-5">
+      <StepBar step={STEP_NUMBER[step]} total={3} />
+      <AuthHeading title={heading.title} intro={heading.intro} />
+      <div hidden={step !== 'phone'}>
+        <PhoneField
+          label={t('fields.phone')}
+          placeholder={t('fields.phonePlaceholder')}
+          readOnly={step !== 'phone'}
+          error={fieldError(errors.phone?.message)}
+          {...register('phone')}
+        />
+      </div>
       {step === 'code' && otp.sent ? (
         <SignupCodeStep
           sent={otp.sent}
+          code={code}
           codeField={register('code')}
           codeError={fieldError(errors.code?.message)}
           notice={notice}
           isResending={otp.mutation.isPending}
           onResend={() => otp.sent && sendCode(otp.sent.phone, true)}
-          onChangePhone={startOver}
         />
       ) : null}
       {step === 'password' ? (
-        <PasswordInput
-          label={t('reset.newPassword')}
-          autoComplete="new-password"
-          autoFocus
-          error={fieldError(errors.newPassword?.message)}
-          {...register('newPassword')}
-        />
-      ) : null}
-      {step === 'password' ? (
-        <PasswordInput
-          label={t('reset.confirmPassword')}
-          autoComplete="new-password"
-          error={fieldError(errors.confirmPassword?.message)}
-          {...register('confirmPassword')}
-        />
+        <>
+          <PasswordInput
+            label={t('reset.newPassword')}
+            autoComplete="new-password"
+            autoFocus
+            hint={t('register.passwordHint')}
+            error={fieldError(errors.newPassword?.message)}
+            {...register('newPassword')}
+          />
+          <PasswordInput
+            label={t('reset.confirmPassword')}
+            autoComplete="new-password"
+            error={fieldError(errors.confirmPassword?.message)}
+            {...register('confirmPassword')}
+          />
+        </>
       ) : null}
       {errorCode ? (
-        <p role="alert" className="text-sm text-destructive">
+        <FormAlert>
           {tCommon(`errors.${errorCode}`, { defaultValue: tCommon('errors.generic') })}
-        </p>
+        </FormAlert>
       ) : null}
       {errorCode === 'RESET_TOKEN_INVALID' ? (
-        <Button variant="plain" size="sm" onClick={startOver}>
+        <Button variant="soft" size="sm" className="justify-self-start" onClick={startOver}>
           {t('reset.startOver')}
         </Button>
       ) : null}
-      <Button type="submit" isLoading={isPending}>
+      <Button type="submit" isFullWidth isLoading={isPending}>
         {submitLabel}
       </Button>
+      {step === 'code' && otp.sent ? (
+        <CodeStepActions
+          telegramDeepLink={otp.sent.result.telegramDeepLink}
+          onChangePhone={startOver}
+        />
+      ) : null}
     </form>
   );
 }

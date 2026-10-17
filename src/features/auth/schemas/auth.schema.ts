@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { parsePhone } from '@shared/lib/phone';
+import { withIraqiPrefix } from '../lib/phone-prefix';
 
-// Anything mazad-api reads as a phone: 07…, +964…, Arabic digits, spaces and dashes included.
+// Anything mazad-api reads as a phone: 07…, +964…, Arabic digits, spaces and dashes included. The
+// field shows a fixed +964, so a number typed without its country code is read with it.
 const phoneSchema = z
   .string()
   .trim()
-  .refine((value) => parsePhone(value) !== null, 'errors.field.phoneInvalid');
+  .refine((value) => parsePhone(withIraqiPrefix(value)) !== null, 'errors.field.phoneInvalid');
 
 const passwordSchema = z.string().min(8, 'errors.field.passwordMin');
 

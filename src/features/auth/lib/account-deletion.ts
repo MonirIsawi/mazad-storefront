@@ -14,6 +14,18 @@ export type DeletionFailure =
   | { type: 'signedOut' }
   | { type: 'message'; namespace: 'auth' | 'common'; key: string };
 
+/** Everything the API can name as still open (ACCOUNT_DELETION_BLOCKED details.reasons). */
+export const DELETION_BLOCKERS = [
+  'SELLER_AUCTIONS_ACTIVE',
+  'SELLER_ORDERS_OPEN',
+  'SELLER_RETURN_WINDOW_OPEN',
+  'BUYER_ORDERS_OPEN',
+  'WINS_PENDING',
+  'RETURNS_OPEN',
+  'LEADING_BIDS',
+  'WALLET_NOT_EMPTY',
+] as const;
+
 /**
  * Where each ACCOUNT_DELETION_BLOCKED reason can be resolved in this storefront. Reasons without a
  * screen here (seller orders, return windows, wallet) are listed without a link.

@@ -40,10 +40,10 @@ export function Price({ value, tone = 'plain', size = 'md', className }: PricePr
     <span className={cn('font-num whitespace-nowrap', TONE[tone], SIZE[size], className)}>
       {parts ? (
         <>
-          {parts.amount}
+          {parts.amount}{' '}
           <span
             className={cn(
-              'ms-[0.3em] text-[max(11px,0.55em)] font-normal',
+              'text-[max(11px,0.55em)] font-normal',
               tone === 'photo' || tone === 'photoPlain'
                 ? 'text-on-photo/70'
                 : 'text-muted-foreground',

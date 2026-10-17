@@ -5,7 +5,9 @@ import { useEffect, useRef } from 'react';
 import { QUERY_KEYS } from '@shared/constants';
 import { useIsAuthenticated } from '@shared/hooks';
 import { paymentsApi } from '../api/payments.api';
-import type { OrderPayments } from '../schemas/payments.schema';
+import { isAwaitingConfirmation } from '../lib/payment-state';
+
+export { isAwaitingConfirmation };
 
 /** How often an order waiting for SwiftPayIQ's confirmation is re-read (while the tab is visible). */
 export const PAYMENT_POLL_MS = 5_000;
@@ -16,13 +18,6 @@ export function usePaymentMethods() {
     queryFn: paymentsApi.methods,
     staleTime: 5 * 60_000,
   });
-}
-
-/** True while an electronic checkout of this order is open and not yet confirmed. */
-export function isAwaitingConfirmation(data: OrderPayments | undefined) {
-  if (!data || data.paidAt) return false;
-  const latest = data.payments.find((payment) => payment.method === 'SWIFTPAY');
-  return Boolean(latest && latest.status === 'PENDING' && latest.open);
 }
 
 /**

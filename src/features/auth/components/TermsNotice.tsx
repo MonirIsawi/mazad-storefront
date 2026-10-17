@@ -5,13 +5,13 @@ import { Trans } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
-const LINK_CLASS = 'font-medium text-accent hover:underline';
+const LINK_CLASS = 'text-gold underline underline-offset-2 light:text-gold-lo';
 
 /** "By creating an account you agree to the Terms and Privacy policy", both linked. */
 export function TermsNotice() {
   const { t } = useAuthTranslation();
   return (
-    <p className="text-footnote text-muted-foreground" data-testid="register-terms">
+    <p className="text-center text-xs text-muted-foreground" data-testid="register-terms">
       <Trans
         t={t}
         i18nKey="register.agree"

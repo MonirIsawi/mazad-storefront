@@ -2,7 +2,10 @@
   "page": {
     "title": "Delivery addresses",
     "subtitle": "You need at least one saved address before you can bid.",
-    "addNew": "Add address"
+    "addNew": "Add address",
+    "account": "Account",
+    "winNote": "When you win an auction, the order goes to your default address.",
+    "noneYet": "Add your first address to start bidding."
   },
   "fields": {
     "label": "Label",
@@ -16,14 +19,17 @@
   "form": {
     "add": "Add address",
     "save": "Save changes",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "newTitle": "New address",
+    "editTitle": "Edit address"
   },
   "list": {
     "empty": "No saved addresses yet.",
     "default": "Default",
     "edit": "Edit",
     "delete": "Delete",
-    "confirmDelete": "Confirm delete"
+    "confirmDelete": "Confirm delete",
+    "deleteQuestion": "Delete this address?"
   },
   "toast": {
     "created": "Address added.",
@@ -36,5 +42,11 @@
       "cityRequired": "City is required."
     },
     "ADDRESS_NOT_FOUND": "That address no longer exists."
+  },
+  "placeholders": {
+    "label": "Home, work…",
+    "street": "Street name or number",
+    "details": "Nearest landmark",
+    "contactPhone": "+964 7xx xxx xxxx"
   }
 }

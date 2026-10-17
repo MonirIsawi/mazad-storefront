@@ -39,6 +39,15 @@ const orderItemDisplaySchema = z.object({
   listingAvailable: z.boolean().nullish(),
 });
 
+/** The buyer's rating of an order item, as GET /orders/:id carries it (prefills the edit sheet). */
+export const orderItemReviewSchema = z.object({
+  id: z.string(),
+  rating: z.number().int().min(1).max(5),
+  tags: z.array(z.string()).nullish(),
+  comment: z.string().nullish(),
+  editableUntil: z.string().nullish(),
+});
+
 const orderItemSchema = z.object({
   id: z.string(),
   productId: z.string(),
@@ -46,6 +55,10 @@ const orderItemSchema = z.object({
   product: z.object({ id: z.string(), nameEn: z.string(), nameAr: z.string() }).nullish(),
   display: orderItemDisplaySchema.nullish(),
   win: z.object({ id: z.string(), amount: z.string() }).nullable(),
+  // Store rating (Bidoom API): absent on an API without ratings, which hides the rating card.
+  review: orderItemReviewSchema.nullish(),
+  canReview: z.boolean().optional(),
+  reviewWindowEndsAt: z.string().nullish(),
   // The 7-day guarantee: present once the buyer has opened a return on this item.
   returnRequest: z
     .object({

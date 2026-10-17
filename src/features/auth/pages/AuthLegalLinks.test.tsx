@@ -58,7 +58,7 @@ describe('help and policies before signing in', () => {
     await i18n.changeLanguage('ar');
     renderWithQuery(<RegisterPage />);
     const notice = screen.getByTestId('register-terms');
-    expect(notice).toHaveTextContent('بإنشاء حساب، فإنك توافق على الشروط وسياسة الخصوصية.');
+    expect(notice).toHaveTextContent('بإنشاء الحساب توافق على الشروط وسياسة الخصوصية.');
     expect(within(notice).getByRole('link', { name: 'سياسة الخصوصية' })).toHaveAttribute(
       'href',
       '/help/privacy',

@@ -2,7 +2,9 @@
   "page": {
     "title": "My wins",
     "emptyTitle": "No wins yet",
-    "empty": "When you win an auction it shows up here to confirm."
+    "empty": "When you win an auction, the order it created shows up here.",
+    "browse": "Browse auctions",
+    "account": "Account"
   },
   "sections": {
     "pending": "Awaiting confirmation",
@@ -12,7 +14,10 @@
     "amount": "Amount",
     "deadline": "Confirm within",
     "expired": "Confirmation window closed",
-    "viewOrder": "View order"
+    "viewOrder": "View order",
+    "wonFor": "Won for",
+    "order": "Order",
+    "openAuction": "View auction"
   },
   "confirm": {
     "title": "Confirm your wins",
@@ -42,5 +47,20 @@
     "WIN_EXPIRED": "The confirmation window for this auction has closed.",
     "WIN_NOT_FOUND": "That win is no longer available.",
     "ADDRESS_NOT_FOUND": "That address no longer exists."
+  },
+  "orderStatus": {
+    "CREATED": "Pending",
+    "CONFIRMED": "Confirmed",
+    "OUT_FOR_DELIVERY": "Out for delivery",
+    "DELIVERED": "Delivered",
+    "CANCELLED": "Cancelled"
+  },
+  "how": {
+    "title": "How winning works",
+    "created": "When an auction ends in your favour, the order is created at once at your default address. There is nothing to confirm.",
+    "change": "Pay on delivery, or electronically from the order page where it’s offered. The order keeps the address it was created with.",
+    "final": "A win is a promise to buy. Declining a win counts as a violation, and repeated violations pause bidding.",
+    "defaultAddress": "Default address: {{label}}, {{city}}",
+    "noAddress": "Add a delivery address: without one, a win can’t become an order."
   }
 }

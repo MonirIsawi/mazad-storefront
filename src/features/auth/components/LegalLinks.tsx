@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { ROUTES } from '@shared/constants';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
@@ -18,13 +19,23 @@ export function LegalLinks() {
 
   return (
     <nav aria-label={t('legal.label')} data-testid="legal-links">
-      <ul className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-footnote">
-        {links.map((link) => (
-          <li key={link.href}>
-            <Link href={link.href} className="text-muted-foreground hover:underline">
-              {link.label}
-            </Link>
-          </li>
+      <ul className="flex flex-wrap items-center justify-center gap-x-2 text-xs text-muted-foreground">
+        {links.map((link, index) => (
+          <Fragment key={link.href}>
+            {index > 0 ? (
+              <li aria-hidden className="select-none">
+                ·
+              </li>
+            ) : null}
+            <li>
+              <Link
+                href={link.href}
+                className="inline-flex min-h-6 items-center text-gold underline underline-offset-2 light:text-gold-lo"
+              >
+                {link.label}
+              </Link>
+            </li>
+          </Fragment>
         ))}
       </ul>
     </nav>

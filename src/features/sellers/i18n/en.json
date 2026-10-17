@@ -24,5 +24,11 @@
   },
   "errors": {
     "CANNOT_FOLLOW_SELF": "You can't follow yourself."
+  },
+  "followingList": {
+    "account": "Account",
+    "verified": "Verified seller",
+    "empty": "Follow a seller from their page to see their new auctions first.",
+    "browse": "Browse auctions"
   }
 }

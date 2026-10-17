@@ -174,7 +174,7 @@ describe('order detail (buyer)', () => {
     api.get.mockResolvedValue(order());
     renderWithQuery(<OrderDetailPage id="o1" />);
     const name = await screen.findByText('Vintage camera');
-    const itemRow = name.closest('.p-4') as HTMLElement;
+    const itemRow = name.closest('[data-testid="order-item-row"]') as HTMLElement;
     expect(imageSrc(itemRow)).toContain('https://cdn.test/images/full.webp');
     expect(itemRow).toHaveTextContent('250,000 IQD');
     expect(screen.getByText('Delivery fee').nextSibling).toHaveTextContent('5,000 IQD');

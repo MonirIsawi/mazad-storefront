@@ -26,7 +26,7 @@ describe('AccountDeletionInfoPage (public)', () => {
     renderWithQuery(<AccountDeletionInfoPage />);
 
     expect(
-      await screen.findByRole('heading', { name: 'Delete your Mazad account' }),
+      await screen.findByRole('heading', { name: 'Delete your Bidoom account' }),
     ).toBeInTheDocument();
     for (const section of [
       'How to delete your account',

@@ -16,7 +16,10 @@ export function OrderItemImage({
 }) {
   return (
     <div
-      className={cn('relative shrink-0 overflow-hidden rounded-md bg-fill', className)}
+      className={cn(
+        'relative shrink-0 overflow-hidden rounded-[18px] border border-border bg-surface-raised',
+        className,
+      )}
       style={{ width: sizePx, height: sizePx }}
       data-testid="order-item-image"
     >

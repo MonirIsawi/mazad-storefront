@@ -9,6 +9,7 @@ import { getSessionTokens, setSessionTokens } from '@shared/api';
 import { useLocaleStore, useToastStore } from '@shared/store';
 import { AuthGuard } from './AuthGuard';
 import { AccountPage } from '../pages/AccountPage';
+import { DeleteAccountPage } from '../pages/DeleteAccountPage';
 import { authApi } from '../api/auth.api';
 import authEn from '../i18n/en.json';
 import authAr from '../i18n/ar.json';
@@ -64,7 +65,7 @@ afterEach(() => {
   setSessionTokens(null);
 });
 
-/** The account route as app/account/page.tsx composes it, with a client the test can inspect. */
+/** The delete-account route as app/account/delete/page.tsx composes it, with a client the test can inspect. */
 async function openDeleteAccount() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -75,13 +76,13 @@ async function openDeleteAccount() {
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
         <AuthGuard>
-          <AccountPage />
+          <DeleteAccountPage />
         </AuthGuard>
       </I18nextProvider>
     </QueryClientProvider>,
   );
   const user = userEvent.setup();
-  await user.click(await screen.findByRole('button', { name: 'Delete account' }));
+  await screen.findByRole('button', { name: 'Delete my account' });
   return { user, queryClient };
 }
 
@@ -92,6 +93,23 @@ async function confirmDeletion(user: ReturnType<typeof userEvent.setup>, passwor
   await user.click(screen.getByRole('checkbox', { name: /can't be undone/i }));
   await user.click(confirmButton());
 }
+
+describe('Account screen', () => {
+  it('keeps Delete account apart, as a link to its own page', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <I18nextProvider i18n={i18n}>
+          <AuthGuard>
+            <AccountPage />
+          </AuthGuard>
+        </I18nextProvider>
+      </QueryClientProvider>,
+    );
+    const link = await screen.findByRole('link', { name: /Delete account/ });
+    expect(link).toHaveAttribute('href', '/account/delete');
+    expect(screen.queryByRole('button', { name: 'Delete my account' })).toBeNull();
+  });
+});
 
 describe('Delete account', () => {
   it('explains the consequences and keeps the delete button disabled until confirmed', async () => {

@@ -1,73 +1,100 @@
 'use client';
 
-import Link from 'next/link';
+import { useState } from 'react';
 import { ROUTES } from '@shared/constants';
 import { EmptyState, ErrorState, PageLoader } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import { Badge, Button, Card, Skeleton } from '@shared/components/ui';
-import { useLocale, useMoney } from '@shared/hooks';
-import { formatDate } from '@shared/lib';
-import { OrderItemImage } from '../components/OrderItemImage';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
+import { SegmentedControl } from '@shared/components/ios';
+import { Button, Skeleton } from '@shared/components/ui';
+import { OrderCard } from '../components/OrderCard';
 import { useOrders, useSales } from '../hooks/useOrders';
-import { useOrderPaymentLabel } from '../hooks/useOrderPaymentLabel';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
-import { orderItemImage, orderItemName, orderStoreName } from '../lib/order-display';
-import type { Order, OrderStatus } from '../types/orders.types';
-
-const STATUS_TONE: Record<OrderStatus, 'live' | 'upcoming' | 'warning' | 'neutral'> = {
-  CREATED: 'upcoming',
-  CONFIRMED: 'upcoming',
-  OUT_FOR_DELIVERY: 'warning',
-  DELIVERED: 'live',
-  CANCELLED: 'neutral',
-};
+import { isOpenOrder } from '../lib/order-status';
+import type { Order } from '../types/orders.types';
 
 export type OrdersMode = 'buyer' | 'seller';
+type Filter = 'all' | 'open' | 'done';
+
+const FILTERS: Record<Filter, (order: Order) => boolean> = {
+  all: () => true,
+  open: isOpenOrder,
+  done: (order) => !isOpenOrder(order),
+};
 
 /**
- * The buyer's orders, or (mode "seller", the Selling hub's "Orders received") the orders other
- * people placed on the seller's auctions: GET /me/sales, same rows with the buyer's name.
+ * The buyer's orders, one card per store order with status, total and payment state, or (mode
+ * "seller", the Selling hub's incoming orders) GET /me/sales with the buyer and the next step the
+ * seller owes. Newest first; no cart exists, a win or a buy-now creates the order.
  */
 export function OrdersPage({ mode = 'buyer' }: { mode?: OrdersMode }) {
   const { t, isReady } = useOrdersTranslation();
   const isSeller = mode === 'seller';
+  const [filter, setFilter] = useState<Filter>('all');
   // Only the list on screen is fetched.
   const buyerOrders = useOrders(!isSeller);
   const sales = useSales(isSeller);
   const orders = isSeller ? sales : buyerOrders;
   const list = orders.data?.pages.flat() ?? [];
+  const shown = list.filter(FILTERS[filter]);
 
   if (!isReady) return <PageLoader />;
 
+  const title = t(isSeller ? 'sales.title' : 'page.title');
   return (
     <>
       <ScreenHeader
-        title={t(isSeller ? 'sales.title' : 'page.title')}
+        title={title}
         backHref={isSeller ? ROUTES.selling : ROUTES.account}
+        crumbs={[
+          isSeller
+            ? { label: t('sales.hub'), href: ROUTES.selling }
+            : { label: t('page.account'), href: ROUTES.account },
+        ]}
       />
-
-      <div className="flex flex-col gap-3 px-gutter pb-6">
+      <PageContainer className="grid gap-4 pb-10">
+        {list.length > 0 ? (
+          <SegmentedControl
+            label={t('filters.label')}
+            value={filter}
+            onChange={setFilter}
+            className="max-w-[420px]"
+            segments={(['all', 'open', 'done'] as const).map((id) => ({
+              id,
+              label: t(`filters.${id}`),
+            }))}
+          />
+        ) : null}
         {orders.isPending ? (
-          Array.from({ length: 3 }, (_, index) => (
-            <Skeleton key={index} radius="lg" className="h-24 w-full" />
-          ))
+          <div className="grid gap-3 lg:grid-cols-2">
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} radius="lg" className="h-52 w-full" />
+            ))}
+          </div>
         ) : orders.isError ? (
           <ErrorState onRetry={() => void orders.refetch()} />
         ) : list.length === 0 ? (
-          isSeller ? (
-            <EmptyState icon="package" title={t('sales.emptyTitle')} message={t('sales.empty')} />
-          ) : (
-            <EmptyState icon="package" title={t('page.emptyTitle')} message={t('page.empty')} />
-          )
+          <EmptyState
+            icon="package"
+            title={t(isSeller ? 'sales.emptyTitle' : 'page.emptyTitle')}
+            message={t(isSeller ? 'sales.empty' : 'page.empty')}
+          />
         ) : (
           <>
-            {list.map((order) => (
-              <OrderRow key={order.id} order={order} mode={mode} />
-            ))}
+            {shown.length === 0 ? (
+              <p className="py-8 text-center text-sm text-foreground-soft">
+                {t(filter === 'open' ? 'filters.emptyOpen' : 'filters.emptyDone')}
+              </p>
+            ) : (
+              <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+                {shown.map((order) => (
+                  <OrderCard key={order.id} order={order} isSeller={isSeller} />
+                ))}
+              </div>
+            )}
             {/* The next page, on request: older orders are never cut off at the first 50. */}
             {orders.hasNextPage ? (
               <Button
-                variant="outline"
+                variant="soft"
                 isFullWidth
                 isLoading={orders.isFetchingNextPage}
                 onClick={() => void orders.fetchNextPage()}
@@ -78,7 +105,7 @@ export function OrdersPage({ mode = 'buyer' }: { mode?: OrdersMode }) {
             ) : null}
           </>
         )}
-      </div>
+      </PageContainer>
     </>
   );
 }
@@ -86,77 +113,4 @@ export function OrdersPage({ mode = 'buyer' }: { mode?: OrdersMode }) {
 /** Seller route: the received orders. */
 export function SalesPage() {
   return <OrdersPage mode="seller" />;
-}
-
-/**
- * One order in the list: the (first) product's photo and name as bought, the order number and
- * date, the buyer (seller view) or store, item price and delivery, how it is paid, and the total.
- */
-function OrderRow({ order, mode }: { order: Order; mode: OrdersMode }) {
-  const { t } = useOrdersTranslation();
-  const { locale } = useLocale();
-  const { money } = useMoney();
-  const payment = useOrderPaymentLabel(order);
-  const isSeller = mode === 'seller';
-  const [first] = order.items;
-  const name = first ? orderItemName(first, locale) : '—';
-  const more = order.items.length - 1;
-  const itemPrice = more > 0 ? order.subtotal : (first?.display?.finalPrice ?? first?.finalPrice);
-
-  return (
-    <Link href={isSeller ? ROUTES.saleDetail(order.id) : ROUTES.orderDetail(order.id)}>
-      <Card
-        isInset
-        className="flex gap-3 transition-transform duration-fast ease-ios active:scale-[0.985]"
-      >
-        <OrderItemImage
-          src={first ? orderItemImage(first, 'thumb') : null}
-          alt={name}
-          sizePx={64}
-        />
-
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start justify-between gap-2">
-            <span
-              className="min-w-0 truncate text-subhead font-semibold text-foreground"
-              data-testid="order-row-name"
-            >
-              {name}
-              {more > 0 ? ` ${t('list.more', { count: more })}` : null}
-            </span>
-            <Badge tone={STATUS_TONE[order.status]} hasDot={order.status === 'OUT_FOR_DELIVERY'}>
-              {t(`status.${order.status}`)}
-            </Badge>
-          </div>
-
-          <span className="truncate text-caption text-muted-foreground">
-            {order.orderNumber} · {formatDate(order.createdAt, locale)}
-          </span>
-          <span className="truncate text-footnote text-foreground-soft">
-            {isSeller
-              ? `${t('sales.buyer')}: ${order.customer?.fullName ?? '—'}`
-              : orderStoreName(order, locale)}
-          </span>
-          <span className="text-caption text-muted-foreground tabular-nums">
-            {t(more > 0 ? 'list.itemsAndDelivery' : 'list.itemAndDelivery', {
-              item: money(itemPrice),
-              delivery: money(order.deliveryFee),
-            })}
-          </span>
-
-          <div className="flex items-center justify-between gap-3">
-            <span
-              className="truncate text-caption text-muted-foreground"
-              data-testid="order-row-payment"
-            >
-              {payment?.method ?? null}
-            </span>
-            <span className="text-callout font-bold text-foreground tabular-nums">
-              {money(order.total)}
-            </span>
-          </div>
-        </div>
-      </Card>
-    </Link>
-  );
 }

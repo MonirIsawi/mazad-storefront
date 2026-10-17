@@ -3,6 +3,10 @@
     "title": "Notifications",
     "emptyTitle": "No notifications",
     "empty": "Bid and order alerts will arrive here.",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "account": "Account",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "unread": "Unread"
   }
 }

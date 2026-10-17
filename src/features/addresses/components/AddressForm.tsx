@@ -3,7 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, Input } from '@shared/components/ui';
+import { Button, Icon, Input } from '@shared/components/ui';
 import { getErrorCode } from '@shared/lib';
 import { addressFormSchema } from '../schemas/addresses.schema';
 import { useCreateAddress } from '../hooks/useCreateAddress';
@@ -16,6 +16,7 @@ export interface AddressFormProps {
   onDone: () => void;
 }
 
+/** Add or edit an address (design `.form`): label, city and area side by side, street, details. */
 export function AddressForm({ address, onDone }: AddressFormProps) {
   const { t } = useAddressesTranslation();
   const { t: tCommon } = useTranslation('common');
@@ -24,6 +25,7 @@ export function AddressForm({ address, onDone }: AddressFormProps) {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<AddressFormValues>({
     resolver: zodResolver(addressFormSchema),
@@ -42,51 +44,72 @@ export function AddressForm({ address, onDone }: AddressFormProps) {
 
   const mutation = address ? updateAddress : createAddress;
   const errorCode = getErrorCode(mutation.error);
+  const fieldError = (message?: string) => (message ? t(message) : undefined);
 
   const onSubmit = handleSubmit((values) => {
-    if (address) {
-      updateAddress.mutate({ id: address.id, values }, { onSuccess: onDone });
-    } else {
-      createAddress.mutate(values, { onSuccess: onDone });
-    }
+    if (address) updateAddress.mutate({ id: address.id, values }, { onSuccess: onDone });
+    else createAddress.mutate(values, { onSuccess: onDone });
   });
+  const cancel = () => {
+    reset();
+    if (address) onDone();
+  };
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3">
+    <form onSubmit={onSubmit} noValidate className="grid gap-4">
       <Input
         label={t('fields.label')}
-        error={errors.label ? t(errors.label.message ?? '') : undefined}
+        placeholder={t('placeholders.label')}
+        error={fieldError(errors.label?.message)}
         {...register('label')}
       />
-      <Input
-        label={t('fields.city')}
-        error={errors.city ? t(errors.city.message ?? '') : undefined}
-        {...register('city')}
-      />
-      <Input label={t('fields.area')} {...register('area')} />
-      <Input label={t('fields.street')} {...register('street')} />
-      <Input label={t('fields.details')} {...register('details')} />
-      <Input label={t('fields.contactPhone')} type="tel" {...register('contactPhone')} />
-      <label className="flex items-center gap-2 text-sm text-foreground-soft">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-border"
-          {...register('isDefault')}
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          label={t('fields.city')}
+          autoComplete="address-level2"
+          error={fieldError(errors.city?.message)}
+          {...register('city')}
         />
+        <Input label={t('fields.area')} autoComplete="address-level3" {...register('area')} />
+      </div>
+      <Input
+        label={t('fields.street')}
+        placeholder={t('placeholders.street')}
+        autoComplete="address-line1"
+        {...register('street')}
+      />
+      <Input
+        label={t('fields.details')}
+        placeholder={t('placeholders.details')}
+        {...register('details')}
+      />
+      <Input
+        label={t('fields.contactPhone')}
+        type="tel"
+        isLatin
+        placeholder={t('placeholders.contactPhone')}
+        {...register('contactPhone')}
+      />
+      <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-foreground">
+        <input type="checkbox" className="peer sr-only" {...register('isDefault')} />
+        <span
+          aria-hidden
+          className="grid size-6 shrink-0 place-items-center rounded-full border-[1.5px] border-border-strong text-transparent peer-checked:border-transparent peer-checked:bg-grad peer-checked:text-gold-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold"
+        >
+          <Icon name="check" size={14} />
+        </span>
         {t('fields.isDefault')}
       </label>
-
       {errorCode ? (
         <p role="alert" className="text-sm text-destructive">
           {t(`errors.${errorCode}`, { defaultValue: tCommon('errors.generic') })}
         </p>
       ) : null}
-
-      <div className="flex gap-2">
-        <Button type="submit" isLoading={mutation.isPending}>
+      <div className="flex gap-2.5">
+        <Button type="submit" className="min-w-0 flex-1" isLoading={mutation.isPending}>
           {t(address ? 'form.save' : 'form.add')}
         </Button>
-        <Button type="button" variant="outline" onClick={onDone}>
+        <Button variant="soft" onClick={cancel}>
           {t('form.cancel')}
         </Button>
       </div>

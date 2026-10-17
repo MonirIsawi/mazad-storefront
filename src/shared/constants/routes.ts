@@ -37,4 +37,6 @@ export const ROUTES = {
   saleDetail: (id: string) => `/account/selling/sales/${id}`,
   sellingAuctionNew: (productId: string) =>
     `/account/selling/auctions?productId=${encodeURIComponent(productId)}`,
+  /** The in-app delete-account flow (the public how-to page is /account-deletion). */
+  deleteAccount: '/account/delete',
 } as const;

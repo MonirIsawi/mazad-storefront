@@ -1,64 +1,35 @@
 'use client';
 
-import Link from 'next/link';
-import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { ROUTES } from '@shared/constants';
 import { ErrorState, PageLoader } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Icon,
-  Input,
-  SectionHeader,
-} from '@shared/components/ui';
-import { useLocale, useMoney, useSubmitGuard } from '@shared/hooks';
-import { formatDateTime, getErrorCode, joinList, telHref } from '@shared/lib';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
 import { useOrder } from '../hooks/useOrders';
-import { useOrderPaymentLabel } from '../hooks/useOrderPaymentLabel';
-import {
-  useAdvanceOrder,
-  useCancelOrder,
-  useOpenReturn,
-  useReturnAction,
-} from '../hooks/useOrderMutations';
 import { useOrdersTranslation } from '../hooks/useOrdersTranslation';
-import { OrderItemFacts } from '../components/OrderItemFacts';
-import { OrderItemImage } from '../components/OrderItemImage';
 import { OrderPaymentSection } from '../components/OrderPaymentSection';
-import { useOrderPayments } from '../hooks/usePayments';
-import {
-  orderItemImage,
-  orderItemListingHref,
-  orderItemName,
-  orderStoreName,
-} from '../lib/order-display';
-import { nextSellerStatus, sellerReturnActions } from '../lib/seller-orders';
-import type { Order, OrderStatus } from '../types/orders.types';
+import { OrderTimelineCard } from '../components/detail/OrderTimelineCard';
+import { OrderItemsCard } from '../components/detail/OrderItemsCard';
+import { DeliveryCard } from '../components/detail/DeliveryCard';
+import { OrderSummaryCard } from '../components/detail/OrderSummaryCard';
+import { SellerNextStepCard } from '../components/detail/SellerNextStepCard';
+import { OrderHelpCard } from '../components/detail/OrderHelpCard';
+import { CancelOrderBlock, CancelledNote } from '../components/detail/CancelOrderBlock';
+import { RatingCard } from '../components/rating/RatingCard';
 import type { OrdersMode } from './OrdersPage';
-
-const STATUS_TONE: Record<OrderStatus, 'live' | 'upcoming' | 'warning' | 'neutral'> = {
-  CREATED: 'upcoming',
-  CONFIRMED: 'upcoming',
-  OUT_FOR_DELIVERY: 'warning',
-  DELIVERED: 'live',
-  CANCELLED: 'neutral',
-};
 
 /** Seller route (Sales): the same order, with the seller's actions instead of the buyer's. */
 export function SaleDetailPage({ id }: { id: string }) {
   return <OrderDetailPage id={id} mode="seller" />;
 }
 
+/**
+ * One order. Buyer: the rating card leads a delivered order, then the timeline, the items and
+ * where it goes; the payment block (the one thing that needs them) sits beside it with the gold
+ * action. Seller: the next step leads, the buyer's phone is one tap, cash is recorded at delivery.
+ */
 export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: OrdersMode }) {
   const { t, isReady } = useOrdersTranslation();
-  const { locale } = useLocale();
-  const { money } = useMoney();
   const order = useOrder(id);
-  const cancelOrder = useCancelOrder(id);
-  const guard = useSubmitGuard();
 
   if (!isReady || order.isPending) return <PageLoader />;
   if (order.isError || !order.data) {
@@ -66,453 +37,53 @@ export function OrderDetailPage({ id, mode = 'buyer' }: { id: string; mode?: Ord
   }
 
   const data = order.data;
-  const cancelError = getErrorCode(cancelOrder.error);
   const isSeller = mode === 'seller';
+  const hasOpenReturnChoice =
+    !isSeller && data.status === 'DELIVERED' && data.items.some((item) => !item.returnRequest);
 
   return (
     <>
       <ScreenHeader
         title={`${t('detail.title')} ${data.orderNumber}`}
         backHref={isSeller ? ROUTES.sellingSales : ROUTES.orders}
+        crumbs={[
+          isSeller
+            ? { label: t('sales.title'), href: ROUTES.sellingSales }
+            : { label: t('page.title'), href: ROUTES.orders },
+        ]}
       />
-
-      <div className="flex flex-col gap-5 px-gutter pb-6">
-        <Card isInset className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-title-3 font-bold text-foreground">
-              {orderStoreName(data, locale)}
-            </span>
-            <span className="text-footnote text-muted-foreground">
-              {t('detail.placedAt')} · {formatDateTime(data.createdAt, locale)}
-            </span>
-            {isSeller && data.customer ? (
-              <span className="truncate text-footnote text-foreground-soft">
-                {t('sales.buyer')}: {data.customer.fullName}
-              </span>
-            ) : null}
-          </div>
-          <Badge tone={STATUS_TONE[data.status]} hasDot={data.status === 'OUT_FOR_DELIVERY'}>
-            {t(`status.${data.status}`)}
-          </Badge>
-        </Card>
-
-        <section>
-          <SectionHeader title={t('detail.items')} />
-          <Card className="overflow-hidden">
-            {data.items.map((item, index) => (
-              <OrderItemRow
-                key={item.id}
-                orderId={data.id}
-                item={item}
-                mode={mode}
-                isLast={index === data.items.length - 1}
-                canReturn={!isSeller && data.status === 'DELIVERED'}
-              />
-            ))}
-          </Card>
-        </section>
-
-        <section>
-          <SectionHeader title={t('detail.summary')} />
-          <Card>
-            <CardContent className="flex flex-col gap-2 text-subhead">
-              <SummaryRow label={t('detail.subtotal')} value={money(data.subtotal)} />
-              <SummaryRow label={t('detail.deliveryFee')} value={money(data.deliveryFee)} />
-              <div className="mt-1 flex items-center justify-between gap-3 border-t border-separator pt-2">
-                <span className="font-semibold text-foreground">{t('detail.total')}</span>
-                <span className="text-title-3 font-extrabold text-foreground tabular-nums">
-                  {money(data.total)}
-                </span>
-              </div>
-              <PaymentSummaryRow order={data} />
-            </CardContent>
-          </Card>
-        </section>
-
-        <OrderPaymentSection order={data} mode={mode} />
-
-        <section>
-          <SectionHeader title={t('detail.delivery')} />
-          <Card>
-            <CardContent className="flex flex-col gap-1.5 text-subhead">
-              <p className="text-foreground">
-                {joinList([data.shipCity, data.shipArea, data.shipStreet], locale)}
-              </p>
-              {data.shipDetails ? (
-                <p className="text-muted-foreground">{data.shipDetails}</p>
-              ) : null}
-              {data.shipPhone ? (
-                <DeliveryPhone phone={data.shipPhone} isCallable={isSeller} />
-              ) : isSeller ? (
-                // Older orders saved none: say so, never a call link without a number, and
-                // never the buyer's account phone instead.
-                <p className="text-muted-foreground" data-testid="order-no-delivery-phone">
-                  {t('detail.noDeliveryPhone')}
-                </p>
-              ) : null}
-              {data.note ? (
-                <p className="text-muted-foreground">
-                  {t('detail.note')}: {data.note}
-                </p>
-              ) : null}
-            </CardContent>
-          </Card>
-        </section>
-
-        {data.status === 'CANCELLED' ? (
-          <div className="text-footnote text-muted-foreground" data-testid="order-cancelled-by">
-            {data.cancelledBy ? <p>{t(`detail.cancelledBy.${data.cancelledBy}`)}</p> : null}
-            {data.cancelReason ? (
-              <p>
-                {t('detail.cancelReason')}: {data.cancelReason}
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-
-        {isSeller ? <SellerNextStep order={data} /> : null}
-
-        {cancelError ? (
-          <p role="alert" className="text-footnote text-destructive">
-            {t(`errors.${cancelError}`, { defaultValue: t('errors.ORDER_STATUS_INVALID') })}
-          </p>
-        ) : null}
-
-        {/* mazad-api only allows a buyer cancellation while the order is still CREATED. */}
-        {data.status === 'CREATED' ? (
-          <Button
-            variant="destructive"
-            size="lg"
-            isFullWidth
-            isLoading={cancelOrder.isPending}
-            onClick={() => {
-              guard((release) => {
-                if (!window.confirm(t('actions.cancelConfirm'))) return release();
-                cancelOrder.mutate(undefined, { onSettled: release });
-              });
-            }}
-          >
-            {t('actions.cancel')}
-          </Button>
-        ) : null}
-      </div>
+      <PageContainer className="pb-12">
+        <TwoColumns
+          main={
+            <>
+              {isSeller ? <SellerNextStepCard order={data} /> : <RatingCard order={data} />}
+              {isSeller ? null : <OrderTimelineCard order={data} isSeller={false} />}
+              <OrderItemsCard order={data} isSeller={isSeller} />
+              {isSeller ? <OrderTimelineCard order={data} isSeller /> : null}
+              {isSeller ? null : <DeliveryCard order={data} isSeller={false} />}
+              <CancelledNote order={data} />
+            </>
+          }
+          aside={
+            <>
+              {isSeller ? <DeliveryCard order={data} isSeller /> : null}
+              <OrderSummaryCard order={data} isSeller={isSeller} />
+              <OrderPaymentSection order={data} mode={mode} />
+              {hasOpenReturnChoice ? <OrderHelpCard orderId={data.id} /> : null}
+              {isSeller ? null : <CancelOrderBlock order={data} />}
+            </>
+          }
+        />
+      </PageContainer>
     </>
   );
 }
 
-function SummaryRow({ label, value }: { label: string; value: string }) {
+function TwoColumns({ main, aside }: { main: ReactNode; aside: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground tabular-nums">{value}</span>
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-10">
+      <div className="grid gap-4">{main}</div>
+      <div className="grid gap-4 lg:sticky lg:top-[100px]">{aside}</div>
     </div>
-  );
-}
-
-/** "Cash on delivery · Not paid yet", "Card · Paid": from the order's payment records. */
-function PaymentSummaryRow({ order }: { order: Order }) {
-  const { t } = useOrdersTranslation();
-  const payment = useOrderPaymentLabel(order);
-  if (!payment) return null;
-  return (
-    <div className="flex items-center justify-between gap-3" data-testid="order-payment-summary">
-      <span className="text-muted-foreground">{t('payment.methodLabel')}</span>
-      <span className="text-end font-medium text-foreground">
-        {payment.method} · {payment.status}
-      </span>
-    </div>
-  );
-}
-
-function OrderItemRow({
-  orderId,
-  item,
-  mode,
-  isLast,
-  canReturn,
-}: {
-  orderId: string;
-  item: Order['items'][number];
-  mode: OrdersMode;
-  isLast: boolean;
-  canReturn: boolean;
-}) {
-  const { t } = useOrdersTranslation();
-  const { locale } = useLocale();
-  const { money } = useMoney();
-  const openReturn = useOpenReturn(orderId);
-  const guard = useSubmitGuard();
-  const [isOpeningReturn, setIsOpeningReturn] = useState(false);
-  const [reason, setReason] = useState('');
-
-  const returnError = getErrorCode(openReturn.error);
-  const name = orderItemName(item, locale);
-  const listingHref = orderItemListingHref(item);
-
-  return (
-    <div className={isLast ? 'p-4' : 'border-b border-separator p-4'}>
-      {/* What was bought, as it was when ordered (the snapshot), with its photo. */}
-      <div className="flex items-start gap-3">
-        <OrderItemImage src={orderItemImage(item, 'full')} alt={name} sizePx={72} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <div className="flex items-start justify-between gap-3">
-            <span className="min-w-0 flex-1 text-subhead font-medium text-foreground">{name}</span>
-            <span className="shrink-0 text-callout font-bold text-foreground tabular-nums">
-              {money(item.display?.finalPrice ?? item.finalPrice)}
-            </span>
-          </div>
-          <OrderItemFacts item={item} />
-          {/* Only while the auction page can still be opened. */}
-          {listingHref ? (
-            <Link
-              href={listingHref}
-              className="self-start text-footnote font-semibold text-primary-text"
-              data-testid="order-view-listing"
-            >
-              {t('detail.viewListing')}
-            </Link>
-          ) : null}
-        </div>
-      </div>
-
-      {item.returnRequest ? (
-        <>
-          <p className="mt-2 inline-flex items-center gap-1.5 text-footnote text-muted-foreground">
-            <Icon name="package" size={14} />
-            {t(`returnStatus.${item.returnRequest.status}`)}
-          </p>
-          {mode === 'seller' ? (
-            <SellerReturnPanel
-              orderId={orderId}
-              returnRequest={item.returnRequest}
-              refundAmount={item.finalPrice}
-            />
-          ) : null}
-        </>
-      ) : canReturn ? (
-        isOpeningReturn ? (
-          <div className="mt-3 flex flex-col gap-2">
-            <Input
-              label={t('actions.returnReason')}
-              value={reason}
-              onChange={(event) => setReason(event.target.value)}
-            />
-            {returnError ? (
-              <p role="alert" className="text-footnote text-destructive">
-                {t(`errors.${returnError}`, { defaultValue: t('errors.RETURN_WINDOW_CLOSED') })}
-              </p>
-            ) : null}
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                disabled={!reason.trim()}
-                isLoading={openReturn.isPending}
-                onClick={() =>
-                  guard((release) =>
-                    openReturn.mutate(
-                      { orderItemId: item.id, reason: reason.trim() },
-                      { onSuccess: () => setIsOpeningReturn(false), onSettled: release },
-                    ),
-                  )
-                }
-              >
-                {t('actions.returnSubmit')}
-              </Button>
-              <Button variant="plain" size="sm" onClick={() => setIsOpeningReturn(false)}>
-                {t('actions.returnCancel')}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Button
-            variant="plain"
-            size="sm"
-            className="mt-1 -ms-3.5"
-            onClick={() => setIsOpeningReturn(true)}
-          >
-            {t('actions.openReturn')}
-          </Button>
-        )
-      ) : null}
-    </div>
-  );
-}
-
-/** The seller's one next step (confirm → out for delivery → delivered), with what it means. */
-function SellerNextStep({ order }: { order: Order }) {
-  const { t } = useOrdersTranslation();
-  const { money } = useMoney();
-  const advance = useAdvanceOrder(order.id);
-  const payments = useOrderPayments(order.id);
-  const guard = useSubmitGuard();
-  const next = nextSellerStatus(order.status);
-  if (!next) return null;
-  const error = getErrorCode(advance.error);
-
-  // Delivering an unpaid cash-on-delivery order records the cash as collected: the seller
-  // confirms the exact amount first (one accidental click must not mark money as received).
-  const deliver = (release: () => void) => {
-    const isPaid = Boolean(payments.data?.paidAt);
-    const question = isPaid
-      ? t('sales.deliver.paidConfirm')
-      : t('sales.deliver.cashConfirm', { amount: money(order.total) });
-    if (!window.confirm(question)) return release();
-    advance.mutate(
-      { status: 'DELIVERED', cashReceived: isPaid ? undefined : Number(order.total) },
-      { onSettled: release },
-    );
-  };
-
-  return (
-    <Card isInset className="flex flex-col gap-3">
-      <p className="text-subhead text-foreground-soft">{t(`sales.nextHint.${order.status}`)}</p>
-      {error ? (
-        <p role="alert" className="text-footnote text-destructive">
-          {t(`errors.${error}`, { defaultValue: t('errors.INVALID_ORDER_TRANSITION') })}
-        </p>
-      ) : null}
-      <Button
-        size="lg"
-        isFullWidth
-        isLoading={advance.isPending}
-        onClick={() =>
-          guard((release) =>
-            next === 'DELIVERED'
-              ? deliver(release)
-              : advance.mutate({ status: next }, { onSettled: release }),
-          )
-        }
-        data-testid="sale-next-step"
-      >
-        {t(`sales.next.${next}`)}
-      </Button>
-    </Card>
-  );
-}
-
-/** Seller side of a return: the buyer's reason and the actions its status allows. */
-function SellerReturnPanel({
-  orderId,
-  returnRequest,
-  refundAmount,
-}: {
-  orderId: string;
-  returnRequest: NonNullable<Order['items'][number]['returnRequest']>;
-  refundAmount: string;
-}) {
-  const { t } = useOrdersTranslation();
-  const { money } = useMoney();
-  const action = useReturnAction(orderId);
-  const guard = useSubmitGuard();
-  const [isRejecting, setIsRejecting] = useState(false);
-  const [reason, setReason] = useState('');
-  const actions = sellerReturnActions(returnRequest.status);
-  const error = getErrorCode(action.error);
-
-  return (
-    <div className="mt-3 flex flex-col gap-2">
-      {returnRequest.reason ? (
-        <p className="text-footnote text-foreground-soft">
-          {t('sales.returns.reason')}: {returnRequest.reason}
-        </p>
-      ) : null}
-      {error ? (
-        <p role="alert" className="text-footnote text-destructive">
-          {t(`errors.${error}`, { defaultValue: t('errors.INVALID_RETURN_TRANSITION') })}
-        </p>
-      ) : null}
-      {isRejecting ? (
-        <>
-          <Input
-            label={t('sales.returns.rejectReason')}
-            value={reason}
-            maxLength={500}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="destructive"
-              disabled={!reason.trim()}
-              isLoading={action.isPending}
-              onClick={() =>
-                guard((release) =>
-                  action.mutate(
-                    { returnId: returnRequest.id, action: 'reject', reason: reason.trim() },
-                    { onSuccess: () => setIsRejecting(false), onSettled: release },
-                  ),
-                )
-              }
-            >
-              {t('sales.returns.rejectSubmit')}
-            </Button>
-            <Button variant="plain" size="sm" onClick={() => setIsRejecting(false)}>
-              {t('sales.returns.back')}
-            </Button>
-          </div>
-        </>
-      ) : actions.length ? (
-        <div className="flex flex-wrap gap-2">
-          {actions.map((name) =>
-            name === 'reject' ? (
-              <Button key={name} variant="plain" size="sm" onClick={() => setIsRejecting(true)}>
-                {t('sales.returns.reject')}
-              </Button>
-            ) : (
-              <Button
-                key={name}
-                size="sm"
-                isLoading={action.isPending && action.variables?.action === name}
-                data-testid={`sale-return-${name}`}
-                onClick={() =>
-                  guard((release) => {
-                    // Recording a refund can't be undone: say how much before sending it.
-                    if (
-                      name === 'refund' &&
-                      !window.confirm(
-                        `${t('sales.returns.refundConfirm', { amount: money(refundAmount) })} ${t('sales.returns.refundConfirmBody')}`,
-                      )
-                    ) {
-                      return release();
-                    }
-                    action.mutate(
-                      { returnId: returnRequest.id, action: name },
-                      { onSettled: release },
-                    );
-                  })
-                }
-              >
-                {t(`sales.returns.${name}`)}
-              </Button>
-            ),
-          )}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-/**
- * The delivery phone the buyer gave. The seller (who delivers, cash on delivery) can tap it to
- * call; the buyer sees their own number as plain text.
- */
-function DeliveryPhone({ phone, isCallable }: { phone: string; isCallable: boolean }) {
-  const { t } = useOrdersTranslation();
-  const href = isCallable ? telHref(phone) : null;
-  if (!href)
-    return (
-      <p className="text-muted-foreground tabular-nums" dir="ltr">
-        {phone}
-      </p>
-    );
-  return (
-    <a
-      href={href}
-      dir="ltr"
-      aria-label={`${t('sales.callBuyer')} ${phone}`}
-      className="self-start font-semibold text-primary-text tabular-nums underline-offset-2 hover:underline"
-    >
-      {phone}
-    </a>
   );
 }

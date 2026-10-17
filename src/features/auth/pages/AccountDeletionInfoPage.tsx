@@ -4,27 +4,20 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ROUTES } from '@shared/constants';
 import { PageLoader } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
 import { buttonVariants, Card } from '@shared/components/ui';
 import { useIsAuthenticated } from '@shared/hooks';
+import { cn } from '@shared/lib';
+import { DELETION_BLOCKERS } from '../lib/account-deletion';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
 const STEPS = ['signIn', 'account', 'delete'] as const;
-const BLOCKERS = [
-  'SELLER_AUCTIONS_ACTIVE',
-  'SELLER_ORDERS_OPEN',
-  'SELLER_RETURN_WINDOW_OPEN',
-  'BUYER_ORDERS_OPEN',
-  'WINS_PENDING',
-  'RETURNS_OPEN',
-  'LEADING_BIDS',
-  'WALLET_NOT_EMPTY',
-] as const;
 const AFTER = ['permanent', 'signedOut', 'phone'] as const;
 
 /**
  * Public "how to delete your account" page (app stores require one reachable without signing in).
- * Information only: the deletion itself happens on the signed-in account screen.
+ * Information only, in the design's order: what must be closed first, what is deleted, what is
+ * kept. The deletion itself happens on the signed-in delete-account screen.
  */
 export function AccountDeletionInfoPage() {
   const { t, isReady } = useAuthTranslation();
@@ -35,12 +28,13 @@ export function AccountDeletionInfoPage() {
   return (
     <>
       <ScreenHeader title={t('accountDeletion.title')} backHref={ROUTES.home} />
-
-      <div className="flex flex-col gap-4 px-gutter pb-6">
-        <p className="text-subhead text-foreground-soft">{t('accountDeletion.intro')}</p>
+      <PageContainer className="grid max-w-[820px] gap-3.5 pb-12">
+        <p className="text-[15px] leading-[1.7] text-foreground-soft">
+          {t('accountDeletion.intro')}
+        </p>
 
         <InfoCard title={t('accountDeletion.howTitle')}>
-          <ol className="flex list-decimal flex-col gap-1.5 ps-5">
+          <ol className="grid list-decimal gap-1.5 ps-5">
             {STEPS.map((step) => (
               <li key={step}>{t(`accountDeletion.steps.${step}`)}</li>
             ))}
@@ -50,8 +44,8 @@ export function AccountDeletionInfoPage() {
 
         <InfoCard title={t('accountDeletion.beforeTitle')}>
           <p>{t('accountDeletion.beforeIntro')}</p>
-          <ul className="flex list-disc flex-col gap-1.5 ps-5">
-            {BLOCKERS.map((reason) => (
+          <ul className="grid list-disc gap-1.5 ps-5">
+            {DELETION_BLOCKERS.map((reason) => (
               <li key={reason}>{t(`deleteAccount.reasons.${reason}`)}</li>
             ))}
           </ul>
@@ -66,7 +60,7 @@ export function AccountDeletionInfoPage() {
         </InfoCard>
 
         <InfoCard title={t('accountDeletion.afterTitle')}>
-          <ul className="flex list-disc flex-col gap-1.5 ps-5">
+          <ul className="grid list-disc gap-1.5 ps-5">
             {AFTER.map((key) => (
               <li key={key}>{t(`deleteAccount.consequences.${key}`)}</li>
             ))}
@@ -75,19 +69,19 @@ export function AccountDeletionInfoPage() {
 
         <Link
           href={isAuthenticated ? ROUTES.account : ROUTES.login}
-          className={buttonVariants({ size: 'lg', isFullWidth: true })}
+          className={cn(buttonVariants({ isFullWidth: true, variant: 'gold' }), 'mt-4')}
         >
           {isAuthenticated ? t('accountDeletion.ctaSignedIn') : t('accountDeletion.ctaSignedOut')}
         </Link>
-      </div>
+      </PageContainer>
     </>
   );
 }
 
 function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Card isInset className="flex flex-col gap-2 text-subhead text-foreground-soft">
-      <h2 className="text-headline font-semibold text-foreground">{title}</h2>
+    <Card isInset className="grid gap-2.5 text-[14.5px] leading-[1.7] text-foreground-soft">
+      <h2 className="text-h3 font-medium text-foreground">{title}</h2>
       {children}
     </Card>
   );

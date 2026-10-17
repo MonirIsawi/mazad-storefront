@@ -1,110 +1,78 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import { ROUTES } from '@shared/constants';
 import { PageLoader, ErrorState } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import { Badge, Button, Card, Icon } from '@shared/components/ui';
-import { ListRow } from '@shared/components/ios';
-import { useLocale, useTheme } from '@shared/hooks';
-import { isolatePhone } from '@shared/lib';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import { useLogout } from '../hooks/useLogout';
-import { DeleteAccountSection } from '../components/DeleteAccountSection';
+import { ProfileCard } from '../components/account/ProfileCard';
+import { AccountCounters } from '../components/account/AccountCounters';
+import { AccountMenu } from '../components/account/AccountMenu';
+import { AccountSignOut } from '../components/account/AccountSignOut';
 
-export function AccountPage() {
+/** Counts the API really gives, read by the route from the features that own them. */
+export interface AccountCounts {
+  openOrders?: number;
+  unreadNotifications?: number;
+  openSales?: number;
+}
+
+export interface AccountPageProps {
+  counts?: AccountCounts;
+  /** The desktop column beside the menus (the route passes the open orders panel). */
+  aside?: ReactNode;
+}
+
+/**
+ * Profile, three live counters that link to what needs you, then grouped menus. Delete account
+ * sits alone, far below sign-out, and opens its own page.
+ */
+export function AccountPage({ counts = {}, aside }: AccountPageProps) {
   const { t, isReady } = useAuthTranslation();
-  const { t: tCommon } = useTranslation('common');
   const { data: user, isPending, isError, refetch } = useCurrentUser();
-  const { locale, changeLocale } = useLocale();
-  const { theme, setTheme } = useTheme();
-  const logout = useLogout();
 
   if (!isReady || isPending) return <PageLoader />;
   if (isError || !user) return <ErrorState onRetry={() => void refetch()} />;
 
+  const counters = [
+    {
+      key: 'orders',
+      href: ROUTES.orders,
+      label: t('account.openOrders'),
+      value: counts.openOrders,
+    },
+    {
+      key: 'notifications',
+      href: ROUTES.notifications,
+      label: t('account.unread'),
+      value: counts.unreadNotifications,
+      isGold: true,
+    },
+    {
+      key: 'sales',
+      href: ROUTES.sellingSales,
+      label: t('account.incoming'),
+      value: counts.openSales,
+    },
+  ];
+
   return (
     <>
       <ScreenHeader title={t('account.title')} isRoot />
-
-      <div className="flex flex-col gap-4 px-gutter pb-6">
-        <Card isInset className="flex items-center gap-3">
-          <span className="inline-flex size-14 shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary">
-            <Icon name="user-round" size={26} />
-          </span>
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <p className="truncate text-title-3 font-bold text-foreground">{user.fullName}</p>
-            <p className="text-footnote text-muted-foreground tabular-nums">
-              {user.phone ? isolatePhone(user.phone) : null}
-            </p>
+      <PageContainer className="pb-10">
+        <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-10">
+          <div className="grid gap-4">
+            <ProfileCard user={user} />
+            <AccountCounters counters={counters} />
+            <AccountMenu unreadNotifications={counts.unreadNotifications} />
+            <AccountSignOut />
           </div>
-          {user.isVerified ? (
-            <Badge tone="live" className="shrink-0">
-              {t('account.verified')}
-            </Badge>
+          {aside ? (
+            <div className="hidden gap-[18px] lg:sticky lg:top-[100px] lg:grid">{aside}</div>
           ) : null}
-        </Card>
-
-        {/* Selling gets its own group: every customer can sell, but it's a different job from
-            the buying rows below and shouldn't be buried among them. */}
-        <Card hasShadow className="overflow-hidden">
-          <ListRow icon="store" title={t('account.selling')} href={ROUTES.selling} isLast />
-        </Card>
-
-        <Card hasShadow className="overflow-hidden">
-          <ListRow icon="gavel" title={t('account.myBids')} href={ROUTES.myBids} />
-          <ListRow icon="badge-check" title={t('account.wins')} href={ROUTES.wins} />
-          <ListRow icon="package" title={t('account.orders')} href={ROUTES.orders} />
-          <ListRow icon="credit-card" title={t('account.payments')} href={ROUTES.payments} />
-          <ListRow icon="heart" title={t('account.watchlist')} href={ROUTES.watchlistList} />
-          <ListRow icon="store" title={t('account.following')} href={ROUTES.following} />
-          <ListRow icon="map-pin" title={t('account.addresses')} href={ROUTES.addressesList} />
-          <ListRow
-            icon="bell"
-            title={tCommon('nav.notifications')}
-            href={ROUTES.notifications}
-            isLast
-          />
-        </Card>
-
-        <Card hasShadow className="overflow-hidden">
-          <ListRow icon="eye" title={t('account.help')} href={ROUTES.help} isLast />
-        </Card>
-
-        {/* Preferences toggle in place rather than pushing a screen — one tap, no navigation. */}
-        <Card hasShadow className="overflow-hidden">
-          <ListRow
-            icon={theme === 'dark' ? 'moon' : 'sun'}
-            iconTone="fill"
-            title={tCommon('theme.label')}
-            value={theme === 'dark' ? tCommon('theme.dark') : tCommon('theme.light')}
-            hasChevron={false}
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          />
-          <ListRow
-            icon="eye"
-            iconTone="fill"
-            title={tCommon('locale.label')}
-            value={locale === 'ar' ? tCommon('locale.ar') : tCommon('locale.en')}
-            hasChevron={false}
-            isLast
-            onClick={() => changeLocale(locale === 'ar' ? 'en' : 'ar')}
-          />
-        </Card>
-
-        <Button
-          variant="gray"
-          size="lg"
-          isFullWidth
-          isLoading={logout.isPending}
-          onClick={() => logout.mutate()}
-        >
-          {t('account.signOut')}
-        </Button>
-
-        <DeleteAccountSection />
-      </div>
+        </div>
+      </PageContainer>
     </>
   );
 }

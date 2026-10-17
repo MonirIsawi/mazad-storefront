@@ -6,7 +6,9 @@ import { useIsAuthenticated } from '@shared/hooks';
 import { ordersApi } from '../api/orders.api';
 import { ORDERS_PAGE_SIZE } from '../lib/paging';
 import { isOpenSale } from '../lib/seller-orders';
-import type { OrdersList } from '../types/orders.types';
+import { isOpenOrder } from '../lib/order-status';
+import type { OrdersList, OrderStatus } from '../types/orders.types';
+import { orderItemImage } from '../lib/order-display';
 
 /** Page n+1 while the last page was full; a short (or empty) page is the end of the list. */
 function nextPage(lastPage: OrdersList, allPages: OrdersList[]): number | undefined {
@@ -70,4 +72,44 @@ export function useOrder(id: string) {
     queryFn: () => ordersApi.get(id),
     enabled: isAuthenticated && Boolean(id),
   });
+}
+
+/**
+ * The buyer's orders still on their way, counted from the first page the list already loads (50
+ * newest). Undefined while loading; never pages through every order to count them.
+ */
+export function useOpenOrdersCount(): number | undefined {
+  const orders = useOrders();
+  return orders.data?.pages[0]?.filter(isOpenOrder).length;
+}
+
+export interface OrderSummary {
+  orderNumber: string;
+  status: OrderStatus;
+  /** The photo of each won item in the order, by the win it came from. */
+  imageByWin: Record<string, string | null>;
+}
+
+/**
+ * The buyer's orders (first page) by id, for screens that only hold an order id (My wins shows
+ * the order each win created). Undefined while loading.
+ */
+export function useOrderSummaries(): Record<string, OrderSummary> | undefined {
+  const orders = useOrders();
+  const first = orders.data?.pages[0];
+  if (!first) return undefined;
+  return Object.fromEntries(
+    first.map((order) => [
+      order.id,
+      {
+        orderNumber: order.orderNumber,
+        status: order.status,
+        imageByWin: Object.fromEntries(
+          order.items.flatMap((item) =>
+            item.win ? [[item.win.id, orderItemImage(item, 'thumb')] as const] : [],
+          ),
+        ),
+      },
+    ]),
+  );
 }

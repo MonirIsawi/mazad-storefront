@@ -2,6 +2,7 @@
 
 import { forwardRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@shared/lib';
 import { Icon } from './Icon';
 import { Input, type InputProps } from './Input';
 
@@ -15,6 +16,8 @@ export const PasswordInput = forwardRef<HTMLInputElement, Omit<InputProps, 'type
         ref={ref}
         isLatin
         {...props}
+        // Edge draws its own reveal eye inside password fields, beside this one.
+        className={cn('[&::-ms-reveal]:hidden', props.className)}
         type={isVisible ? 'text' : 'password'}
         trailing={
           <button

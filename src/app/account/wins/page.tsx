@@ -3,12 +3,21 @@
 import { AuthGuard } from '@features/auth';
 import { WinsPage } from '@features/wins';
 import { useAddresses } from '@features/addresses';
+import { useOrderSummaries } from '@features/orders';
 
-// Confirming a win needs a delivery address, which belongs to the addresses slice — the route
-// composes the two rather than letting wins import addresses (AGENTS.md rule 1).
+// My wins shows the delivery address and the order each win created; those belong to the
+// addresses and orders slices, so the route composes them rather than letting wins import
+// either (AGENTS.md rule 1).
 function WinsRoute() {
   const addresses = useAddresses();
-  return <WinsPage addresses={addresses.data ?? []} isAddressesPending={addresses.isPending} />;
+  const orders = useOrderSummaries();
+  return (
+    <WinsPage
+      addresses={addresses.data ?? []}
+      isAddressesPending={addresses.isPending}
+      orders={orders}
+    />
+  );
 }
 
 export default function Page() {

@@ -1,28 +1,28 @@
 'use client';
 
-import Link from 'next/link';
 import { ROUTES } from '@shared/constants';
 import { PageLoader } from '@shared/components/feedback';
 import { LegalLinks } from '../components/LegalLinks';
 import { RegisterForm } from '../components/RegisterForm';
+import { AuthShell } from '../components/shell/AuthShell';
+import { AuthSwitchLine } from '../components/shell/AuthSwitchLine';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 
+/** Sign-up in two real steps (details, then the Telegram code); the form draws its own heading. */
 export function RegisterPage() {
   const { t, isReady } = useAuthTranslation();
 
   if (!isReady) return <PageLoader />;
 
   return (
-    <div className="mx-auto flex max-w-sm flex-col gap-6 px-gutter py-12">
-      <h1 className="text-2xl font-bold text-foreground">{t('register.title')}</h1>
+    <AuthShell backHref={ROUTES.home}>
       <RegisterForm />
-      <p className="text-center text-sm text-muted-foreground">
-        {t('register.haveAccount')}{' '}
-        <Link href={ROUTES.login} className="font-medium text-accent hover:underline">
-          {t('register.signIn')}
-        </Link>
-      </p>
+      <AuthSwitchLine
+        question={t('register.haveAccount')}
+        linkLabel={t('register.signIn')}
+        href={ROUTES.login}
+      />
       <LegalLinks />
-    </div>
+    </AuthShell>
   );
 }

@@ -23,7 +23,7 @@ export function ResendCodeButton({ availableAt, isResending, onResend }: ResendC
       onClick={onResend}
       disabled={isWaiting}
       isLoading={isResending}
-      className="self-start"
+      className="justify-self-center font-tabular disabled:text-muted-foreground disabled:opacity-100"
     >
       {isWaiting ? t('register.resendIn', { seconds: secondsLeft }) : t('register.resend')}
     </Button>

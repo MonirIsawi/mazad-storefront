@@ -1,24 +1,34 @@
 {
   "fields": {
     "phone": "Phone number",
-    "phonePlaceholder": "+9647xxxxxxxx",
+    "phonePlaceholder": "770 123 4567",
     "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
     "fullName": "Full name",
     "code": "Verification code"
   },
+  "shell": {
+    "tagline": "Every auction starts with an account verified by your phone.",
+    "back": "Back",
+    "step": "Step {{step, num}} of {{total, num}}"
+  },
   "login": {
-    "title": "Sign in",
+    "title": "Welcome back",
+    "intro": "Sign in to follow your bids.",
     "submit": "Sign in",
-    "noAccount": "Don't have an account?",
-    "createAccount": "Register"
+    "noAccount": "New to Bidoom?",
+    "createAccount": "Create an account"
   },
   "register": {
-    "title": "Create account",
+    "title": "New account",
+    "intro": "We need your name and number to verify your bids.",
     "submit": "Create account",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
-    "sendCode": "Send verification code",
-    "codeSentTo": "We sent a 6-digit code to {{phone}}.",
+    "sendCode": "Send verification code via Telegram",
+    "passwordHint": "Use 8 or more characters.",
+    "codeTitle": "Enter the code",
+    "codeSentTo": "We sent a 6-digit code to the Telegram linked to {{phone}}.",
     "openTelegram": "To get the code for {{phone}}, open our Telegram bot and share your phone number.",
     "openTelegramLink": "Open Telegram",
     "resend": "Resend code",
@@ -30,17 +40,30 @@
   "account": {
     "title": "Account",
     "selling": "Selling",
-    "verified": "Verified account",
+    "sellerHub": "Seller hub",
+    "sellerHubHint": "Your products, auctions and incoming orders",
+    "activity": "My activity",
+    "preferences": "Preferences",
+    "verified": "Verified",
     "quickLinks": "Account links",
+    "counters": "What needs you",
+    "openOrders": "Open orders",
+    "unread": "Unread notifications",
+    "incoming": "Incoming orders",
     "addresses": "Delivery addresses",
     "myBids": "My bids",
     "watchlist": "Watchlist",
     "following": "Sellers you follow",
+    "notifications": "Notifications",
     "signOut": "Sign out",
     "wins": "My wins",
     "orders": "My orders",
-    "payments": "Payment history",
-    "help": "Help & policies"
+    "payments": "Payments",
+    "help": "Help and policies",
+    "contact": "Contact us",
+    "contactHint": "Report a problem or send a suggestion",
+    "deleteRow": "Delete account",
+    "deleteRowHint": "Permanent, after open orders are closed"
   },
   "legal": {
     "label": "Help and policies",
@@ -50,7 +73,14 @@
   },
   "deleteAccount": {
     "title": "Delete account",
-    "summary": "Permanently close your Mazad account. Open orders, auctions, returns and any wallet balance must be finished first.",
+    "heading": "Before you delete your account",
+    "summary": "Permanently close your Bidoom account. Open orders, auctions, returns and any wallet balance must be finished first.",
+    "closeFirst": "Close these first",
+    "closeFirstIntro": "An account can't be deleted while it still has open business with other people. If anything is still open, the delete button lists it, with a link to where it's closed.",
+    "deletedTitle": "What is deleted",
+    "keptTitle": "What we keep",
+    "afterTitle": "After deletion",
+    "confirmTitle": "Confirm",
     "open": "Delete account",
     "consequences": {
       "permanent": "Your account is closed permanently and can't be restored.",
@@ -91,11 +121,11 @@
     }
   },
   "accountDeletion": {
-    "title": "Delete your Mazad account",
-    "intro": "You can permanently delete your Mazad account yourself, in the Mazad app or on this website. This page explains how, and what happens to your data.",
+    "title": "Delete your Bidoom account",
+    "intro": "You can permanently delete your Bidoom account yourself, in the Bidoom app or on this website. This page explains how, and what happens to your data.",
     "howTitle": "How to delete your account",
     "steps": {
-      "signIn": "Sign in to your Mazad account, in the app or on the website.",
+      "signIn": "Sign in to your Bidoom account, in the app or on the website.",
       "account": "Open Account.",
       "delete": "At the bottom of the Account screen, choose Delete account and confirm. You'll be asked for your password if your account has one."
     },
@@ -122,6 +152,9 @@
     "forgot": "Forgot password?",
     "title": "Reset password",
     "intro": "Enter your phone number and we'll send you a verification code.",
+    "codeTitle": "Enter the code",
+    "passwordTitle": "New password",
+    "passwordIntro": "Choose a new password for your account.",
     "verify": "Verify code",
     "newPassword": "New password",
     "confirmPassword": "Confirm new password",

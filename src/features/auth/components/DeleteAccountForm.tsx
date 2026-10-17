@@ -3,7 +3,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { Button, PasswordInput } from '@shared/components/ui';
+import { Button, Card, Icon, PasswordInput } from '@shared/components/ui';
 import { deleteAccountSchema } from '../schemas/auth.schema';
 import { resolveDeletionFailure } from '../lib/account-deletion';
 import type { DeleteAccountValues } from '../types/auth.types';
@@ -11,10 +11,12 @@ import { useDeleteAccount } from '../hooks/useDeleteAccount';
 import { useLogout } from '../hooks/useLogout';
 import { useAuthTranslation } from '../hooks/useAuthTranslation';
 import { DeletionBlockedList } from './DeletionBlockedList';
+import { FormAlert } from './fields/FormAlert';
 
-/** Only facts the API enforces — see the consequences keys in i18n. */
-const CONSEQUENCES = ['permanent', 'removed', 'kept', 'signedOut', 'phone'] as const;
-
+/**
+ * The confirmation: password (optional, the API decides), "I understand", then the destructive
+ * button, outlined red and alone at the end with space before it.
+ */
 export function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
   const { t } = useAuthTranslation();
   const { t: tCommon } = useTranslation('common');
@@ -31,7 +33,6 @@ export function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
     defaultValues: { password: '', isConfirmed: false },
   });
   const isConfirmed = useWatch({ control, name: 'isConfirmed' });
-
   const failure = deletion.error ? resolveDeletionFailure(deletion.error) : null;
 
   const onSubmit = handleSubmit(({ password }) => {
@@ -39,45 +40,46 @@ export function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
       onError: (error) => {
         const result = resolveDeletionFailure(error);
         if (result.type !== 'password') return;
-        const message = `deleteAccount.errors.${result.code}`;
-        setError('password', { message }, { shouldFocus: true });
+        setError(
+          'password',
+          { message: `deleteAccount.errors.${result.code}` },
+          { shouldFocus: true },
+        );
       },
     });
   });
 
   return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-      <ul className="flex list-disc flex-col gap-1.5 ps-5 text-footnote text-foreground-soft">
-        {CONSEQUENCES.map((key) => (
-          <li key={key}>{t(`deleteAccount.consequences.${key}`)}</li>
-        ))}
-      </ul>
-
-      <PasswordInput
-        label={t('fields.password')}
-        autoComplete="current-password"
-        hint={t('deleteAccount.passwordHint')}
-        error={errors.password ? t(errors.password.message ?? '') : undefined}
-        {...register('password')}
-      />
-
-      <label className="flex items-center gap-2 text-sm text-foreground-soft">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-border"
-          {...register('isConfirmed')}
+    <form onSubmit={onSubmit} noValidate className="grid gap-3.5">
+      <Card isInset className="grid gap-4">
+        <h2 className="text-h3 font-medium text-foreground">{t('deleteAccount.confirmTitle')}</h2>
+        <PasswordInput
+          label={t('fields.password')}
+          autoComplete="current-password"
+          hint={t('deleteAccount.passwordHint')}
+          error={errors.password ? t(errors.password.message ?? '') : undefined}
+          {...register('password')}
         />
-        {t('deleteAccount.confirmLabel')}
-      </label>
+        <label className="flex min-h-11 cursor-pointer items-center gap-3 text-sm text-foreground">
+          <input type="checkbox" className="peer sr-only" {...register('isConfirmed')} />
+          <span
+            aria-hidden
+            className="grid size-6 shrink-0 place-items-center rounded-full border-[1.5px] border-border-strong text-transparent peer-checked:border-transparent peer-checked:bg-grad peer-checked:text-gold-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold"
+          >
+            <Icon name="check" size={14} />
+          </span>
+          {t('deleteAccount.confirmLabel')}
+        </label>
+      </Card>
 
       {failure?.type === 'blocked' ? <DeletionBlockedList reasons={failure.reasons} /> : null}
       {failure?.type === 'reauth' ? (
-        <div role="alert" className="flex flex-col gap-2 text-footnote">
+        <div role="alert" className="grid gap-2.5 rounded-lg bg-destructive-soft p-4 text-sm">
           <p className="text-destructive">{t('deleteAccount.errors.REAUTH_REQUIRED')}</p>
           <Button
-            variant="outline"
+            variant="soft"
             size="sm"
-            className="self-start"
+            className="justify-self-start"
             isLoading={logout.isPending}
             onClick={() => logout.mutate()}
           >
@@ -86,25 +88,24 @@ export function DeleteAccountForm({ onCancel }: { onCancel: () => void }) {
         </div>
       ) : null}
       {failure?.type === 'message' ? (
-        <p role="alert" className="text-sm text-destructive">
+        <FormAlert>
           {failure.namespace === 'common' ? tCommon(failure.key) : t(failure.key)}
-        </p>
+        </FormAlert>
       ) : null}
 
-      <div className="flex gap-2">
-        <Button
-          type="submit"
-          variant="destructive"
-          className="flex-1"
-          disabled={!isConfirmed}
-          isLoading={deletion.isPending}
-        >
-          {t('deleteAccount.confirm')}
-        </Button>
-        <Button variant="gray" disabled={deletion.isPending} onClick={onCancel}>
-          {t('deleteAccount.cancel')}
-        </Button>
-      </div>
+      <Button variant="soft" isFullWidth disabled={deletion.isPending} onClick={onCancel}>
+        {t('deleteAccount.cancel')}
+      </Button>
+      <Button
+        type="submit"
+        variant="dangerLine"
+        isFullWidth
+        className="mt-8"
+        disabled={!isConfirmed}
+        isLoading={deletion.isPending}
+      >
+        {t('deleteAccount.confirm')}
+      </Button>
     </form>
   );
 }

@@ -2,7 +2,8 @@
   "page": {
     "title": "My orders",
     "emptyTitle": "No orders yet",
-    "empty": "Once you confirm a win, the order shows up here."
+    "empty": "Once you confirm a win, the order shows up here.",
+    "account": "Account"
   },
   "detail": {
     "title": "Order",
@@ -20,7 +21,7 @@
     "cancelledBy": {
       "BUYER": "Cancelled by the buyer",
       "SELLER": "Cancelled by the seller",
-      "ADMIN": "Cancelled by Mazad",
+      "ADMIN": "Cancelled by Bidoom",
       "SYSTEM": "Cancelled automatically"
     },
     "viewListing": "View listing",
@@ -121,7 +122,8 @@
     "deliver": {
       "cashConfirm": "Did you receive {{amount}} from the buyer? Confirm only once you have the full amount; the order is then marked delivered and paid.",
       "paidConfirm": "This order was already paid by card. Mark it as delivered?"
-    }
+    },
+    "hub": "Seller hub"
   },
   "payment": {
     "title": "Payment",
@@ -139,7 +141,7 @@
     "openedHint": "The payment page opened in a new tab. Come back here when you're done: this page updates by itself once SwiftPayIQ confirms.",
     "state": {
       "awaiting": "Waiting for SwiftPayIQ to confirm your payment",
-      "awaitingHint": "Returning from the payment page doesn't confirm it; SwiftPayIQ notifies Mazad directly. This usually takes a few seconds.",
+      "awaitingHint": "Returning from the payment page doesn't confirm it; SwiftPayIQ notifies Bidoom directly. This usually takes a few seconds.",
       "paid": "Paid electronically",
       "paidHint": "Nothing to pay on delivery.",
       "paidCash": "Paid on delivery",
@@ -195,5 +197,102 @@
     "itemAndDelivery": "Item {{item}} · Delivery {{delivery}}",
     "itemsAndDelivery": "Items {{item}} · Delivery {{delivery}}",
     "loadMore": "Load more"
+  },
+  "filters": {
+    "label": "Show orders",
+    "all": "All",
+    "open": "Open",
+    "done": "Done",
+    "emptyOpen": "No open orders.",
+    "emptyDone": "No finished orders yet."
+  },
+  "card": {
+    "next": "Next: {{step}}",
+    "rate": "Rate this order",
+    "openOrders": "Your open orders",
+    "noOpen": "No open orders right now.",
+    "seeAll": "See all"
+  },
+  "timeline": {
+    "title": "Order status",
+    "created": "Order created",
+    "won": "You won; order created",
+    "confirmed": "Seller confirmed",
+    "confirmedSeller": "You confirmed",
+    "shipped": "Out for delivery",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "waitingCourier": "Waiting for the courier",
+    "pending": "Not yet"
+  },
+  "view": {
+    "deliveringTo": "Delivering to",
+    "summary": "Order summary",
+    "problem": "Problem with this order? Contact us",
+    "somethingWrong": "Something wrong?",
+    "somethingWrongBody": "If it arrived damaged or not as described, you can request a return within 7 days of delivery.",
+    "contact": "Contact us",
+    "nextStep": "Next step",
+    "buyerTitle": "Buyer",
+    "collect": "Collect on delivery",
+    "call": "Call the buyer"
+  },
+  "nextTitle": {
+    "CREATED": "Confirm the order",
+    "CONFIRMED": "Hand the order to the courier",
+    "OUT_FOR_DELIVERY": "Deliver and collect the payment"
+  },
+  "rating": {
+    "cardTitle": "How was your experience with {{store}}?",
+    "cardHint": "Your rating helps other buyers.",
+    "openUntil": "Open until {{date}}.",
+    "star_one": "{{count, num}} of 5",
+    "star_other": "{{count, num}} of 5",
+    "starsLabel": "Your rating",
+    "done": "Thanks, your rating is live",
+    "edit": "Edit your rating",
+    "sheetTitle": "Rate {{store}}",
+    "words": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very good",
+      "5": "Excellent"
+    },
+    "wentWell": "What went well?",
+    "wentWrong": "What went wrong?",
+    "maxTags": "Pick up to 3.",
+    "returnOffer": "Is something wrong with the item? A return fixes more than a review.",
+    "returnAction": "Request a return",
+    "comment": "Tell other buyers more (optional)",
+    "commentPlaceholder": "For example: did it match the photos? How was the packaging?",
+    "rule": "Your rating appears on the store page with your full name and the item’s name.",
+    "ruleUntil": "You can edit it until {{date}}.",
+    "post": "Post rating",
+    "save": "Save changes",
+    "posted": "Your rating is live.",
+    "updated": "Your rating was updated.",
+    "starsRequired": "Choose the stars first.",
+    "tags": {
+      "AS_DESCRIBED": "As described",
+      "FAST_DELIVERY": "Fast delivery",
+      "GOOD_PACKAGING": "Well packed",
+      "FRIENDLY_SELLER": "Friendly seller",
+      "GOOD_VALUE": "Good value",
+      "NOT_AS_DESCRIBED": "Not as described",
+      "LATE_DELIVERY": "Late delivery",
+      "POOR_PACKAGING": "Poor packaging",
+      "UNRESPONSIVE_SELLER": "Hard to reach",
+      "DAMAGED": "Arrived damaged"
+    },
+    "errors": {
+      "REVIEW_ALREADY_EXISTS": "You already rated this item.",
+      "REVIEW_WINDOW_CLOSED": "Rating this order has closed.",
+      "REVIEW_TAGS_MISMATCH": "Those tags don’t match the stars. Pick them again.",
+      "generic": "Your rating wasn’t saved. Try again."
+    }
+  },
+  "ledger": {
+    "declined": "The payment failed. Try again from the order, or pay on delivery."
   }
 }
