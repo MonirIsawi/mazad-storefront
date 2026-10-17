@@ -120,7 +120,53 @@
     "unavailable": "هذا المتجر غير متاح",
     "unavailableMessage": "لا يمكنك عرض هذا المتجر حاليًا.",
     "loadError": "تعذّر تحميل هذا المتجر.",
-    "title": "المتجر"
+    "title": "المتجر",
+    "sections": "أقسام المتجر",
+    "tabs": {
+      "live": "مباشر",
+      "upcoming": "قادم",
+      "ended": "منتهٍ",
+      "ratings": "التقييمات"
+    },
+    "stats": {
+      "live": "مزاد مباشر",
+      "followers": "متابع",
+      "sold": "عملية بيع",
+      "deliveryFee": "رسوم التوصيل"
+    },
+    "empty": {
+      "liveTitle": "لا مزادات مباشرة الآن",
+      "liveMessage": "اطّلع على المزادات القادمة، أو تصفّح كل المزادات المباشرة.",
+      "upcomingTitle": "لا مزادات مجدولة بعد",
+      "upcomingMessage": "تظهر هنا مزادات المتجر الجديدة قبل أن تبدأ.",
+      "endedTitle": "لا مزادات منتهية بعد",
+      "endedMessage": "تظهر هنا المزادات التي انتهت."
+    },
+    "showMore": "عرض المزيد",
+    "ratings": {
+      "openTab": "عرض تقييمات المتجر",
+      "outOf": "{{value}} من 5 نجوم",
+      "starsRow": "{{stars, num}} نجوم: {{count, num}}",
+      "rule": "كل التقييمات من مشترين استلموا طلباتهم من هذا المتجر.",
+      "reply": "رد المتجر",
+      "item": "المنتج: {{name}}",
+      "showMore": "عرض المزيد من التقييمات",
+      "emptyTitle": "لا تقييمات بعد",
+      "emptyMessage": "تظهر التقييمات هنا بعد أن يستلم المشترون طلباتهم.",
+      "topTags": "الأكثر ذكراً"
+    },
+    "tags": {
+      "AS_DESCRIBED": "مطابق للوصف",
+      "FAST_DELIVERY": "توصيل سريع",
+      "GOOD_PACKAGING": "تغليف ممتاز",
+      "FRIENDLY_SELLER": "تواصل جيد",
+      "GOOD_VALUE": "سعر يستحق",
+      "NOT_AS_DESCRIBED": "لا يطابق الوصف",
+      "LATE_DELIVERY": "تأخر التوصيل",
+      "POOR_PACKAGING": "تغليف سيئ",
+      "UNRESPONSIVE_SELLER": "صعوبة التواصل",
+      "DAMAGED": "وصل متضرراً"
+    }
   },
   "conditionHint": {
     "NEW": "غير مستعمل، في تغليفه الأصلي.",

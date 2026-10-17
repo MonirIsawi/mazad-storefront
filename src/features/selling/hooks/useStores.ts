@@ -58,3 +58,21 @@ export function useDeleteStore() {
     },
   });
 }
+
+/** Upload then set the store's cover (the product-photo upload flow); `file: null` removes it. */
+export function useStoreCover() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
+  const { t } = useSellingTranslation();
+
+  return useMutation({
+    mutationFn: async ({ storeId, file }: { storeId: string; file: File | null }) => {
+      const key = file ? (await sellingApi.uploadImage(file)).key : null;
+      return sellingApi.setStoreCover(storeId, key);
+    },
+    onSuccess: (_store, { file }) => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.selling.stores });
+      toast.success(t(file ? 'toast.coverUpdated' : 'toast.coverRemoved'));
+    },
+  });
+}

@@ -3,12 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@shared/constants';
 import { getErrorStatus } from '@shared/lib';
-import { catalogApi } from '../api/catalog.api';
+import { storeApi } from '../api/store.api';
 
 export function useStore(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.catalog.store(id),
-    queryFn: () => catalogApi.getStore(id),
+    queryFn: () => storeApi.getStore(id),
     enabled: !!id,
     // A missing, suspended or forbidden store won't appear on a second try: show its screen at once.
     // Everything else keeps the app's single retry.

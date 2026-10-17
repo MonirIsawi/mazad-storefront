@@ -15,7 +15,11 @@
     "rating_other": "{{average, num}} ({{count, num}} تقييم)",
     "noRating": "لا توجد تقييمات بعد",
     "stores": "المتاجر",
-    "notFound": "البائع غير موجود."
+    "notFound": "البائع غير موجود.",
+    "title": "البائع",
+    "crumbStores": "المتاجر",
+    "verified": "بائع موثّق",
+    "currentAuctions": "مزادات حالية"
   },
   "follow": {
     "follow": "متابعة",

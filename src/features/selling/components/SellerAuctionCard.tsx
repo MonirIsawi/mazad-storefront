@@ -1,46 +1,44 @@
 'use client';
 
+import Link from 'next/link';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Card, Icon } from '@shared/components/ui';
-import { useLocale, useMoney } from '@shared/hooks';
-import { formatDateTime, getErrorCode, pickLocalizedName } from '@shared/lib';
+import { Button, ConfirmDialog, Icon, buttonVariants } from '@shared/components/ui';
+import { ROUTES } from '@shared/constants';
+import { useLocale } from '@shared/hooks';
+import { getErrorCode, pickLocalizedName, resolveThumbUrl } from '@shared/lib';
 import {
   canCancelAuction,
   canEditAuction,
   canRelistAuction,
   canSubmitAuction,
-  getSellerAuctionTone,
 } from '../lib/auction-permissions';
+import { SELLING_PATHS } from '../lib/selling-paths';
 import { useCancelAuction, useSubmitAuction } from '../hooks/useSellerAuctions';
 import { useSellingTranslation } from '../hooks/useSellingTranslation';
 import type { SellerAuction } from '../types/selling.types';
+import { LotRow } from './LotRow';
+import { AuctionRowDetail } from './auctions/AuctionRowDetail';
+import { SellerAuctionBadge } from './auctions/SellerAuctionBadge';
 
 export interface SellerAuctionCardProps {
   auction: SellerAuction;
-  onEdit: (auction: SellerAuction) => void;
-  /** "List again", pre-filled from this listing. */
-  onRelist?: (auction: SellerAuction) => void;
   /** Products that can be put up again; "List again" shows only for these (relistableProductIds). */
   relistable?: ReadonlySet<string>;
 }
 
-/** One row of "My listings": status, the money, and only the actions this state actually allows. */
-export function SellerAuctionCard({
-  auction,
-  onEdit,
-  onRelist,
-  relistable,
-}: SellerAuctionCardProps) {
+const SMALL_SOFT = buttonVariants({ variant: 'soft', size: 'sm' });
+const SMALL_LINE = buttonVariants({ variant: 'line', size: 'sm' });
+
+/** One row of "My auctions": status, the money, and only the actions this state allows. */
+export function SellerAuctionCard({ auction, relistable }: SellerAuctionCardProps) {
   const { t } = useSellingTranslation();
   const { t: tCommon } = useTranslation('common');
   const { locale } = useLocale();
-  const { money, number } = useMoney();
   const submitAuction = useSubmitAuction();
   const cancelAuction = useCancelAuction();
+  const [isAsking, setIsAsking] = useState(false);
 
-  const isMutating =
-    (submitAuction.isPending && submitAuction.variables === auction.id) ||
-    (cancelAuction.isPending && cancelAuction.variables?.id === auction.id);
   const cancelErrorCode = getErrorCode(cancelAuction.error);
   // A refused withdrawal: the review ended first (or an older API), not a refused cancellation.
   const errorCode =
@@ -49,104 +47,106 @@ export function SellerAuctionCard({
       ? 'AUCTION_NOT_WITHDRAWABLE'
       : cancelErrorCode);
 
-  const name = auction.product ? pickLocalizedName(auction.product, locale) : auction.id;
-  // Awaiting Mazad's review: cancelling it is "withdrawing" it from the queue.
+  const product = auction.product;
+  const cover = product?.images?.find((image) => image.isCover) ?? product?.images?.[0];
+  // Awaiting Bidoom's review: cancelling it is "withdrawing" it from the queue.
   const isWithdraw = auction.status === 'PENDING_APPROVAL';
+  const isEditable = canEditAuction(auction.status);
+  // Buyers can open it once it is on the marketplace; drafts and rejected ones open the editor.
+  const href = isEditable
+    ? SELLING_PATHS.auctionEdit(auction.id)
+    : ['LIVE', 'SCHEDULED', 'ENDED', 'SOLD', 'UNSOLD'].includes(auction.status)
+      ? ROUTES.auctionDetail(auction.id)
+      : undefined;
+
+  const actions = (
+    <>
+      {isEditable ? (
+        <Link
+          href={SELLING_PATHS.auctionEdit(auction.id)}
+          className={auction.status === 'REJECTED' ? SMALL_LINE : SMALL_SOFT}
+        >
+          {auction.status === 'REJECTED' ? null : <Icon name="pencil-simple" size={16} />}
+          {t(auction.status === 'REJECTED' ? 'auctions.fix' : 'auctions.edit')}
+        </Link>
+      ) : null}
+      {canSubmitAuction(auction.status) && auction.status === 'DRAFT' ? (
+        <Button
+          size="sm"
+          variant="line"
+          isLoading={submitAuction.isPending}
+          onClick={() => submitAuction.mutate(auction.id)}
+        >
+          {t('auctions.publish')}
+        </Button>
+      ) : null}
+      {canRelistAuction(auction, relistable) ? (
+        <Link
+          href={SELLING_PATHS.auctionRelist(auction.id)}
+          className={SMALL_LINE}
+          data-testid="auction-relist"
+        >
+          {t('auctions.relist')}
+        </Link>
+      ) : null}
+      {auction.status === 'SOLD' && !auction.saleCancelled ? (
+        <Link href={ROUTES.sellingSales} className={SMALL_SOFT}>
+          {t('auctions.order')}
+        </Link>
+      ) : null}
+      {canCancelAuction(auction) ? (
+        <Button
+          size="sm"
+          variant="soft"
+          isLoading={cancelAuction.isPending}
+          data-testid={isWithdraw ? 'auction-withdraw' : 'auction-cancel'}
+          onClick={() => setIsAsking(true)}
+        >
+          {t(isWithdraw ? 'auctions.withdraw' : 'auctions.cancel')}
+        </Button>
+      ) : null}
+    </>
+  );
 
   return (
-    <Card isInset className="flex flex-col gap-2">
-      <div className="flex items-start gap-2">
-        <p className="min-w-0 flex-1 truncate text-headline font-semibold text-foreground">
-          {name}
-        </p>
-        <Badge tone={getSellerAuctionTone(auction.status)} className="shrink-0">
-          {t(`status.${auction.status}`)}
-        </Badge>
-      </div>
-
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-footnote text-muted-foreground">
-        <span className="text-callout font-bold text-foreground tabular-nums">
-          {money(auction.currentPrice ?? auction.startingPrice)}
+    <>
+      <LotRow
+        thumbUrl={resolveThumbUrl(cover?.url)}
+        title={product ? pickLocalizedName(product, locale) : auction.id}
+        href={href}
+        hasActions
+        end={actions}
+      >
+        <span className="flex flex-wrap items-center gap-2">
+          <SellerAuctionBadge status={auction.status} />
         </span>
-        <span className="inline-flex items-center gap-1">
-          <Icon name="gavel" size={12} />
-          {t('auctions.bids', { count: auction.bidCount })}
-        </span>
-      </div>
-
-      <p className="text-caption text-muted-foreground tabular-nums">
-        {t('auctions.endsAt', { date: formatDateTime(auction.endsAt, locale) })}
-      </p>
-
-      {/* The admin's reason is the only way a seller learns what to fix before resubmitting. */}
-      {auction.status === 'REJECTED' && auction.rejectionReason ? (
-        <p className="text-footnote text-warning">
-          {t('auctions.rejectedReason', { reason: auction.rejectionReason })}
-        </p>
-      ) : null}
-      {auction.status === 'CANCELLED' && auction.cancelReason ? (
-        <p className="text-footnote text-muted-foreground">
-          {t('auctions.cancelledReason', { reason: auction.cancelReason })}
-        </p>
-      ) : null}
-
-      {errorCode ? (
-        <p role="alert" className="text-footnote text-destructive">
-          {t(`errors.${errorCode}`, { defaultValue: tCommon('errors.generic') })}
-        </p>
-      ) : null}
-
-      <div className="flex flex-wrap gap-2">
-        {canEditAuction(auction.status) ? (
-          <Button size="sm" variant="outline" onClick={() => onEdit(auction)}>
-            {t('auctions.edit')}
-          </Button>
-        ) : null}
-
-        {canSubmitAuction(auction.status) ? (
-          <Button size="sm" isLoading={isMutating} onClick={() => submitAuction.mutate(auction.id)}>
-            {t('auctions.publish')}
-          </Button>
-        ) : null}
-
-        {onRelist && canRelistAuction(auction, relistable) ? (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onRelist(auction)}
-            data-testid="auction-relist"
-          >
-            {t('auctions.relist')}
-          </Button>
-        ) : null}
-
-        {canCancelAuction(auction) ? (
-          <Button
-            size="sm"
-            variant="destructive"
-            isLoading={isMutating}
-            data-testid={isWithdraw ? 'auction-withdraw' : 'auction-cancel'}
-            onClick={() => {
-              if (
-                window.confirm(
-                  t(isWithdraw ? 'auctions.withdrawConfirm' : 'auctions.cancelConfirm'),
-                )
-              ) {
-                cancelAuction.mutate({ id: auction.id, isWithdraw });
-              }
-            }}
-          >
-            {t(isWithdraw ? 'auctions.withdraw' : 'auctions.cancel')}
-          </Button>
-        ) : null}
-
+        <AuctionRowDetail auction={auction} />
         {/* A live listing that has taken bids is locked: say why rather than showing nothing. */}
         {auction.status === 'LIVE' && auction.bidCount > 0 ? (
-          <p className="self-center text-caption text-muted-foreground">
-            {t('auctions.lockedWithBids', { count: number(auction.bidCount) })}
-          </p>
+          <span className="text-xs text-muted-foreground">{t('auctions.lockedWithBids')}</span>
         ) : null}
-      </div>
-    </Card>
+        {errorCode ? (
+          <span role="alert" className="text-xs text-destructive">
+            {t(`errors.${errorCode}`, { defaultValue: tCommon('errors.generic') })}
+          </span>
+        ) : null}
+      </LotRow>
+      <ConfirmDialog
+        isOpen={isAsking}
+        tone="danger"
+        title={t(isWithdraw ? 'auctions.withdrawTitle' : 'auctions.cancelTitle')}
+        body={t(isWithdraw ? 'auctions.withdrawConfirm' : 'auctions.cancelConfirm')}
+        confirmLabel={t(isWithdraw ? 'auctions.withdraw' : 'auctions.cancel')}
+        cancelLabel={t('auctions.keep')}
+        isPending={cancelAuction.isPending}
+        onCancel={() => setIsAsking(false)}
+        onConfirm={() =>
+          cancelAuction.mutate(
+            { id: auction.id, isWithdraw },
+            { onSettled: () => setIsAsking(false) },
+          )
+        }
+      />
+    </>
   );
 }

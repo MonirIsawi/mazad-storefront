@@ -1,149 +1,125 @@
 'use client';
 
-import Link from 'next/link';
+import { useRef, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { PageLoader, ErrorState, EmptyState } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  Icon,
-  SectionHeader,
-  buttonVariants,
-} from '@shared/components/ui';
+import { PageLoader } from '@shared/components/feedback';
+import { PageContainer } from '@shared/components/layout';
+import { SegmentedControl, type Segment } from '@shared/components/ios';
 import { ROUTES } from '@shared/constants';
 import { useLocale, useMoney } from '@shared/hooks';
-import { getErrorCode, getErrorStatus, pickLocalizedName } from '@shared/lib';
+import { pickLocalizedName } from '@shared/lib';
 import { useCatalogTranslation } from '../hooks/useCatalogTranslation';
 import { useStore } from '../hooks/useStore';
 import { useStoreAuctions } from '../hooks/useStoreAuctions';
-import { AuctionGrid, AuctionGridSkeleton } from '@shared/components/cards';
+import { useStoreReviews } from '../hooks/useStoreReviews';
+import { pickStoreRating } from '../lib/store-rating';
+import { StoreHero } from '../components/store/StoreHero';
+import { StoreStats } from '../components/store/StoreStats';
+import { StoreAuctionsPanel } from '../components/store/StoreAuctionsPanel';
+import { StoreRatingsPanel } from '../components/store/StoreRatingsPanel';
+import { StoreUnavailable } from '../components/store/StoreUnavailable';
+import type { StoreTab } from '../types/store.types';
 
 export interface StorePageProps {
   id: string;
+  /** `?tab=ratings` from a seller's rating opens the ratings tab. */
+  initialTab?: StoreTab;
   renderSellerFollowToggle?: (sellerId: string) => ReactNode;
 }
 
-export function StorePage({ id, renderSellerFollowToggle }: StorePageProps) {
+/**
+ * A store is a shopfront (Bidoom design `store`): its head, its numbers, then its auctions by
+ * status in tabs, and its ratings as the fourth tab while the API has store ratings.
+ */
+export function StorePage({ id, initialTab, renderSellerFollowToggle }: StorePageProps) {
   const { t, isReady } = useCatalogTranslation();
-  const { t: tCommon } = useTranslation('common');
   const { locale } = useLocale();
-  const { money } = useMoney();
+  const { number } = useMoney();
   const router = useRouter();
   const store = useStore(id);
-  const auctions = useStoreAuctions(id);
+  const reviews = useStoreReviews(id);
+  const live = useStoreAuctions(id, 'live');
+  const upcoming = useStoreAuctions(id, 'upcoming');
+  const ended = useStoreAuctions(id, 'ended');
+  const [tab, setTab] = useState<StoreTab>(initialTab ?? 'live');
+  const tabsRef = useRef<HTMLDivElement>(null);
 
   if (!isReady || store.isPending) return <PageLoader />;
   if (store.isError || !store.data) {
-    // A 404 (missing, removed or suspended store, or a banned seller) and a 403 won't change on
-    // retry: offer a way on instead. Retry stays for network and server failures, which can.
-    const status = getErrorStatus(store.error);
-    const isNotFound = status === 404 || getErrorCode(store.error) === 'STORE_NOT_FOUND';
-    if (isNotFound || status === 403) {
-      // Back where the buyer came from; home when the store was the first page they opened.
-      const goBack = () => (window.history.length > 1 ? router.back() : router.push(ROUTES.home));
-      return (
-        <EmptyState
-          icon="store"
-          title={t(isNotFound ? 'store.notFound' : 'store.unavailable')}
-          message={t(isNotFound ? 'store.notFoundMessage' : 'store.unavailableMessage')}
-          action={
-            <div className="mt-2 flex flex-wrap justify-center gap-2">
-              <Button variant="gray" onClick={goBack}>
-                {tCommon('nav.back')}
-              </Button>
-              <Link href={ROUTES.auctions} className={buttonVariants({ variant: 'tinted' })}>
-                {t('detail.browseAuctions')}
-              </Link>
-            </div>
-          }
-        />
-      );
-    }
-    return <ErrorState message={t('store.loadError')} onRetry={() => void store.refetch()} />;
+    return (
+      <PageContainer className="py-6">
+        <StoreUnavailable error={store.error} onRetry={() => void store.refetch()} />
+      </PageContainer>
+    );
   }
 
   const data = store.data;
-  const { sellerRating } = data;
-  const hasRating = sellerRating && sellerRating.count > 0 && sellerRating.average != null;
+  const hasRatings = reviews.isAvailable === true;
+  // A ratings link from an API that has no ratings lands on the live tab instead.
+  const shown: StoreTab = tab === 'ratings' && reviews.isAvailable === false ? 'live' : tab;
+  const queries = { live, upcoming, ended };
+  const total = (key: keyof typeof queries) => queries[key].data?.pages[0]?.meta.total;
+  const count = (value: number | undefined) => (value ? number(value) : undefined);
+
+  const segments: Segment<StoreTab>[] = (['live', 'upcoming', 'ended'] as const).map((key) => ({
+    id: key,
+    label: t(`store.tabs.${key}`),
+    count: count(total(key)),
+  }));
+  if (hasRatings) {
+    segments.push({
+      id: 'ratings',
+      label: t('store.tabs.ratings'),
+      count: count(reviews.summary?.count),
+    });
+  }
+
+  const selectTab = (next: StoreTab) => {
+    setTab(next);
+    // Keeps the tab in the address, so a shared or reloaded link opens the same one.
+    window.history.replaceState(
+      null,
+      '',
+      next === 'live' ? window.location.pathname : `?tab=${next}`,
+    );
+  };
+  const openRatings = () => {
+    selectTab('ratings');
+    tabsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  };
+  const goBack = () => (window.history.length > 1 ? router.back() : router.push(ROUTES.home));
+  const rating = pickStoreRating(data, reviews.summary);
 
   return (
     <>
-      <ScreenHeader title={t('store.title')} backHref={ROUTES.auctions} />
+      <StoreHero
+        store={data}
+        name={pickLocalizedName(data, locale)}
+        rating={rating}
+        onOpenRatings={hasRatings && rating ? openRatings : undefined}
+        followSlot={renderSellerFollowToggle?.(data.seller.id)}
+        onBack={goBack}
+      />
 
-      <div className="flex flex-col gap-5 px-gutter pb-6">
-        <Card isInset className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-lg bg-primary-tint text-primary">
-              <Icon name="store" size={24} />
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <p className="truncate text-title-3 font-bold text-foreground">
-                {pickLocalizedName(data, locale)}
-              </p>
-              <p className="truncate text-footnote text-muted-foreground">{data.city}</p>
-            </div>
-          </div>
-
-          {/* Verified only when the seller is; a rating only once there are reviews. */}
-          {data.seller.isVerified || hasRating ? (
-            <div className="flex flex-wrap items-center gap-2 text-footnote">
-              {data.seller.isVerified ? (
-                <Badge tone="live" data-testid="store-verified">
-                  <Icon name="badge-check" size={12} />
-                  {t('detail.verifiedSeller')}
-                </Badge>
-              ) : null}
-              {hasRating ? (
-                <span className="text-foreground-soft" data-testid="store-rating">
-                  {t('detail.ratingValue', {
-                    average: sellerRating.average?.toLocaleString(locale === 'ar' ? 'ar' : 'en-US'),
-                    count: sellerRating.count,
-                  })}
-                </span>
-              ) : null}
-            </div>
-          ) : null}
-
-          <CardContent className="flex flex-col gap-2 p-0 text-subhead">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">{t('store.deliveryFee')}</span>
-              <span className="font-medium text-foreground tabular-nums">
-                {money(data.deliveryFee)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-muted-foreground">{t('detail.seller')}</span>
-              <span className="flex items-center gap-2">
-                <Link
-                  href={ROUTES.sellerProfile(data.seller.id)}
-                  className="font-semibold text-primary-text"
-                >
-                  {data.seller.fullName}
-                </Link>
-                {renderSellerFollowToggle?.(data.seller.id)}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <section>
-          <SectionHeader title={t('store.activeAuctions')} />
-          {auctions.isPending ? (
-            <AuctionGridSkeleton count={4} />
-          ) : auctions.isError ? (
-            <ErrorState onRetry={() => void auctions.refetch()} />
-          ) : auctions.data.data.length === 0 ? (
-            <EmptyState icon="gavel" message={t('browse.empty')} />
+      <PageContainer className="grid gap-[18px] pt-[18px] pb-8">
+        <StoreStats store={data} liveTotal={total('live')} />
+        <div ref={tabsRef} className="scroll-mt-24">
+          <SegmentedControl
+            label={t('store.sections')}
+            value={shown}
+            onChange={selectTab}
+            segments={segments}
+            className="max-w-[620px]"
+          />
+        </div>
+        <div role="tabpanel" aria-label={t(`store.tabs.${shown}`)}>
+          {shown === 'ratings' ? (
+            <StoreRatingsPanel query={reviews} />
           ) : (
-            <AuctionGrid auctions={auctions.data.data} />
+            <StoreAuctionsPanel key={shown} status={shown} query={queries[shown]} />
           )}
-        </section>
-      </div>
+        </div>
+      </PageContainer>
     </>
   );
 }

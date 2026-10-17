@@ -2,20 +2,27 @@
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@shared/components/ui';
+import { Button, Icon } from '@shared/components/ui';
 import { useIsAuthenticated } from '@shared/hooks';
-import { getErrorCode } from '@shared/lib';
+import { cn, getErrorCode } from '@shared/lib';
 import { useFollowing } from '../hooks/useFollowing';
 import { useToggleFollow } from '../hooks/useToggleFollow';
 import { useSellersTranslation } from '../hooks/useSellersTranslation';
 
 export interface FollowSellerButtonProps {
   sellerId: string;
+  /** `md`: the store and seller pages, where Follow is the one gold action. */
+  size?: 'sm' | 'md';
+  isFullWidth?: boolean;
 }
 
 // Same optimistic-override shape as watchlist's WatchlistToggle — see that file's comment for
 // why there's no useEffect syncing local state from the query result.
-export function FollowSellerButton({ sellerId }: FollowSellerButtonProps) {
+export function FollowSellerButton({
+  sellerId,
+  size = 'sm',
+  isFullWidth = false,
+}: FollowSellerButtonProps) {
   const { t } = useSellersTranslation();
   const { t: tCommon } = useTranslation('common');
   const isAuthenticated = useIsAuthenticated();
@@ -36,14 +43,18 @@ export function FollowSellerButton({ sellerId }: FollowSellerButtonProps) {
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className={cn('flex flex-col gap-1', isFullWidth && 'w-full')}>
       <Button
         type="button"
-        variant={isFollowing ? 'outline' : 'filled'}
-        size="sm"
+        variant={isFollowing ? 'soft' : 'gold'}
+        size={size}
+        isFullWidth={isFullWidth}
         isLoading={toggle.isPending}
         onClick={handleClick}
       >
+        {toggle.isPending ? null : (
+          <Icon name={isFollowing ? 'check' : 'plus'} size={size === 'md' ? 20 : 16} />
+        )}
         {isFollowing ? t('follow.following') : t('follow.follow')}
       </Button>
       {errorCode ? (

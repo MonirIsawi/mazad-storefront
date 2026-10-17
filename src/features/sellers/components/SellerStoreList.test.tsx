@@ -12,7 +12,7 @@ describe('SellerStoreList', () => {
         ]}
       />,
     );
-    expect(screen.getByRole('link', { name: 'Store A' }).getAttribute('href')).toBe('/stores/st-a');
-    expect(screen.getByRole('link', { name: 'Store B' }).getAttribute('href')).toBe('/stores/st-b');
+    expect(screen.getByRole('link', { name: /Store A/ }).getAttribute('href')).toBe('/stores/st-a');
+    expect(screen.getByRole('link', { name: /Store B/ }).getAttribute('href')).toBe('/stores/st-b');
   });
 });

@@ -1,5 +1,6 @@
 import { httpClient } from '@shared/api';
 import {
+  productBlockSchema,
   sellerAuctionListSchema,
   sellerAuctionSchema,
   sellerProductListSchema,
@@ -36,6 +37,12 @@ export const sellingApi = {
     return storeSchema.parse(response.data);
   },
 
+  /** PATCH /me/stores/:id { coverKey }: an upload key of this seller's, or null to remove it. */
+  setStoreCover: async (id: string, coverKey: string | null): Promise<Store> => {
+    const response = await httpClient.patch<unknown>(`/me/stores/${id}`, { coverKey });
+    return storeSchema.parse(response.data);
+  },
+
   deleteStore: async (id: string): Promise<void> => {
     await httpClient.delete(`/me/stores/${id}`);
   },
@@ -60,6 +67,12 @@ export const sellingApi = {
   ): Promise<SellerProduct> => {
     const response = await httpClient.patch<unknown>(`/products/${id}`, values);
     return sellerProductSchema.parse(response.data);
+  },
+
+  /** The owner's view of one product: it adds why Bidoom blocked it (absent from /me/products). */
+  getProductBlockReason: async (id: string): Promise<string | null> => {
+    const response = await httpClient.get<unknown>(`/products/${id}`);
+    return productBlockSchema.parse(response.data).blockReason ?? null;
   },
 
   deleteProduct: async (id: string): Promise<void> => {

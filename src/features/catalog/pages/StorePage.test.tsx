@@ -81,21 +81,34 @@ const listing = {
   },
 };
 
-/** Answers /stores/:id with `store` (a body, or an error to throw) and /auctions with `listings`. */
-function mockApi(store: unknown, listings: unknown[] = []) {
-  vi.mocked(httpClient.get).mockImplementation(async (url: string) => {
+/**
+ * Answers /stores/:id with `store` (a body, or an error to throw), the live tab of /auctions with
+ * `listings`, and /stores/:id/reviews with `reviews` (by default a 404: an API without ratings).
+ */
+function mockApi(
+  store: unknown,
+  listings: unknown[] = [],
+  reviews: unknown = apiError(404, 'NOT_FOUND'),
+) {
+  vi.mocked(httpClient.get).mockImplementation(async (url: string, config?: unknown) => {
+    if (url.endsWith('/reviews')) {
+      if (reviews instanceof Error) throw reviews;
+      return { data: reviews } as AxiosResponse;
+    }
     if (url.startsWith('/stores/')) {
       if (store instanceof Error) throw store;
       return { data: store } as AxiosResponse;
     }
+    const status = (config as { params?: { status?: string } } | undefined)?.params?.status;
+    const data = status === 'live' ? listings : [];
     return {
-      data: { data: listings, meta: { page: 1, limit: 20, total: listings.length, totalPages: 1 } },
+      data: { data, meta: { page: 1, limit: 24, total: data.length, totalPages: 1 } },
     } as AxiosResponse;
   });
 }
 
 const storeRequests = () =>
-  vi.mocked(httpClient.get).mock.calls.filter(([url]) => url.startsWith('/stores/')).length;
+  vi.mocked(httpClient.get).mock.calls.filter(([url]) => /^\/stores\/[^/]+$/.test(url)).length;
 
 beforeAll(async () => {
   addNamespaceBundle('catalog', 'en', catalogEn);
@@ -147,18 +160,21 @@ describe('StorePage: the store', () => {
         renderSellerFollowToggle={(sellerId) => <span>follow {sellerId}</span>}
       />,
     );
-    expect(await screen.findByText('Ali Store')).toBeTruthy();
+    expect(await screen.findByRole('heading', { level: 1, name: /Ali Store/ })).toBeTruthy();
     expect(screen.getByText('Baghdad')).toBeTruthy();
-    expect(screen.getByText('Delivery fee').nextSibling).toHaveTextContent('5,000');
-    expect(screen.getByRole('link', { name: 'Ali Hassan' }).getAttribute('href')).toBe(
+    expect(screen.getByText('delivery fee').nextSibling).toHaveTextContent('5,000');
+    expect(screen.getByRole('link', { name: /Ali Hassan/ }).getAttribute('href')).toBe(
       '/sellers/s1',
     );
     expect(screen.getByText('follow s1')).toBeTruthy();
-    expect(screen.getByTestId('store-verified')).toHaveTextContent('Verified seller');
-    expect(screen.getByTestId('store-rating')).toHaveTextContent('★ 4.6 (12 reviews)');
+    expect(screen.getByRole('img', { name: 'Verified seller' })).toBeTruthy();
+    expect(screen.getByTestId('store-rating')).toHaveTextContent('4.6');
+    expect(screen.getByTestId('store-rating')).toHaveTextContent('12 ratings');
     expect(await screen.findByText('Vintage camera')).toBeTruthy();
     expect(httpClient.get).toHaveBeenCalledWith('/stores/st1');
-    expect(httpClient.get).toHaveBeenCalledWith('/auctions', { params: { storeId: 'st1' } });
+    expect(httpClient.get).toHaveBeenCalledWith('/auctions', {
+      params: { storeId: 'st1', status: 'live', page: 1, limit: 24 },
+    });
   });
 
   it('no badge for an unverified seller, and no rating before the first review', async () => {
@@ -170,7 +186,7 @@ describe('StorePage: the store', () => {
     );
     renderWithQuery(<StorePage id="st1" />);
     expect(await screen.findByText('Ali Store')).toBeTruthy();
-    expect(screen.queryByTestId('store-verified')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Verified seller' })).toBeNull();
     expect(screen.queryByTestId('store-rating')).toBeNull();
     expect(screen.queryByText(/★/)).toBeNull();
   });
@@ -182,7 +198,7 @@ describe('StorePage: the store', () => {
     renderWithQuery(<StorePage id="st1" />);
     expect(await screen.findByText('Ali Store')).toBeTruthy();
     expect(screen.queryByTestId('store-rating')).toBeNull();
-    expect(screen.getByTestId('store-verified')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Verified seller' })).toBeTruthy();
   });
 
   it('never shows a phone or street, even if the API sent one', async () => {
@@ -277,5 +293,113 @@ describe('StorePage: when the store cannot be shown', () => {
     const alert = within(await screen.findByRole('alert', {}, { timeout: 4000 }));
     expect(alert.getByText("Couldn't load this store.")).toBeTruthy();
     expect(alert.getByRole('button', { name: /retry|try again/i })).toBeTruthy();
+  });
+});
+
+/** GET /stores/:id/reviews as the Bidoom contract defines it (mocked: no local API has it yet). */
+const reviewsBody = {
+  summary: {
+    avg: 4.5,
+    count: 2,
+    distribution: [0, 0, 0, 1, 1],
+    topTags: [
+      { tag: 'AS_DESCRIBED', count: 2 },
+      { tag: 'SOMETHING_NEW', count: 1 },
+    ],
+  },
+  items: [
+    {
+      id: 'r1',
+      rating: 5,
+      tags: ['AS_DESCRIBED', 'FAST_DELIVERY'],
+      comment: 'Exactly as shown.',
+      authorName: 'Zainab Kareem',
+      itemName: 'Vintage camera',
+      itemNameEn: 'Vintage camera',
+      itemNameAr: 'كاميرا قديمة',
+      createdAt: '2026-10-10T10:00:00.000Z',
+      updatedAt: '2026-10-10T10:00:00.000Z',
+      reply: { text: 'Thank you, enjoy it.', createdAt: '2026-10-11T10:00:00.000Z' },
+    },
+    {
+      id: 'r2',
+      rating: 4,
+      tags: [],
+      comment: null,
+      authorName: 'Hussein Ali',
+      itemName: 'Old radio',
+      itemNameEn: 'Old radio',
+      itemNameAr: 'راديو قديم',
+      createdAt: '2026-10-09T10:00:00.000Z',
+      updatedAt: '2026-10-09T10:00:00.000Z',
+      reply: null,
+    },
+  ],
+  nextCursor: null,
+};
+
+describe('StorePage: the Bidoom storefront (API with covers and ratings)', () => {
+  const bidoomStore = storeBody({
+    coverUrl: 'covers/st1.webp',
+    isVerified: true,
+    rating: { avg: 4.5, count: 2 },
+    followers: 1810,
+    liveCount: 9,
+    soldCount: 204,
+  });
+
+  it('shows the cover, the store rating and its numbers', async () => {
+    mockApi(bidoomStore, [listing], reviewsBody);
+    const { container } = renderWithQuery(<StorePage id="st1" />);
+    expect(await screen.findByText('Ali Store')).toBeTruthy();
+    expect(
+      container.querySelector('img[src*="covers%2Fst1.webp"], img[src*="covers/st1.webp"]'),
+    ).toBeTruthy();
+    expect(screen.getByText('live auctions').nextSibling).toHaveTextContent('9');
+    expect(screen.getByText('followers').nextSibling).toHaveTextContent('1,810');
+    expect(screen.getByText('sales').nextSibling).toHaveTextContent('204');
+    // The store's own rating, not the seller's 4.6 over 12.
+    expect(screen.getByTestId('store-rating')).toHaveTextContent('4.5');
+    expect(screen.getByTestId('store-rating')).toHaveTextContent('2 ratings');
+  });
+
+  it('adds the Ratings tab; the rating under the name opens it', async () => {
+    mockApi(bidoomStore, [listing], reviewsBody);
+    renderWithQuery(<StorePage id="st1" />);
+    const tab = await screen.findByRole('tab', { name: /Ratings/ });
+    expect(tab).toHaveAttribute('aria-selected', 'false');
+    await userEvent.click(screen.getByTestId('store-rating'));
+    expect(screen.getByRole('tab', { name: /Ratings/ })).toHaveAttribute('aria-selected', 'true');
+    const panel = within(screen.getByRole('tabpanel'));
+    expect(
+      panel.getByText('Every rating comes from a buyer who received an order from this store.'),
+    ).toBeTruthy();
+    expect(panel.getByText('Exactly as shown.')).toBeTruthy();
+    expect(panel.getByText('Item: Vintage camera')).toBeTruthy();
+    expect(panel.getByText('Thank you, enjoy it.')).toBeTruthy();
+    expect(panel.getByText('Store reply')).toBeTruthy();
+    expect(panel.getAllByText('As described').length).toBe(2);
+    expect(panel.getByText('Fast delivery')).toBeTruthy();
+    // A tag this client doesn't know is left out rather than shown raw.
+    expect(panel.queryByText(/SOMETHING_NEW/)).toBeNull();
+    expect(panel.getByLabelText('5 stars: 1')).toBeTruthy();
+  });
+
+  it('opens on the Ratings tab from a ?tab=ratings link', async () => {
+    mockApi(bidoomStore, [listing], reviewsBody);
+    renderWithQuery(<StorePage id="st1" initialTab="ratings" />);
+    expect(await screen.findByText('Zainab Kareem')).toBeTruthy();
+  });
+
+  it('an API without store ratings (404): no Ratings tab, and a ratings link lands on Live', async () => {
+    mockApi(storeBody(), [listing]);
+    renderWithQuery(<StorePage id="st1" initialTab="ratings" />);
+    expect(await screen.findByText('Vintage camera')).toBeTruthy();
+    expect(screen.queryByRole('tab', { name: /Ratings/ })).toBeNull();
+    expect(screen.getByRole('tab', { name: /Live/ })).toHaveAttribute('aria-selected', 'true');
+    // The rating stays as text: there is no tab for it to open.
+    expect(screen.getByTestId('store-rating').tagName).toBe('SPAN');
+    expect(screen.queryByText('followers')).toBeNull();
+    expect(screen.queryByText('sales')).toBeNull();
   });
 });

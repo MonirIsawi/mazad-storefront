@@ -1,13 +1,17 @@
 {
   "profile": {
     "memberSince": "Member since {{date}}",
-    "followers_one": "{{count}} follower",
-    "followers_other": "{{count}} followers",
+    "followers_one": "{{count, num}} follower",
+    "followers_other": "{{count, num}} followers",
     "rating_one": "{{average}} ({{count}} review)",
     "rating_other": "{{average}} ({{count}} reviews)",
     "noRating": "No reviews yet",
     "stores": "Stores",
-    "notFound": "Seller not found."
+    "notFound": "Seller not found.",
+    "title": "Seller",
+    "crumbStores": "Stores",
+    "verified": "Verified seller",
+    "currentAuctions": "Current auctions"
   },
   "follow": {
     "follow": "Follow",

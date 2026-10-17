@@ -20,7 +20,7 @@ export const SELLER_AUCTION_STATUSES = [
 
 // Decimal fields arrive as strings from mazad-api and stay strings here (ADR-009) — parse them
 // with parseMoney at the point of arithmetic, never by coercing the schema to a number.
-export const storeSchema = z.object({
+const storeRowSchema = z.object({
   id: z.string(),
   nameEn: z.string(),
   nameAr: z.string(),
@@ -31,7 +31,17 @@ export const storeSchema = z.object({
   contactPhone: z.string().nullable(),
   deliveryFee: z.coerce.string(),
   isDefault: z.boolean(),
+  coverUrl: z.string().nullish(),
+  /** True when the API knows store covers (its rows carry a `coverUrl` key, even a null one). */
+  supportsCover: z.boolean(),
 });
+
+// An API with store covers sends `coverUrl` on every row (null without a cover); an older one
+// doesn't send the key at all, and the cover upload stays hidden.
+export const storeSchema = z.preprocess(
+  (raw) => (raw && typeof raw === 'object' ? { ...raw, supportsCover: 'coverUrl' in raw } : raw),
+  storeRowSchema,
+);
 
 export const storeListSchema = z.array(storeSchema);
 
@@ -66,6 +76,9 @@ export const sellerProductListSchema = z.object({
     .partial()
     .passthrough(),
 });
+
+/** GET /products/:id for the owner: only the block reason is read from it. */
+export const productBlockSchema = z.object({ blockReason: z.string().nullish() });
 
 export const sellerAuctionSchema = z.object({
   id: z.string(),

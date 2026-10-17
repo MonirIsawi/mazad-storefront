@@ -97,7 +97,53 @@
     "unavailable": "This store isn't available",
     "unavailableMessage": "You can't view this store right now.",
     "loadError": "Couldn't load this store.",
-    "title": "Store"
+    "title": "Store",
+    "sections": "Store sections",
+    "tabs": {
+      "live": "Live",
+      "upcoming": "Upcoming",
+      "ended": "Ended",
+      "ratings": "Ratings"
+    },
+    "stats": {
+      "live": "live auctions",
+      "followers": "followers",
+      "sold": "sales",
+      "deliveryFee": "delivery fee"
+    },
+    "empty": {
+      "liveTitle": "No live auctions right now",
+      "liveMessage": "Look at what is coming up next, or browse every live auction.",
+      "upcomingTitle": "Nothing scheduled yet",
+      "upcomingMessage": "New auctions from this store will show here before they open.",
+      "endedTitle": "No ended auctions yet",
+      "endedMessage": "Auctions that have finished will be listed here."
+    },
+    "showMore": "Show more",
+    "ratings": {
+      "openTab": "See the store's ratings",
+      "outOf": "{{value}} out of 5 stars",
+      "starsRow": "{{stars, num}} stars: {{count, num}}",
+      "rule": "Every rating comes from a buyer who received an order from this store.",
+      "reply": "Store reply",
+      "item": "Item: {{name}}",
+      "showMore": "Show more ratings",
+      "emptyTitle": "No ratings yet",
+      "emptyMessage": "Ratings appear here once buyers have received their orders.",
+      "topTags": "Most mentioned"
+    },
+    "tags": {
+      "AS_DESCRIBED": "As described",
+      "FAST_DELIVERY": "Fast delivery",
+      "GOOD_PACKAGING": "Well packed",
+      "FRIENDLY_SELLER": "Easy to reach",
+      "GOOD_VALUE": "Good value",
+      "NOT_AS_DESCRIBED": "Not as described",
+      "LATE_DELIVERY": "Late delivery",
+      "POOR_PACKAGING": "Poor packaging",
+      "UNRESPONSIVE_SELLER": "Hard to reach",
+      "DAMAGED": "Arrived damaged"
+    }
   },
   "conditionHint": {
     "NEW": "Unused, in its original packaging.",

@@ -14,6 +14,16 @@ export function useProducts() {
   });
 }
 
+/** Why a blocked product is blocked: fetched only for blocked rows. */
+export function useProductBlockReason(id: string, isBlocked: boolean) {
+  return useQuery({
+    queryKey: [...QUERY_KEYS.selling.products, id, 'blockReason'],
+    queryFn: () => sellingApi.getProductBlockReason(id),
+    enabled: isBlocked,
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useCreateProduct() {
   const queryClient = useQueryClient();
   const toast = useToast();
@@ -78,13 +88,15 @@ export function useAddProductImage() {
       productId: string;
       file: File;
       isCover: boolean;
+      /** A batch after creating the product says so once, not per photo. */
+      silent?: boolean;
     }) => {
       const uploaded = await sellingApi.uploadImage(file);
       await sellingApi.addProductImage(productId, { key: uploaded.key, isCover });
     },
-    onSuccess: () => {
+    onSuccess: (_result, { silent }) => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEYS.selling.products });
-      toast.success(t('toast.photoAdded'));
+      if (!silent) toast.success(t('toast.photoAdded'));
     },
   });
 }
