@@ -182,6 +182,9 @@
   --color-gold-line: rgb(212 166 70 / 45%);
   --color-glass: rgb(24 22 20 / 70%);
   --color-glass-line: rgb(255 245 225 / 12%);
+  /* state colours on a dark surface: the featured lot's countdown turns amber in its last hour */
+  --color-warning: #f4a54b;
+  --color-live: #7bd39a;
   --grad: linear-gradient(180deg, #f8dd86 0%, #e3b556 48%, #c08a2c 100%);
   --bi-s: url(#biG);
   --bi-f: url(#biF);

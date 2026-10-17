@@ -44,7 +44,7 @@ const TAB_ROOTS = new Set<string>([
  * instead). Routes this list doesn't know (a 404) keep the tab bar, so there is a way out.
  */
 const PUSHED_ROUTE_PATTERN =
-  /^\/(auctions\/[^/]+|stores\/[^/]+|sellers\/[^/]+|account\/.+|help(\/.*)?|legal(\/.*)?|contact|account-deletion)$/;
+  /^\/(auctions\/[^/]+(\/bids)?|stores\/[^/]+|sellers\/[^/]+|account\/.+|help(\/.*)?|legal(\/.*)?|contact|account-deletion)$/;
 
 function useFooterColumns(): FooterColumn[] {
   const { t } = useTranslation('common');

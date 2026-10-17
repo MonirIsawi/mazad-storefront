@@ -5,11 +5,26 @@
   },
   "page": {
     "title": "Watchlist",
-    "empty": "Tap the heart on an auction to follow it from here.",
-    "emptyTitle": "Nothing saved"
+    "empty": "Tap the heart on any auction to follow it here.",
+    "emptyTitle": "Nothing saved yet",
+    "count_one": "{{formattedCount}} saved auction",
+    "count_other": "{{formattedCount}} saved auctions",
+    "account": "Account",
+    "filterLabel": "Show",
+    "filters": {
+      "all": "All",
+      "endingToday": "Ending today",
+      "upcoming": "Upcoming"
+    },
+    "filterEmpty": "No saved auctions here. Try another filter."
   },
   "toast": {
     "added": "Added to watchlist.",
     "removed": "Removed from watchlist."
+  },
+  "remind": {
+    "set": "Remind me when it starts",
+    "on": "Reminder on",
+    "signIn": "Sign in to get a reminder"
   }
 }

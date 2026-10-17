@@ -4,6 +4,8 @@ export const QUERY_KEYS = {
   },
   home: {
     feed: ['home', 'feed'] as const,
+    /** GET /stores: the home rail of verified stores (shown only when the API has it). */
+    stores: ['home', 'stores'] as const,
   },
   catalog: {
     categories: ['catalog', 'categories'] as const,

@@ -1,6 +1,6 @@
 {
   "browse": {
-    "title": "Auctions",
+    "title": "Browse",
     "empty": "No auctions match your filters.",
     "emptyTitle": "No results",
     "clearFilters": "Clear filters",
@@ -17,7 +17,10 @@
       "endingSoon": "Ending soonest",
       "newest": "Newest",
       "priceLow": "Lowest price"
-    }
+    },
+    "resultsFor": "Results for “{{q}}”",
+    "searchPlaceholder": "Search products",
+    "categoriesLabel": "Categories"
   },
   "detail": {
     "soldFor": "Sold for",
@@ -49,7 +52,7 @@
     "extended_one": "Extended by {{count, num}} minute because of late bids.",
     "extended_other": "Extended by {{count, num}} minutes because of late bids.",
     "paymentCod": "Cash on delivery",
-    "paymentHint": "You choose how to pay after you win, when you confirm the order — not when you bid.",
+    "paymentHint": "You choose how to pay after you win, on the order: not when you bid.",
     "returnsHint": "Request a return from the order if the item is not as described.",
     "verifiedSeller": "Verified seller",
     "ratingValue_one": "★ {{average}} ({{count, num}} review)",
@@ -61,8 +64,8 @@
     "bidHistory": "Bid history",
     "bidders_one": "{{count, num}} bidder",
     "bidders_other": "{{count, num}} bidders",
-    "auctionInfo": "Auction information",
-    "deliveryPayment": "Delivery & payment",
+    "auctionInfo": "Price and time",
+    "deliveryPayment": "Delivery and payment",
     "paymentMethods": "Payment methods",
     "paymentCard": "Card",
     "productDetails": "Product details",
@@ -71,12 +74,14 @@
     "viewStore": "View store",
     "noReviews": "No reviews yet",
     "returnPolicy": "Return policy",
-    "returnsWithin_one": "Returns can be requested within {{count, num}} day of delivery",
-    "returnsWithin_other": "Returns can be requested within {{count, num}} days of delivery",
+    "returnsWithin_one": "Within {{count, num}} day of delivery",
+    "returnsWithin_other": "Within {{count, num}} days of delivery",
     "bidYou": "You",
     "bidAuto": "Auto",
     "showAllBids": "Show all ({{count, num}})",
-    "showFewerBids": "Show fewer"
+    "showFewerBids": "Show fewer",
+    "payment": "Payment",
+    "returns": "Returns"
   },
   "condition": {
     "NEW": "New",
@@ -101,8 +106,8 @@
     "USED": "Used, with signs of use the seller describes."
   },
   "price": {
-    "current": "Current price",
-    "opening": "Opening bid",
+    "current": "Top bid",
+    "opening": "Opening price",
     "buyNow": "Buy now",
     "buyNowTotal": "Buy now total with delivery",
     "marketPrice": "New retail price",
@@ -110,6 +115,83 @@
     "nextRaise": "Next raise",
     "delivery": "Delivery",
     "noDeliveryFee": "No delivery fee",
-    "saving": "{{amount}} below the new price"
+    "saving": "{{amount}} below the new price",
+    "step": "Step {{amount}}",
+    "savingRetail": "That is {{amount}} below the new retail price",
+    "deliveryFrom": "Delivery from {{city}}"
+  },
+  "crumbs": {
+    "home": "Home",
+    "browse": "Browse"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all",
+    "status": "Auction status",
+    "category": "Category",
+    "price": "Current price",
+    "from": "From",
+    "to": "To",
+    "priceHint": "In Iraqi dinars",
+    "priceInverted": "The “from” amount is above the “to” amount.",
+    "condition": "Condition",
+    "showResults": "Show results",
+    "show_one": "Show {{formattedCount}} result",
+    "show_other": "Show {{formattedCount}} results",
+    "remove": "Remove filter: {{label}}",
+    "priceBetween": "{{min}} – {{max}}",
+    "priceFrom": "From {{min}}",
+    "priceUpTo": "Up to {{max}}",
+    "finalHour": "Ending within the hour",
+    "titleCount_one": "Filters, {{count}} on",
+    "titleCount_other": "Filters, {{count}} on"
+  },
+  "empty": {
+    "title": "No matching auctions",
+    "query": "Nothing matches “{{q}}”. Try fewer or different words, or remove a filter.",
+    "filtered": "Try fewer filters: remove the category, the price or the condition.",
+    "none": "There are no auctions here yet. Check back soon.",
+    "mightLike": "You might like",
+    "seeAll": "See all"
+  },
+  "gallery": {
+    "view": "View photo {{index, num}} of {{total, num}} full screen",
+    "thumb": "Photo {{index, num}} of {{total, num}}",
+    "title": "Product photos",
+    "close": "Close",
+    "hint": "Swipe between photos. Double-tap or pinch to zoom"
+  },
+  "about": {
+    "title": "About this item",
+    "readMore": "Read the full description",
+    "readLess": "Show less",
+    "specs": "Full specifications"
+  },
+  "rules": {
+    "title": "Rules for this auction",
+    "step": "Bid step",
+    "lateBid_one": "A bid in the last {{count, num}} minute",
+    "lateBid_other": "A bid in the last {{count, num}} minutes",
+    "adds_one": "adds {{count, num}} minute",
+    "adds_other": "adds {{count, num}} minutes",
+    "maxExtensions": "Most extensions",
+    "times_one": "{{count, num}} time",
+    "times_other": "{{count, num}} times",
+    "names": "Bidder names",
+    "namesValue": "partly hidden",
+    "binding": "Bids and wins",
+    "bindingValue": "binding, no take-backs",
+    "stepNote": "The step comes from the price: it grows as the price rises, the same for every auction at that price.",
+    "how": "How auctions work"
+  },
+  "history": {
+    "seeAll": "See all ({{count}})",
+    "upcomingEmpty": "No bids yet. Every bid appears here once the auction opens.",
+    "statBids_one": "bid",
+    "statBids_other": "bids",
+    "statBidders_one": "bidder",
+    "statBidders_other": "bidders",
+    "statExtensions_one": "extension",
+    "statExtensions_other": "extensions"
   }
 }

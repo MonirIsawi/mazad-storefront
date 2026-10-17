@@ -5,11 +5,30 @@
   },
   "page": {
     "title": "المفضلة",
-    "empty": "احفظ مزادًا بالضغط على القلب لتتابعه من هنا.",
-    "emptyTitle": "لا شيء في المفضلة"
+    "empty": "اضغط على القلب في أي مزاد لتتابعه من هنا.",
+    "emptyTitle": "لا شيء محفوظ بعد",
+    "count_zero": "{{formattedCount}} مزاد محفوظ",
+    "count_one": "مزاد محفوظ واحد",
+    "count_two": "مزادان محفوظان",
+    "count_few": "{{formattedCount}} مزادات محفوظة",
+    "count_many": "{{formattedCount}} مزاداً محفوظاً",
+    "count_other": "{{formattedCount}} مزاد محفوظ",
+    "account": "الحساب",
+    "filterLabel": "عرض",
+    "filters": {
+      "all": "الكل",
+      "endingToday": "ينتهي اليوم",
+      "upcoming": "قادم"
+    },
+    "filterEmpty": "لا مزادات محفوظة هنا. جرّب فلتراً آخر."
   },
   "toast": {
     "added": "تمت الإضافة إلى المفضلة.",
     "removed": "تمت الإزالة من المفضلة."
+  },
+  "remind": {
+    "set": "ذكّرني عند البدء",
+    "on": "التذكير مفعّل",
+    "signIn": "سجّل الدخول لتفعيل التذكير"
   }
 }

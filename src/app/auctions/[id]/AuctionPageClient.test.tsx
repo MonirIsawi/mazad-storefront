@@ -5,15 +5,26 @@ import { AuctionBidding } from './AuctionPageClient';
 const bidPanel = vi.fn((_props: unknown) => null);
 const wins = { data: undefined as unknown, isPending: false, refetch: vi.fn() };
 const useWins = vi.fn((_enabled?: boolean) => wins);
-vi.mock('next/navigation', () => ({ useParams: () => ({ id: 'a1' }) }));
-vi.mock('@features/bidding', () => ({ BidPanel: (props: unknown) => bidPanel(props) }));
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ id: 'a1' }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+vi.mock('@features/bidding', () => ({
+  BidPanel: (props: unknown) => bidPanel(props),
+  useMyStanding: () => null,
+  DeliveryLineView: () => null,
+}));
+vi.mock('@features/addresses', () => ({ useAddresses: () => ({ data: undefined }) }));
 vi.mock('@features/auth', () => ({ useCurrentUser: () => ({ data: { id: 'buyer-1' } }) }));
 vi.mock('@features/wins', () => ({ useWins: (enabled?: boolean) => useWins(enabled) }));
 vi.mock('@features/catalog', () => ({ AuctionDetailPage: () => null }));
-vi.mock('@features/watchlist', () => ({ WatchlistToggle: () => null }));
+vi.mock('@features/watchlist', () => ({ WatchlistToggle: () => null, RemindMeButton: () => null }));
 vi.mock('@features/sellers', () => ({ FollowSellerButton: () => null }));
 const auth = vi.hoisted(() => ({ signedIn: true }));
-vi.mock('@shared/hooks', () => ({ useIsAuthenticated: () => auth.signedIn }));
+vi.mock('@shared/hooks', () => ({
+  useIsAuthenticated: () => auth.signedIn,
+  useLocale: () => ({ locale: 'en' }),
+}));
 
 const win = (auctionId: string, orderId: string | null, status = 'CONFIRMED') => ({
   auctionId,

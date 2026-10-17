@@ -1,21 +1,20 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { ROUTES } from '@shared/constants';
 import { ErrorState } from '@shared/components/feedback';
-import { Card, Skeleton, buttonVariants } from '@shared/components/ui';
-import { BottomActionBar } from '@shared/components/ios';
+import { Icon, Skeleton, buttonVariants } from '@shared/components/ui';
 import { useIsAuthenticated } from '@shared/hooks';
-import { toMinorUnits } from '@shared/lib';
 import { useAuctionPricing } from '../hooks/useAuctionPricing';
 import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 import { useMyStanding } from '../hooks/useMyStanding';
+import { computeMinimumBid } from '../lib/computeMinimumBid';
 import { userStateOf } from '../lib/user-state';
-import { BidForm } from './BidForm';
-import { BuyNowButton } from './BuyNowButton';
-import { AutoBidControl } from './AutoBidControl';
-import { UserStateLine } from './UserStateLine';
-import type { AuctionPricing } from '../types/bidding.types';
+import { HammerStrike } from './hammer/HammerStrike';
+import { LiveActions } from './LiveActions';
+import { PanelBar } from './PanelBar';
+import { StandingBanner } from './StandingBanner';
 
 export interface BidPanelProps {
   auctionId: string;
@@ -28,37 +27,37 @@ export interface BidPanelProps {
   winner?: { orderId: string | null } | null;
   /** The wins are still loading for a closed auction: wait rather than say "sold to another". */
   isCheckingWin?: boolean;
-}
-
-/** Buy now only while the bidding hasn't reached it (the server refuses it after that). */
-function canBuyNow(pricing: AuctionPricing): pricing is AuctionPricing & { buyNowPrice: string } {
-  const buyNow = toMinorUnits(pricing.buyNowPrice);
-  const current = toMinorUnits(pricing.currentPrice);
-  return buyNow != null && (current == null || current < buyNow);
+  /** Before it opens: the reminder (the watchlist feature: WATCHED_AUCTION_STARTING). */
+  reminder?: ReactNode;
+  /** "Delivers to: …" in the bid sheet (the addresses feature). */
+  deliveryLine?: ReactNode;
+  /** Open the bid sheet at once (arrived from "Bid" on My bids). */
+  isSheetOpenOnLoad?: boolean;
 }
 
 /**
- * The viewer's state on the auction (one line, see userStateOf) and what they can do about it:
- * bid, buy now and auto-bid for a buyer on a live auction, the way to the order for the winner,
- * sign-in for a guest. The seller's own auction gets the state only.
+ * The viewer's standing on the auction (one banner, see userStateOf) and what they can do about
+ * it: bid, buy now and auto-bid for a buyer on a live auction, the way to the order for the winner,
+ * a reminder before it opens, sign-in for a guest. The seller's own auction gets the state only.
  */
 export function BidPanel({
   auctionId,
   isOwnAuction = false,
   winner = null,
   isCheckingWin = false,
+  reminder,
+  deliveryLine,
+  isSheetOpenOnLoad = false,
 }: BidPanelProps) {
   const { t, isReady } = useBiddingTranslation();
   const isAuthenticated = useIsAuthenticated();
   const pricing = useAuctionPricing(auctionId);
   const standing = useMyStanding(auctionId);
 
-  // A skeleton the size of the real bid card, so the CTA doesn't jump into place under the
-  // user's thumb once pricing resolves.
+  // A skeleton the size of the real panel, so nothing jumps into place under the thumb.
   if (!isReady || pricing.isPending || isCheckingWin) {
     return <Skeleton radius="lg" className="h-28 w-full" />;
   }
-
   if (pricing.isError || !pricing.data) {
     return <ErrorState message={t('panel.loadError')} onRetry={() => void pricing.refetch()} />;
   }
@@ -71,46 +70,48 @@ export function BidPanel({
     standing,
   });
 
-  // Signed out on a live auction: the sign-in button is the state line.
+  // Signed out on a live auction: the sign-in button is the state.
   if (state.kind === 'signIn') {
     return (
-      <BottomActionBar>
-        <Link href={ROUTES.login} className={buttonVariants({ size: 'lg', isFullWidth: true })}>
+      <PanelBar>
+        <Link href={ROUTES.login} className={buttonVariants({ isFullWidth: true })}>
           {t('panel.signInToBid')}
         </Link>
-      </BottomActionBar>
+      </PanelBar>
     );
   }
 
   const canBid = pricing.data.status === 'LIVE' && state.kind !== 'own' && state.kind !== 'won';
 
   return (
-    <div className="flex flex-col gap-3">
-      <UserStateLine state={state} />
+    <div className="grid gap-3">
+      <StandingBanner state={state} minimumBid={computeMinimumBid(pricing.data) ?? undefined} />
 
-      {/* The winner of a closed auction: the way to what the win became. */}
+      {/* A win is final: the order already exists, so the only action is to open it. */}
       {state.kind === 'won' && winner ? (
-        <BottomActionBar>
-          <Link
-            href={winner.orderId ? ROUTES.orderDetail(winner.orderId) : ROUTES.wins}
-            className={buttonVariants({ size: 'lg', isFullWidth: true })}
-            data-testid="won-view-order"
-          >
-            {t(winner.orderId ? 'panel.wonViewOrder' : 'panel.wonViewWins')}
-          </Link>
-        </BottomActionBar>
+        <>
+          <HammerStrike auctionId={auctionId} />
+          <PanelBar>
+            <Link
+              href={winner.orderId ? ROUTES.orderDetail(winner.orderId) : ROUTES.wins}
+              className={buttonVariants({ isFullWidth: true })}
+              data-testid="won-view-order"
+            >
+              <Icon name="package" size={20} />
+              {t(winner.orderId ? 'panel.wonViewOrder' : 'panel.wonViewWins')}
+            </Link>
+          </PanelBar>
+        </>
       ) : null}
 
+      {state.kind === 'notStarted' && reminder ? <PanelBar>{reminder}</PanelBar> : null}
+
       {canBid ? (
-        <>
-          <BidForm auction={pricing.data} />
-          {canBuyNow(pricing.data) ? (
-            <Card isInset>
-              <BuyNowButton auctionId={auctionId} buyNowPrice={pricing.data.buyNowPrice} />
-            </Card>
-          ) : null}
-          <AutoBidControl auctionId={auctionId} />
-        </>
+        <LiveActions
+          pricing={pricing.data}
+          deliveryLine={deliveryLine}
+          isSheetOpenOnLoad={isSheetOpenOnLoad}
+        />
       ) : null}
     </div>
   );

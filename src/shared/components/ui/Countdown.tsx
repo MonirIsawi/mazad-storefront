@@ -53,11 +53,14 @@ export function TimerBoxes({
   endsAt,
   tone = 'solid',
   size = 'md',
+  isUrgent = false,
   className,
 }: {
   endsAt: string | null | undefined;
   tone?: keyof typeof TIMER_TONE;
   size?: 'sm' | 'md';
+  /** Amber now, whatever the time left: the viewer was outbid (design `.timer.hot`). */
+  isUrgent?: boolean;
   className?: string;
 }) {
   const { t } = useTranslation('common');
@@ -65,7 +68,7 @@ export function TimerBoxes({
   const ms = useCountdown(endsAt);
   const p = parts(ms);
   const boxes = p.days > 0 ? [t('time.days', { count: p.days }), p.hh, p.mm] : [p.hh, p.mm, p.ss];
-  const isHot = ms > 0 && ms <= HOT_MS;
+  const isHot = ms > 0 && (isUrgent || ms <= HOT_MS);
 
   return (
     <span

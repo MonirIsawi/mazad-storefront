@@ -1,14 +1,15 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { useCurrentUser } from '@features/auth';
 import { AuctionDetailPage } from '@features/catalog';
-import { BidPanel } from '@features/bidding';
-import { WatchlistToggle } from '@features/watchlist';
+import { BidPanel, useMyStanding } from '@features/bidding';
+import { RemindMeButton, WatchlistToggle } from '@features/watchlist';
 import { useWins } from '@features/wins';
 import { useIsAuthenticated } from '@shared/hooks';
 import { SellerFollowToggle } from '@app/sellers/SellerFollowToggle';
+import { DeliveryLine } from './DeliveryLine';
 
 /** Statuses after which nobody bids any more and the viewer may be the winner. */
 const CLOSED = new Set(['ENDED', 'SOLD', 'UNSOLD']);
@@ -23,10 +24,12 @@ export function AuctionBidding({
   auctionId,
   sellerId,
   status,
+  isSheetOpenOnLoad = false,
 }: {
   auctionId: string;
   sellerId: string;
   status: string;
+  isSheetOpenOnLoad?: boolean;
 }) {
   const me = useCurrentUser();
   const isAuthenticated = useIsAuthenticated();
@@ -67,17 +70,34 @@ export function AuctionBidding({
       winner={win ? { orderId } : null}
       // A closed auction's wins still loading: the winner must not first read "sold to another".
       isCheckingWin={isClosed && isAuthenticated && !isOwnAuction && wins.isPending}
+      reminder={<RemindMeButton auctionId={auctionId} />}
+      deliveryLine={<DeliveryLine />}
+      isSheetOpenOnLoad={isSheetOpenOnLoad}
     />
   );
 }
 
 export function AuctionPageClient() {
   const params = useParams<{ id: string }>();
+  // "Bid" on My bids lands here with ?bid=1: the bid sheet opens at once (when bidding is open).
+  const isSheetOpenOnLoad = useSearchParams().get('bid') === '1';
+  const standing = useMyStanding(params.id);
+  // Outbid: the viewer bid, doesn't lead, and no auto-bid of theirs is still answering.
+  const isOutbid =
+    !!standing?.myHighestBid &&
+    !standing.leading &&
+    !(standing.autoBid && !standing.autoBid.exhausted);
   return (
     <AuctionDetailPage
       id={params.id}
+      isOutbid={isOutbid}
       renderBiddingPanel={({ sellerId, status }) => (
-        <AuctionBidding auctionId={params.id} sellerId={sellerId} status={status} />
+        <AuctionBidding
+          auctionId={params.id}
+          sellerId={sellerId}
+          status={status}
+          isSheetOpenOnLoad={isSheetOpenOnLoad}
+        />
       )}
       watchlistToggle={<WatchlistToggle auctionId={params.id} />}
       renderSellerFollowToggle={(sellerId) => <SellerFollowToggle sellerId={sellerId} />}

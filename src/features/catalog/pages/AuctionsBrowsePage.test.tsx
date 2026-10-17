@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import i18n, { addNamespaceBundle } from '@shared/i18n';
 import { useLocaleStore } from '@shared/store';
 import { renderWithQuery } from '@/test/render';
@@ -32,7 +32,13 @@ describe('AuctionsBrowsePage: no results', () => {
       meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
     } as never);
     renderWithQuery(<AuctionsBrowsePage />);
-    expect(await screen.findByText('No auctions match your filters.')).toBeTruthy();
+    expect(
+      await screen.findByText(
+        'Nothing matches “zzzqqq”. Try fewer or different words, or remove a filter.',
+      ),
+    ).toBeTruthy();
+    // The fastest way out: one action that clears the search and the filters.
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeTruthy();
     expect(screen.queryByText(/\b0 results\b/)).toBeNull();
   });
 
@@ -43,11 +49,9 @@ describe('AuctionsBrowsePage: no results', () => {
       meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
     } as never);
     renderWithQuery(<AuctionsBrowsePage />);
-    expect(await screen.findByRole('button', { name: 'Ending soonest' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    expect(screen.getByRole('button', { name: 'Lowest price' })).toBeTruthy();
+    const [sort] = await screen.findAllByRole('combobox', { name: 'Sort' });
+    expect(sort).toHaveValue('endingSoon');
+    expect(within(sort!).getByRole('option', { name: 'Lowest price' })).toBeTruthy();
     expect(vi.mocked(catalogApi.listAuctions).mock.calls[0]![0]).not.toHaveProperty('sort');
   });
 });

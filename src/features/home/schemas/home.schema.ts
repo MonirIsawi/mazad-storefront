@@ -47,3 +47,27 @@ export const homeFeedSchema = z.object({
   endingSoon: z.array(homeAuctionSchema),
   serverTime: z.string(),
 });
+
+// --- GET /stores (the "Verified stores" rail; an API addition, hidden until it is deployed) ---
+
+export const publicStoreSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    nameEn: z.string(),
+    nameAr: z.string(),
+    city: z.string(),
+    coverUrl: z.string().nullable(),
+    isVerified: z.boolean(),
+    rating: z.object({ avg: z.number().nullable(), count: z.number() }),
+    followers: z.number(),
+    liveCount: z.number(),
+    soldCount: z.number(),
+    deliveryFee: z.string(),
+  })
+  .transform((store) => ({ ...store, coverUrl: resolveAssetUrl(store.coverUrl) }));
+
+export const publicStoreListSchema = z.object({
+  items: z.array(publicStoreSchema),
+  nextCursor: z.string().nullable(),
+});

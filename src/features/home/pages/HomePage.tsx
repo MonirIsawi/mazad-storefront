@@ -1,115 +1,106 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, type ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
-import { ROUTES } from '@shared/constants';
+import type { ReactNode } from 'react';
 import { ErrorState } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import { SearchField } from '@shared/components/ui';
-import { useMoney } from '@shared/hooks';
-import { useHomeTranslation } from '../hooks/useHomeTranslation';
+import { PageContainer } from '@shared/components/layout';
 import { useHomeFeed } from '../hooks/useHomeFeed';
-import { FeedSection } from '../components/FeedSection';
-import { PromoPanel } from '../components/PromoPanel';
+import { useHomeTranslation } from '../hooks/useHomeTranslation';
+import { useFirstRunWelcome } from '../hooks/useFirstRunWelcome';
+import { endingBoard, pickFeatured } from '../lib/home-feed';
+import { EndingBoard } from '../components/EndingBoard';
+import { FeaturedLot } from '../components/FeaturedLot';
+import { FinalHourRail, LiveNowSection, StartingSoonRail } from '../components/HomeFeedSections';
+import { FeaturedLotSkeleton, FeedSkeleton, HeaderSkeleton } from '../components/HomeSkeleton';
+import { HeroCopy } from '../components/HeroCopy';
+import { HomeGreeting } from '../components/HomeGreeting';
+import { HomeSearch } from '../components/HomeSearch';
+import { HomeTopBar } from '../components/HomeTopBar';
+import { HowItWorks } from '../components/HowItWorks';
+import { PerksRow } from '../components/PerksRow';
+import { StoresRail } from '../components/StoresRail';
+
+/** The list without the featured lot, so it isn't shown twice. */
+function without<T extends { id: string }>(list: T[], id: string | undefined): T[] {
+  return list.filter((item) => item.id !== id);
+}
 
 export interface HomePageProps {
   /** Composed in by the route — the categories query belongs to the catalog feature. */
   categoryRail?: ReactNode;
   /** Unread badge for the bell, supplied by the route from the notifications feature. */
   unreadNotificationCount?: number;
+  /** The signed-in user's full name (auth feature); undefined for a guest. */
+  userName?: string;
+  /** The heart on the featured lot (watchlist feature). */
+  renderWatchToggle?: (auctionId: string) => ReactNode;
 }
 
-export function HomePage({ categoryRail, unreadNotificationCount = 0 }: HomePageProps) {
-  const { t, isReady } = useHomeTranslation();
-  const { t: tCommon } = useTranslation('common');
-  const { number } = useMoney();
-  const router = useRouter();
+/**
+ * Home: what is live and how long is left, before anything else. The featured lot is the one
+ * persuasive moment; below it, rails and a grid to scan. The static chrome (bar, greeting, search,
+ * categories, promises) renders at once and stays usable while the lots load.
+ */
+export function HomePage({
+  categoryRail,
+  unreadNotificationCount = 0,
+  userName,
+  renderWatchToggle,
+}: HomePageProps) {
+  useFirstRunWelcome();
+  const { isReady } = useHomeTranslation();
   const feed = useHomeFeed();
-  const [query, setQuery] = useState('');
-
-  const handleSearch = () => {
-    if (query.trim()) router.push(`${ROUTES.auctions}?q=${encodeURIComponent(query.trim())}`);
-  };
+  const featured = pickFeatured(feed.data);
 
   return (
     <>
-      <ScreenHeader
-        title={isReady ? t('title') : tCommon('app.name')}
-        isRoot
-        hasLogo
-        actions={[
-          {
-            name: 'bell',
-            label: tCommon('nav.notifications'),
-            href: ROUTES.notifications,
-            badge: unreadNotificationCount > 0 ? number(unreadNotificationCount) : undefined,
-          },
-        ]}
-      />
-
-      <div className="flex flex-col gap-5 px-gutter pb-6">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleSearch();
-          }}
-        >
-          <SearchField
-            value={query}
-            onChange={setQuery}
-            label={tCommon('search.label')}
-            placeholder={tCommon('search.placeholder')}
-            clearLabel={tCommon('search.clear')}
-          />
-        </form>
-
+      <HomeTopBar unreadCount={unreadNotificationCount} userName={userName} />
+      <PageContainer className="grid grid-cols-[minmax(0,1fr)] gap-[22px] pt-1 pb-8 lg:gap-12 lg:pt-5 lg:pb-16">
         {isReady ? (
-          <PromoPanel
-            title={t('promo.title')}
-            subtitle={t('promo.subtitle')}
-            ctaLabel={t('promo.cta')}
-            ctaHref={ROUTES.auctions}
-          />
-        ) : null}
-
+          <>
+            <HomeGreeting userName={userName} />
+            <HomeSearch />
+          </>
+        ) : (
+          <HeaderSkeleton />
+        )}
         {categoryRail}
+
+        <div className="relative grid grid-cols-[minmax(0,1fr)] gap-[22px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-center lg:gap-11">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -end-20 -top-32 hidden size-[640px] bg-glow lg:block"
+          />
+          {isReady ? <HeroCopy /> : null}
+          {feed.isPending || !isReady ? (
+            <FeaturedLotSkeleton />
+          ) : featured ? (
+            <FeaturedLot auction={featured} watchToggle={renderWatchToggle?.(featured.id)} />
+          ) : null}
+        </div>
+        {isReady ? <PerksRow className="lg:hidden" /> : null}
 
         {feed.isError ? (
           <ErrorState onRetry={() => void feed.refetch()} />
+        ) : feed.isPending || !isReady ? (
+          <FeedSkeleton />
         ) : (
-          <div className="flex flex-col gap-5">
-            {/* Only while something ends soon: an empty "nothing ending" block pushed the live
-                auctions below the fold (as on mobile). */}
-            {feed.isPending || (feed.data?.endingSoon.length ?? 0) > 0 ? (
-              <FeedSection
-                title={t('sections.endingSoon')}
-                auctions={feed.data?.endingSoon ?? []}
-                emptyMessage={t('empty.endingSoon')}
-                actionLabel={t('viewAll')}
-                actionHref={`${ROUTES.auctions}?status=live&endingSoon=true`}
-                isLoading={feed.isPending}
-              />
-            ) : null}
-            <FeedSection
-              title={t('sections.live')}
-              auctions={feed.data?.live ?? []}
-              emptyMessage={t('empty.live')}
-              actionLabel={t('viewAll')}
-              actionHref={`${ROUTES.auctions}?status=live`}
-              isLoading={feed.isPending}
+          <>
+            <EndingBoard board={endingBoard(feed.data, featured?.id)} />
+            <FinalHourRail auctions={without(feed.data.endingSoon, featured?.id)} />
+            <LiveNowSection
+              auctions={without(feed.data.live, featured?.id)}
+              hasFeatured={featured != null}
             />
-            <FeedSection
-              title={t('sections.upcoming')}
-              auctions={feed.data?.upcoming ?? []}
-              emptyMessage={t('empty.upcoming')}
-              actionLabel={t('viewAll')}
-              actionHref={`${ROUTES.auctions}?status=upcoming`}
-              isLoading={feed.isPending}
-            />
-          </div>
+            <StartingSoonRail auctions={feed.data.upcoming} />
+          </>
         )}
-      </div>
+        {isReady ? (
+          <>
+            <StoresRail />
+            <HowItWorks />
+          </>
+        ) : null}
+      </PageContainer>
     </>
   );
 }

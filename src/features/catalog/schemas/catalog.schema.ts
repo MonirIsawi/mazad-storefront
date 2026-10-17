@@ -163,6 +163,11 @@ export const auctionSchema = z.object({
   returnWindowDays: z.number().optional(),
   sellerRating: z.object({ average: z.number().nullable(), count: z.number() }).optional(),
   serverTime: z.string().optional(),
+  // The late-bid rule for this auction: a bid in the last N minutes extends it by N minutes, at
+  // most maxExtensions times (optional: older API builds).
+  antiSnipingMinutes: z.number().optional(),
+  maxExtensions: z.number().optional(),
+  extensionsCount: z.number().optional(),
 });
 
 export const paginationMetaSchema = z.object({

@@ -17,6 +17,16 @@ Routes are folders under `src/app/`, each with a `page.tsx`. There is no generat
 | `app/register/page.tsx`      | `/register`     | `RegisterPage`             |
 | `app/account/page.tsx`       | `/account`      | `AccountPage`              |
 
+### Bidoom first run: `/welcome`
+
+`app/welcome/page.tsx` renders `WelcomePage` (brand art, the promise, slide to start). It is never a
+gate: the server always renders the page that was asked for, so deep links and crawlers are
+unaffected. On the client, a first visit to `/` by a signed-out visitor is sent to `/welcome`
+once; `mazad.welcomeSeen` in localStorage remembers it (also set for signed-in visitors, who never
+see it). Slide to start goes home; "Sign in" goes to `/login`. The shell draws no header, footer or
+tab bar there. Other Bidoom routes: `/auctions/:id/bids` (full bid history), `/account/delete`
+(in-app account deletion) and `/contact` (support reports; hidden unless the API has them).
+
 Only `/account` needs a session — browsing the marketplace is public, matching `mazad-api`'s
 `@Public()` decorators on `/homepage`, `/categories`, `/products`, `/auctions`, and `/stores/:id`.
 

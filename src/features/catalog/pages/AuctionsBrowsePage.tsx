@@ -1,141 +1,141 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
-import { ErrorState, EmptyState, PageLoader } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import { Chip, SearchField } from '@shared/components/ui';
+import { ErrorState, PageLoader } from '@shared/components/feedback';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
 import { AuctionGrid, AuctionGridSkeleton } from '@shared/components/cards';
+import { SearchField } from '@shared/components/ui';
 import { useMoney } from '@shared/hooks';
 import { useCatalogTranslation } from '../hooks/useCatalogTranslation';
 import { useCategories } from '../hooks/useCategories';
 import { useAuctions } from '../hooks/useAuctions';
-import { CategoryChips } from '../components/CategoryChips';
-import { StatusFilter } from '../components/StatusFilter';
-import type { AuctionStatusFilter, CatalogSort } from '../types/catalog.types';
+import { useBrowseFilters } from '../hooks/useBrowseFilters';
+import { countSheetFilters, toListParams } from '../lib/browse-filters';
+import { findCategory } from '../lib/category-list';
+import { ActiveFilterChips } from '../components/browse/ActiveFilterChips';
+import { BrowseEmpty } from '../components/browse/BrowseEmpty';
+import { FilterPanel } from '../components/browse/FilterPanel';
+import { FilterSheet } from '../components/browse/FilterSheet';
+import { SortSelect } from '../components/browse/SortSelect';
+import { StatusSegments } from '../components/browse/StatusSegments';
 
-const STATUS_VALUES: AuctionStatusFilter[] = ['live', 'upcoming', 'ended'];
-const SORT_VALUES: CatalogSort[] = ['endingSoon', 'newest', 'priceLow'];
-
-function parseStatus(value: string | null): AuctionStatusFilter | undefined {
-  return STATUS_VALUES.find((status) => status === value);
-}
-
+/**
+ * Browse and search (design `browse`): one screen for search, status, categories and filters,
+ * every one of them in the URL. Phones: search with the filter button, the status as a segmented
+ * control, applied filters as removable chips, the filter sheet. Desktop: a persistent filter
+ * column beside the results and the sort at the end of the title row.
+ */
 export function AuctionsBrowsePage() {
   const { t, isReady } = useCatalogTranslation();
   const { t: tCommon } = useTranslation('common');
   const { number } = useMoney();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // The URL owns the filters rather than component state: the home feed's section links and
-  // category tiles arrive here pre-filtered, back/forward behaves, and a filtered view is
-  // shareable. Chips write to the URL and read straight back out of it.
-  const categoryId = searchParams.get('categoryId') ?? undefined;
-  const status = parseStatus(searchParams.get('status'));
-  const appliedQuery = searchParams.get('q') ?? '';
-  // Absent = the server's default (live ending soonest, then upcoming, finished last).
-  const sort = SORT_VALUES.find((value) => value === searchParams.get('sort'));
-
-  // The search box is the one exception — keystrokes shouldn't each become a history entry, so
-  // it holds its own draft and commits on submit.
-  const [draftQuery, setDraftQuery] = useState(appliedQuery);
-
-  const setFilter = (key: string, value: string | undefined) => {
-    const next = new URLSearchParams(searchParams);
-    if (value) next.set(key, value);
-    else next.delete(key);
-    router.replace(next.size ? `${ROUTES.auctions}?${next}` : ROUTES.auctions, { scroll: false });
-  };
-
+  const { filters, update, clear, isSheetOpen, setSheetOpen } = useBrowseFilters();
+  // The search box holds a draft: keystrokes shouldn't each become a request; it commits on submit.
+  const [draftQuery, setDraftQuery] = useState(filters.q ?? '');
   const categories = useCategories();
-  const auctions = useAuctions({
-    categoryId,
-    status,
-    q: appliedQuery || undefined,
-    ...(sort ? { sort } : {}),
-    limit: 24,
-  });
-
-  const hasFilters = Boolean(categoryId || status || appliedQuery);
-
-  const clearFilters = () => {
-    setDraftQuery('');
-    router.replace(ROUTES.auctions, { scroll: false });
-  };
+  const auctions = useAuctions(toListParams(filters, 24));
 
   if (!isReady) return <PageLoader />;
 
+  const categoryList = categories.data ?? [];
+  const category = findCategory(categoryList, filters.categoryId);
+  const hasFilters = Object.keys(filters).some((key) => key !== 'sort');
+  const total = auctions.data?.meta.total ?? 0;
+  const title =
+    category?.name ?? (filters.q ? t('browse.resultsFor', { q: filters.q }) : t('browse.title'));
+  const sort = <SortSelect value={filters.sort} onChange={(next) => update({ sort: next })} />;
+
   return (
     <>
-      <ScreenHeader title={t('browse.title')} isRoot />
+      <ScreenHeader
+        title={title}
+        isRoot
+        // No count line at zero: the empty state already says there's nothing.
+        subtitle={
+          total > 0
+            ? t('browse.results', { count: total, formattedCount: number(total) })
+            : undefined
+        }
+        crumbs={[
+          { label: t('crumbs.home'), href: ROUTES.home },
+          ...(category || filters.q ? [{ label: t('crumbs.browse'), href: ROUTES.auctions }] : []),
+        ]}
+        desktopTrailing={sort}
+      />
 
-      <div className="flex flex-col gap-3 px-gutter pb-6">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            setFilter('q', draftQuery.trim() || undefined);
-          }}
-        >
-          <SearchField
-            value={draftQuery}
-            onChange={setDraftQuery}
-            label={tCommon('search.label')}
-            placeholder={tCommon('search.placeholder')}
-            clearLabel={tCommon('search.clear')}
-          />
-        </form>
+      <PageContainer className="pb-8 lg:pb-16">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-8">
+          <aside aria-label={t('filters.title')} className="hidden lg:block">
+            <FilterPanel
+              value={filters}
+              onChange={(next) => update(next)}
+              categories={categoryList}
+            />
+          </aside>
 
-        <StatusFilter selected={status} onSelect={(value) => setFilter('status', value)} />
-        <div className="flex gap-2 overflow-x-auto" role="group" aria-label={t('browse.sortLabel')}>
-          {SORT_VALUES.map((value) => (
-            <Chip
-              key={value}
-              isActive={(sort ?? 'endingSoon') === value}
-              onClick={() => setFilter('sort', value === 'endingSoon' ? undefined : value)}
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-4">
+            <form
+              role="search"
+              className="lg:hidden"
+              onSubmit={(event) => {
+                event.preventDefault();
+                update({ q: draftQuery.trim() || undefined });
+              }}
             >
-              {t(`browse.sort.${value}`)}
-            </Chip>
-          ))}
+              <SearchField
+                value={draftQuery}
+                onChange={setDraftQuery}
+                label={tCommon('search.label')}
+                placeholder={t('browse.searchPlaceholder')}
+                clearLabel={tCommon('search.clear')}
+                onFilter={() => setSheetOpen(true)}
+                // The count on the button is part of its name (what you see is what is read).
+                filterLabel={
+                  countSheetFilters(filters) > 0
+                    ? t('filters.titleCount', { count: countSheetFilters(filters) })
+                    : t('filters.title')
+                }
+                filterCount={countSheetFilters(filters)}
+              />
+            </form>
+            <StatusSegments value={filters.status} onChange={(status) => update({ status })} />
+            <ActiveFilterChips
+              filters={filters}
+              categories={categoryList}
+              onRemove={(changes) => update(changes)}
+              trailing={<span className="lg:hidden">{sort}</span>}
+            />
+
+            {auctions.isPending ? (
+              <AuctionGridSkeleton count={6} columns={3} />
+            ) : auctions.isError ? (
+              <ErrorState onRetry={() => void auctions.refetch()} />
+            ) : auctions.data.data.length === 0 ? (
+              <BrowseEmpty
+                filters={filters}
+                hasFilters={hasFilters}
+                onClear={() => {
+                  setDraftQuery('');
+                  clear();
+                }}
+              />
+            ) : (
+              <AuctionGrid auctions={auctions.data.data} columns={3} priorityCount={4} />
+            )}
+          </div>
         </div>
-        {categories.data ? (
-          <CategoryChips
-            categories={categories.data}
-            selectedId={categoryId}
-            onSelect={(value) => setFilter('categoryId', value)}
-          />
-        ) : null}
+      </PageContainer>
 
-        {/* No count line at zero: the empty state below already says there's nothing. */}
-        {auctions.data && auctions.data.meta.total > 0 ? (
-          <p className="text-footnote text-muted-foreground">
-            {t('browse.results', {
-              count: auctions.data.meta.total,
-              // i18next selects the plural form from `count`, but the digits the user reads have
-              // to be Arabic-Indic — so the interpolated value is formatted separately.
-              formattedCount: number(auctions.data.meta.total),
-            })}
-          </p>
-        ) : null}
-
-        {auctions.isPending ? (
-          <AuctionGridSkeleton count={6} />
-        ) : auctions.isError ? (
-          <ErrorState onRetry={() => void auctions.refetch()} />
-        ) : auctions.data.data.length === 0 ? (
-          <EmptyState
-            icon="search"
-            title={t('browse.emptyTitle')}
-            message={t('browse.empty')}
-            actionLabel={hasFilters ? t('browse.clearFilters') : undefined}
-            onAction={hasFilters ? clearFilters : undefined}
-          />
-        ) : (
-          <AuctionGrid auctions={auctions.data.data} />
-        )}
-      </div>
+      {isSheetOpen ? (
+        <FilterSheet
+          filters={filters}
+          categories={categoryList}
+          onApply={(next) => update(next, { closeSheet: true })}
+          onClose={() => setSheetOpen(false)}
+        />
+      ) : null}
     </>
   );
 }

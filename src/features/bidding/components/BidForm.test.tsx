@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { I18nextProvider } from 'react-i18next';
 import type { ReactElement } from 'react';
@@ -8,7 +8,7 @@ import i18n, { addNamespaceBundle } from '@shared/i18n';
 import { useLocaleStore } from '@shared/store';
 import { renderWithQuery } from '@/test/render';
 import { BidForm } from './BidForm';
-import { BuyNowButton } from './BuyNowButton';
+import { BuyNowSheet } from './sheet/BuyNowSheet';
 import { biddingApi } from '../api/bidding.api';
 import biddingEn from '../i18n/en.json';
 import biddingAr from '../i18n/ar.json';
@@ -31,6 +31,18 @@ beforeEach(() => {
     .mockResolvedValue({} as never);
 });
 
+/** Money never moves on a tap: the slide's tap path opens a confirmation, which places the bid. */
+async function slideToBid() {
+  // After a placed bid the slide shows "Bid placed" for a moment and takes no new tap until then.
+  await waitFor(
+    () =>
+      expect(screen.getByRole('button', { name: /^Slide to bid/ })).not.toHaveClass('bg-live-soft'),
+    { timeout: 2500 },
+  );
+  await userEvent.click(screen.getByRole('button', { name: /^Slide to bid/ }));
+  await userEvent.click(await screen.findByRole('button', { name: 'Place bid' }));
+}
+
 const auction = (overrides: Partial<AuctionPricing> = {}): AuctionPricing => ({
   id: 'auction-1',
   status: 'LIVE',
@@ -47,7 +59,7 @@ describe('BidForm minimum bid', () => {
     renderWithQuery(<BidForm auction={auction()} />);
 
     expect(screen.getByText(/minimum bid 100,000 IQD/i)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /place bid/i }));
+    await slideToBid();
 
     expect(biddingApi.placeBid).toHaveBeenCalledWith('auction-1', 100_000, expect.any(String));
   });
@@ -56,7 +68,7 @@ describe('BidForm minimum bid', () => {
     renderWithQuery(<BidForm auction={auction({ currentPrice: '125000.00' })} />);
 
     expect(screen.getByText(/minimum bid 130,000 IQD/i)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /place bid/i }));
+    await slideToBid();
 
     expect(biddingApi.placeBid).toHaveBeenCalledWith('auction-1', 130_000, expect.any(String));
   });
@@ -75,7 +87,7 @@ describe('BidForm minimum bid', () => {
     const increase = screen.getByRole('button', { name: /increase amount/i });
     await userEvent.click(increase);
     await userEvent.click(increase);
-    await userEvent.click(screen.getByRole('button', { name: /place bid/i }));
+    await slideToBid();
 
     // 1000.10 + 0.10 = 1000.20 minimum, two steps up = 1000.40 exactly (not 1000.4000000000001).
     expect(biddingApi.placeBid).toHaveBeenCalledWith('auction-1', 1000.4, expect.any(String));
@@ -95,16 +107,21 @@ function renderLive(ui: ReactElement) {
 }
 
 describe('BidForm submits only what the user saw', () => {
-  it('when the minimum rises, the first tap adopts the new amount and the second places it', async () => {
+  it('when the minimum rises, the slide waits until the new amount is taken on', async () => {
     const view = renderLive(<BidForm auction={auction({ currentPrice: '100000.00' })} />);
     // Someone bids 500,000 while the user is looking at 105,000.
     view.rerender(<BidForm auction={auction({ currentPrice: '500000.00' })} />);
 
     expect(screen.getByRole('status')).toHaveTextContent(/rose to 505,000 IQD/i);
-    await userEvent.click(screen.getByRole('button', { name: /bid 505,000 IQD/i }));
+    // The slide waits until the new amount is taken on: nothing is placed for an unseen amount.
+    expect(screen.getByRole('button', { name: /^Slide to bid/ })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+    await userEvent.click(screen.getByRole('button', { name: /use 505,000 IQD/i }));
     expect(biddingApi.placeBid).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole('button', { name: /place bid/i }));
+    await slideToBid();
     expect(biddingApi.placeBid).toHaveBeenCalledWith('auction-1', 505_000, expect.any(String));
   });
 
@@ -112,14 +129,13 @@ describe('BidForm submits only what the user saw', () => {
     vi.mocked(biddingApi.placeBid).mockRejectedValueOnce(new Error('timeout'));
     renderWithQuery(<BidForm auction={auction({ currentPrice: '125000.00' })} />);
 
-    const place = screen.getByRole('button', { name: /place bid/i });
-    await userEvent.click(place);
-    await userEvent.click(place);
+    await slideToBid();
+    await slideToBid();
     const [first, retry] = vi.mocked(biddingApi.placeBid).mock.calls;
     expect(retry![2]).toBe(first![2]);
 
     await userEvent.click(screen.getByRole('button', { name: /increase amount/i }));
-    await userEvent.click(screen.getByRole('button', { name: /place bid/i }));
+    await slideToBid();
     expect(vi.mocked(biddingApi.placeBid).mock.calls[2]![2]).not.toBe(first![2]);
   });
 
@@ -131,27 +147,51 @@ describe('BidForm submits only what the user saw', () => {
   });
 });
 
-describe('BuyNowButton', () => {
+describe('BuyNowSheet', () => {
   beforeEach(() => {
     vi.mocked(biddingApi.buyNow)
       .mockReset()
       .mockResolvedValue({} as never);
   });
 
-  it('never buys on a single tap', async () => {
-    renderWithQuery(<BuyNowButton auctionId="auction-1" buyNowPrice="200000.00" />);
+  it('spells out the total with delivery, and never buys on a single tap', async () => {
+    renderWithQuery(
+      <BuyNowSheet
+        auction={auction({ buyNowPrice: '200000.00', deliveryFee: '5000.00' })}
+        buyNowPrice="200000.00"
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByTestId('buy-now-summary')).toHaveTextContent(
+      'Buy-now price200,000 IQDDelivery5,000 IQDTotal205,000 IQD',
+    );
 
-    await userEvent.click(screen.getByRole('button', { name: /buy now for 200,000 IQD/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Slide to buy' }));
     expect(biddingApi.buyNow).not.toHaveBeenCalled();
-    expect(screen.getByRole('status')).toHaveTextContent(/ends the auction/i);
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(/ends the auction/i);
 
     await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
     expect(biddingApi.buyNow).not.toHaveBeenCalled();
 
-    await userEvent.click(screen.getByRole('button', { name: /buy now for 200,000 IQD/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Slide to buy' }));
     await userEvent.click(
-      screen.getByRole('button', { name: /confirm purchase for 200,000 IQD/i }),
+      within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Buy now' }),
     );
     expect(biddingApi.buyNow).toHaveBeenCalledExactlyOnceWith('auction-1', expect.any(String));
+  });
+});
+
+describe('BidForm: a bid far above the top bid', () => {
+  it('asks once more before a bid over three times the top bid', async () => {
+    renderWithQuery(
+      <BidForm auction={auction({ currentPrice: '10.00', minIncrement: '20.00' })} />,
+    );
+    // Minimum 30 (top 10 + 20); one step up is 50, over three times the top bid.
+    await userEvent.click(screen.getByRole('button', { name: /increase amount/i }));
+    await slideToBid();
+    expect(biddingApi.placeBid).not.toHaveBeenCalled();
+    expect(screen.getByRole('alertdialog', { name: /three times the top bid/i })).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: /^Bid 50/ }));
+    expect(biddingApi.placeBid).toHaveBeenCalledWith('auction-1', 50, expect.any(String));
   });
 });

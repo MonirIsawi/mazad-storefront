@@ -1,21 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 import { ErrorState, EmptyState, PageLoader } from '@shared/components/feedback';
-import { ScreenHeader } from '@shared/components/layout';
-import { Badge, Card, Icon, Skeleton } from '@shared/components/ui';
+import { PageContainer, ScreenHeader } from '@shared/components/layout';
+import { Skeleton } from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { ROUTES } from '@shared/constants';
-import { useLocale, useMoney, useServerClock } from '@shared/hooks';
-import { formatDuration, getImageTintStyle, pickLocalizedName, resolveThumbUrl } from '@shared/lib';
+import { useMoney } from '@shared/hooks';
 import { useMyBids } from '../hooks/useMyBids';
 import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
+import { MyBidRow } from '../components/MyBidRow';
 import type { BidStanding, MyBidItem } from '../types/bidding.types';
 
-// The three segments a buyer actually thinks in: what I'm still in, what I won, what's over.
-// The API's five standings collapse onto them.
+// The three segments a buyer thinks in: what I'm still in, what I won, what's over. The API's
+// five standings (all shown as chips on the rows) collapse onto them.
 type BidSegment = 'active' | 'won' | 'ended';
 
 const SEGMENT_STANDINGS: Record<BidSegment, BidStanding[]> = {
@@ -24,115 +22,88 @@ const SEGMENT_STANDINGS: Record<BidSegment, BidStanding[]> = {
   ended: ['LOST'],
 };
 
-const STANDING_TONE: Record<BidStanding, 'live' | 'warning' | 'upcoming' | 'neutral'> = {
-  WINNING: 'live',
-  OUTBID: 'warning',
-  AWAITING_CONFIRMATION: 'upcoming',
-  WON: 'live',
-  LOST: 'neutral',
-};
+/** Under the active bids: the latest finished ones, so a result is seen without switching. */
+const RECENTLY_ENDED = 3;
 
+const byLatestEnd = (a: MyBidItem, b: MyBidItem) =>
+  new Date(b.auction.endsAt).getTime() - new Date(a.auction.endsAt).getTime();
+
+/** My bids (design `bids`): every row answers "am I winning" and "how long is left". */
 export function MyBidsPage() {
   const { t, isReady } = useBiddingTranslation();
+  const { number } = useMoney();
   const [segment, setSegment] = useState<BidSegment>('active');
   const { data, isPending, isError, refetch } = useMyBids({ limit: 50 });
 
   if (!isReady) return <PageLoader />;
 
-  const visible = (data?.data ?? []).filter((item) =>
-    SEGMENT_STANDINGS[segment].includes(item.standing),
-  );
+  const items = data?.data ?? [];
+  const inSegment = (id: BidSegment) =>
+    items.filter((item) => SEGMENT_STANDINGS[id].includes(item.standing));
+  const visible = inSegment(segment);
+  const recent =
+    segment === 'active'
+      ? items
+          .filter((item) => !SEGMENT_STANDINGS.active.includes(item.standing))
+          .sort(byLatestEnd)
+          .slice(0, RECENTLY_ENDED)
+      : [];
+  const count = (id: BidSegment) => (data ? number(inSegment(id).length) : undefined);
 
   return (
     <>
-      <ScreenHeader title={t('myBids.title')} isRoot />
-
-      <div className="flex flex-col gap-4 px-gutter pb-6">
+      <ScreenHeader
+        title={t('myBids.title')}
+        isRoot
+        crumbs={[{ label: t('myBids.account'), href: ROUTES.account }]}
+      />
+      <PageContainer className="grid gap-4 pb-8 lg:pb-16">
         <SegmentedControl
           label={t('myBids.title')}
           value={segment}
           onChange={setSegment}
+          className="max-w-[520px]"
           segments={[
-            { id: 'active', label: t('myBids.segments.active') },
-            { id: 'won', label: t('myBids.segments.won') },
-            { id: 'ended', label: t('myBids.segments.ended') },
+            { id: 'active', label: t('myBids.segments.active'), count: count('active') },
+            { id: 'won', label: t('myBids.segments.won'), count: count('won') },
+            { id: 'ended', label: t('myBids.segments.ended'), count: count('ended') },
           ]}
         />
 
         {isPending ? (
-          <div className="flex flex-col gap-3">
+          <div aria-hidden className="grid gap-3 lg:grid-cols-2">
             {Array.from({ length: 4 }, (_, index) => (
-              <Skeleton key={index} radius="lg" className="h-20 w-full" />
+              <Skeleton key={index} radius="xl" className="h-[98px] w-full" />
             ))}
           </div>
         ) : isError || !data ? (
           <ErrorState onRetry={() => void refetch()} />
-        ) : visible.length === 0 ? (
-          <EmptyState icon="gavel" title={t('myBids.emptyTitle')} message={t('myBids.empty')} />
+        ) : visible.length === 0 && recent.length === 0 ? (
+          <EmptyState icon="paddle" title={t('myBids.emptyTitle')} message={t('myBids.empty')} />
         ) : (
-          <div className="flex flex-col gap-3">
-            {visible.map((item) => (
-              <MyBidRow key={item.auctionId} item={item} />
-            ))}
-          </div>
+          <>
+            {visible.length > 0 ? <BidList items={visible} /> : null}
+            {recent.length > 0 ? (
+              <section className="grid gap-3">
+                <h2 className="px-1 pt-2 text-[13px] font-medium text-foreground-soft">
+                  {t('myBids.recentlyEnded')}
+                </h2>
+                <BidList items={recent} />
+              </section>
+            ) : null}
+          </>
         )}
-      </div>
+      </PageContainer>
     </>
   );
 }
 
-function MyBidRow({ item }: { item: MyBidItem }) {
-  const { t } = useBiddingTranslation();
-  const { locale } = useLocale();
-  const { money } = useMoney();
-  const { now } = useServerClock();
-
-  const name = pickLocalizedName(item.auction.product, locale);
-  // A 56 px thumb: the 300 px thumbnail, not the full photo.
-  const coverImage = resolveThumbUrl(item.auction.product.coverImage);
-  const endsInMs = new Date(item.auction.endsAt).getTime() - now();
-
+function BidList({ items }: { items: MyBidItem[] }) {
   return (
-    <Link href={ROUTES.auctionDetail(item.auctionId)}>
-      <Card className="flex items-center gap-3 p-3 transition-transform duration-fast ease-ios active:scale-[0.985]">
-        <div
-          className="relative size-14 shrink-0 overflow-hidden rounded-sm"
-          style={coverImage ? undefined : getImageTintStyle(item.auction.product.id)}
-        >
-          {coverImage ? (
-            <Image src={coverImage} alt={name} fill sizes="56px" className="object-cover" />
-          ) : (
-            <span className="absolute inset-0 flex items-center justify-center text-foreground/22">
-              <Icon name="package" size={22} />
-            </span>
-          )}
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="truncate text-subhead font-semibold text-foreground">{name}</p>
-          <p className="text-caption text-muted-foreground">
-            {t('myBids.yourBid', { amount: money(item.myHighestBid) })}
-          </p>
-          <Badge
-            tone={STANDING_TONE[item.standing]}
-            hasDot={item.standing === 'WINNING'}
-            className="self-start"
-          >
-            {t(`standing.${item.standing}`)}
-          </Badge>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-callout font-bold text-foreground tabular-nums">
-            {money(item.auction.currentPrice ?? item.auction.startingPrice)}
-          </span>
-          {item.auction.status === 'LIVE' && endsInMs > 0 ? (
-            <span className="text-caption-2 text-muted-foreground tabular-nums">
-              {formatDuration(endsInMs, locale)}
-            </span>
-          ) : null}
-        </div>
-      </Card>
-    </Link>
+    <ul className="grid gap-3 lg:grid-cols-2">
+      {items.map((item) => (
+        <MyBidRow key={item.auctionId} item={item} />
+      ))}
+    </ul>
   );
 }

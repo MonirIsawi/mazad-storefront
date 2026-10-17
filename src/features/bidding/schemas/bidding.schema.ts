@@ -70,6 +70,10 @@ export const auctionPricingSchema = z.object({
   endsAt: z.string(),
   minNextBid: z.string().optional(),
   bidIncrement: z.string().optional(),
+  // For the buy-now sheet: what is bought and the total with delivery (optional: older builds).
+  deliveryFee: z.string().optional(),
+  store: z.object({ deliveryFee: z.string() }).optional(),
+  product: z.object({ nameEn: z.string(), nameAr: z.string() }).optional(),
 });
 
 const myBidWinSchema = z.object({

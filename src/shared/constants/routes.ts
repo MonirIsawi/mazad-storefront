@@ -8,6 +8,8 @@ export const ROUTES = {
   orderProblem: (orderId: string) => `/contact?orderId=${encodeURIComponent(orderId)}`,
   auctions: '/auctions',
   auctionDetail: (id: string) => `/auctions/${id}`,
+  /** The full bid history of one auction (design `history`). */
+  auctionBids: (id: string) => `/auctions/${id}/bids`,
   store: (id: string) => `/stores/${id}`,
   login: '/login',
   register: '/register',

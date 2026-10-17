@@ -8,10 +8,11 @@ import { renderWithQuery } from '@/test/render';
 import { catalogApi } from '../api/catalog.api';
 import catalogAr from '../i18n/ar.json';
 import catalogEn from '../i18n/en.json';
-import { SellerCard } from '../components/SellerCard';
+import { SellerCard } from '../components/auction/SellerCard';
 import { auctionSchema } from '../schemas/catalog.schema';
 import type { BidHistoryItem } from '../types/catalog.types';
 import { AuctionDetailPage } from './AuctionDetailPage';
+import { BidHistoryPage } from './BidHistoryPage';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), back: vi.fn() }) }));
 vi.mock('../api/catalog.api', () => ({
@@ -152,13 +153,15 @@ describe('AuctionDetailPage: photos', () => {
     );
     expect(screen.getByTestId('gallery-indicator')).toHaveTextContent('1 / 3');
     // The cover leads, at full size; the strip uses the thumbnail (or the photo when none).
-    expect(screen.getByRole('link', { name: /Open photo 1 of 3/ }).getAttribute('href')).toBe(
-      'https://cdn.test/1.jpg',
-    );
-    const thumb = screen.getByRole('button', { name: 'Show photo 1 of 3' }).querySelector('img');
+    const cover = screen.getByRole('img', { name: 'Vintage camera, photo 1 of 3' });
+    expect(decodeURIComponent(cover.getAttribute('src') ?? '')).toContain('cdn.test/1.jpg');
+    const thumb = screen.getByRole('button', { name: 'Photo 1 of 3' }).querySelector('img');
     expect(decodeURIComponent(thumb?.getAttribute('src') ?? '')).toContain('1-thumb.jpg');
     await userEvent.click(screen.getByRole('button', { name: 'Show photo 3 of 3' }));
     expect(await screen.findByText('3 / 3')).toBeTruthy();
+    // Any photo opens full screen.
+    await userEvent.click(screen.getByRole('button', { name: 'View photo 1 of 3 full screen' }));
+    expect(screen.getByRole('dialog', { name: 'Product photos' })).toBeTruthy();
   });
 });
 
@@ -166,11 +169,15 @@ describe('AuctionDetailPage: prices', () => {
   it('a live auction with bids: current price, opening bid, next raise and delivery', async () => {
     await renderAuction(auction());
     const prices = screen.getByTestId('detail-prices');
-    expect(within(prices).getByText('Current price')).toBeTruthy();
-    expect(screen.getByTestId('detail-main-price')).toHaveTextContent('125,000 IQD');
-    expect(within(prices).getByText('Opening bid').nextSibling).toHaveTextContent('100,000 IQD');
-    expect(within(prices).getByText('Next raise').nextSibling).toHaveTextContent('5,000 IQD');
-    expect(within(prices).getByTestId('price-delivery')).toHaveTextContent('Delivery5,000 IQD');
+    expect(within(prices).getByText('Top bid')).toBeTruthy();
+    expect(screen.getByTestId('detail-main-price')).toHaveTextContent(/^125,000\s?IQD$/);
+    expect(within(prices).getByText('Step 5,000 IQD')).toBeTruthy();
+    const rules = within(screen.getByTestId('detail-rules'));
+    expect(rules.getByText('Opening price').nextSibling).toHaveTextContent('100,000 IQD');
+    expect(rules.getByText('Bid step').nextSibling).toHaveTextContent('5,000 IQD');
+    expect(screen.getByTestId('price-delivery')).toHaveTextContent(
+      'Delivery from Baghdad5,000 IQD',
+    );
     // No buy now, no market price, and never a "total" for a live bid.
     expect(screen.queryByTestId('price-buy-now')).toBeNull();
     expect(screen.queryByTestId('price-market')).toBeNull();
@@ -180,8 +187,9 @@ describe('AuctionDetailPage: prices', () => {
   it('no bids yet: the opening bid is the main price, not repeated', async () => {
     await renderAuction(auction({ currentPrice: null, bidCount: 0, bidderCount: 0 }));
     const prices = screen.getByTestId('detail-prices');
-    expect(within(prices).getAllByText('Opening bid')).toHaveLength(1);
-    expect(screen.getByTestId('detail-main-price')).toHaveTextContent('100,000 IQD');
+    expect(within(prices).getAllByText('Opening price')).toHaveLength(1);
+    expect(within(screen.getByTestId('detail-rules')).queryByText('Opening price')).toBeNull();
+    expect(screen.getByTestId('detail-main-price')).toHaveTextContent(/^100,000\s?IQD$/);
     expect(screen.getByTestId('detail-activity')).toHaveTextContent('No bids yet');
   });
 
@@ -192,7 +200,10 @@ describe('AuctionDetailPage: prices', () => {
     expect(priceRow('price-market')).toBe('New retail price400,000 IQD');
     const savings = screen.getAllByTestId('price-saving').map((note) => note.textContent);
     // Below the main price (400,000 − 125,000) and below buy now (400,000 − 300,000).
-    expect(savings).toEqual(['275,000 IQD below the new price', '100,000 IQD below the new price']);
+    expect(savings).toEqual([
+      'That is 275,000 IQD below the new retail price',
+      '100,000 IQD below the new price',
+    ]);
     expect(screen.queryByText(/original price/i)).toBeNull();
     expect(screen.queryByText(/%/)).toBeNull();
   });
@@ -223,7 +234,7 @@ describe('AuctionDetailPage: prices', () => {
   it('a zero delivery fee reads "No delivery fee", never "free shipping"', async () => {
     await renderAuction(auction({ deliveryFee: '0.00' }));
     for (const row of screen.getAllByTestId('price-delivery')) {
-      expect(row).toHaveTextContent('DeliveryNo delivery fee');
+      expect(row).toHaveTextContent('Delivery from BaghdadNo delivery fee');
     }
     expect(screen.queryByText(/free/i)).toBeNull();
   });
@@ -232,7 +243,7 @@ describe('AuctionDetailPage: prices', () => {
 describe('AuctionDetailPage: auction information', () => {
   it('shows bidders and bids, the exact start and end, and the extension', async () => {
     await renderAuction(auction());
-    expect(screen.getByTestId('detail-activity')).toHaveTextContent('3 bidders · 5 bids');
+    expect(screen.getByTestId('detail-activity')).toHaveTextContent('5 bids3 bidders');
     expect(screen.getByText('Starts')).toBeTruthy();
     expect(screen.getByText('Ends')).toBeTruthy();
     expect(screen.getByTestId('detail-extended')).toHaveTextContent('Extended by 5 minutes');
@@ -256,7 +267,7 @@ describe('AuctionDetailPage: the product', () => {
     const description = screen.getByTestId('detail-description');
     expect(description.textContent).toBe('A 1970s film camera.\nTested and working.');
     expect(description.className).toContain('whitespace-pre-wrap');
-    expect(screen.getByText('Product details')).toBeTruthy();
+    expect(screen.getByText('About this item')).toBeTruthy();
   });
 
   it('condition explained, main category and subcategory, then the specifications', async () => {
@@ -310,9 +321,7 @@ describe('AuctionDetailPage: delivery, payment and returns', () => {
 
   it('takes the return window from the API', async () => {
     await renderAuction(auction({ returnWindowDays: 14 }));
-    expect(screen.getByTestId('detail-returns')).toHaveTextContent(
-      'Returns can be requested within 14 days of delivery',
-    );
+    expect(screen.getByTestId('detail-returns')).toHaveTextContent('Within 14 days of delivery');
   });
 });
 
@@ -413,20 +422,32 @@ describe('AuctionDetailPage: bid history', () => {
     const rows = within(await screen.findByTestId('bid-history')).getAllByRole('listitem');
     expect(rows[0]).toHaveTextContent(/^You/);
     expect(rows[0]).not.toHaveTextContent('us***3');
-    expect(rows[1]).toHaveTextContent(/^us\*\*\*2Auto/);
+    expect(rows[1]).toHaveTextContent(/^us\*\*\*2.*Auto/);
     expect(rows[2]).toHaveTextContent(/^us\*\*\*1/);
     expect(rows[2]).not.toHaveTextContent('Auto');
   });
 
-  it('shows ten bids, then all of them on request', async () => {
+  it('shows the latest five, with the way to the full history', async () => {
     vi.mocked(catalogApi.getAuctionBids).mockResolvedValue(
       Array.from({ length: 12 }, (_, i) => bid(12 - i)),
     );
     await renderAuction(auction());
     const list = await screen.findByTestId('bid-history');
-    expect(within(list).getAllByRole('listitem')).toHaveLength(10);
-    await userEvent.click(screen.getByRole('button', { name: 'Show all (12)' }));
-    expect(within(screen.getByTestId('bid-history')).getAllByRole('listitem')).toHaveLength(12);
+    expect(within(list).getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getByRole('link', { name: 'See all (12)' }).getAttribute('href')).toBe(
+      '/auctions/a1/bids',
+    );
+  });
+
+  it('the history screen lists every bid with the counts', async () => {
+    vi.mocked(catalogApi.getAuction).mockResolvedValue(auction({ extensionsCount: 1 }));
+    vi.mocked(catalogApi.getAuctionBids).mockResolvedValue(
+      Array.from({ length: 12 }, (_, i) => bid(12 - i)),
+    );
+    renderWithQuery(<BidHistoryPage id="a1" />);
+    const list = await screen.findByTestId('bid-history');
+    expect(within(list).getAllByRole('listitem')).toHaveLength(12);
+    expect(screen.getByText('extension')).toBeTruthy();
   });
 });
 
@@ -436,22 +457,20 @@ describe('AuctionDetailPage: in Arabic', () => {
     await renderAuction(auction({ buyNowPrice: '300000.00' }, { marketPrice: '400000.00' }));
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('كاميرا قديمة');
     const prices = within(screen.getByTestId('detail-prices'));
-    expect(prices.getByText('السعر الحالي')).toBeTruthy();
-    expect(prices.getByText('سعر افتتاح المزاد')).toBeTruthy();
+    expect(prices.getByText('أعلى مزايدة')).toBeTruthy();
+    expect(within(screen.getByTestId('detail-rules')).getByText('سعر الافتتاح')).toBeTruthy();
     expect(priceRow('price-market')).toBe('سعر المنتج الجديد400,000 د.ع');
     expect(priceRow('price-buy-now-total')).toBe('الإجمالي مع التوصيل عند الشراء الآن305,000 د.ع');
     expect(screen.getAllByTestId('price-saving')[0]).toHaveTextContent(
-      'أقل بـ 275,000 د.ع من سعر المنتج الجديد',
+      'أقل بـ 275,000 د.ع من سعره جديداً',
     );
-    expect(screen.getByTestId('detail-activity')).toHaveTextContent('3 مزايدين · 5 مزايدات');
+    expect(screen.getByTestId('detail-activity')).toHaveTextContent('5 مزايدات3 مزايدين');
     const info = within(screen.getByTestId('detail-product-info'));
     expect(info.getByText('الفئة الفرعية').nextSibling).toHaveTextContent('كاميرات أفلام');
     expect(info.getByText('العلامة').nextSibling).toHaveTextContent('كانون');
     // No Arabic for this specification: the English one, never a blank row.
     expect(info.getByText('Lens').nextSibling).toHaveTextContent('50 mm');
-    expect(screen.getByTestId('detail-returns')).toHaveTextContent(
-      'يمكن طلب الإرجاع خلال 7 أيام من الاستلام',
-    );
+    expect(screen.getByTestId('detail-returns')).toHaveTextContent('خلال 7 أيام من الاستلام');
     expect(
       within(screen.getByTestId('detail-payment-methods'))
         .getAllByRole('listitem')

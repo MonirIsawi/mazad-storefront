@@ -1,20 +1,84 @@
 {
-  "title": "Mazad",
+  "title": "Bidoom",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "morningNamed": "Good morning, {{name}}",
+    "afternoonNamed": "Good afternoon, {{name}}",
+    "eveningNamed": "Good evening, {{name}}"
+  },
+  "headline": "What will you win tonight?",
+  "search": {
+    "placeholder": "Search products",
+    "filters": "Filters"
+  },
+  "hero": {
+    "kicker": "Live auctions from sellers across Iraq",
+    "title": "Bid on what you want, ",
+    "titleGold": "at the price you decide.",
+    "body": "Prices that move in front of you, clear bid steps, and payment on delivery.",
+    "browse": "Browse auctions",
+    "how": "How auctions work"
+  },
+  "featured": {
+    "badge": "Ending soonest",
+    "topBid": "Top bid",
+    "opening": "Opening price",
+    "bidNow": "Bid now",
+    "share": "Share",
+    "linkCopied": "Link copied.",
+    "shareUnavailable": "Couldn't share this auction."
+  },
+  "perks": {
+    "cod": "Pay on delivery",
+    "returns": "7-day returns",
+    "antiSniping": "Anti-sniping"
+  },
   "sections": {
+    "finalHour": "Final hour",
+    "endingSoonest": "Ending soonest",
     "live": "Live now",
     "endingSoon": "Ending soon",
     "upcoming": "Starting soon",
-    "categories": "Categories"
+    "stores": "Verified stores",
+    "categories": "Categories",
+    "howTo": "How it works"
   },
   "empty": {
     "live": "No live auctions right now.",
     "endingSoon": "Nothing ending in the next hour.",
     "upcoming": "No upcoming auctions scheduled."
   },
-  "viewAll": "View all",
-  "promo": {
-    "title": "Bid on what you want",
-    "subtitle": "Live auctions from verified sellers across Iraq",
-    "cta": "Browse auctions"
+  "viewAll": "See all",
+  "allCategories": "All",
+  "stores": {
+    "live_one": "{{count, num}} live",
+    "live_other": "{{count, num}} live",
+    "open": "Open {{name}}"
+  },
+  "howTo": {
+    "bid": "Bid, or set an automatic maximum",
+    "win": "Win when the clock runs out",
+    "order": "Your order is created for you",
+    "receive": "Receive it and pay at the door or by card"
+  },
+  "account": "Account",
+  "signIn": "Sign in",
+  "welcome": {
+    "pageTitle": "Welcome",
+    "title": "Live auctions. Watch the price move.",
+    "perks": {
+      "live": "Live auctions",
+      "cod": "Pay on delivery",
+      "antiSniping": "Anti-sniping"
+    },
+    "slide": "Slide to start",
+    "slideDone": "Welcome",
+    "confirmTitle": "Ready to start?",
+    "confirmBody": "Bids are confirmed with this same slide, so a single tap never moves money.",
+    "confirmLabel": "Start",
+    "signIn": "I have an account. Sign in",
+    "terms": "By continuing you accept the <terms>terms</terms> and <privacy>privacy policy</privacy>"
   }
 }
