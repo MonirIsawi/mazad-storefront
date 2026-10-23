@@ -10,10 +10,11 @@ import { useMyStanding } from '../hooks/useMyStanding';
 import type { AuctionPricing } from '../types/bidding.types';
 import { AutoBidSummary } from './AutoBidSummary';
 import { BidForm } from './BidForm';
+import { AddressFirstNotice, AddressFirstSheet } from './sheet/AddressFirstSheet';
 import { BidSheet } from './sheet/BidSheet';
 import { BuyNowSheet } from './sheet/BuyNowSheet';
 
-type OpenSheet = 'bid' | 'auto' | 'buy' | null;
+type OpenSheet = 'bid' | 'auto' | 'buy' | 'address' | null;
 
 /** Buy now only while the bidding hasn't reached it (the server refuses it after that). */
 function buyNowPriceOf(pricing: AuctionPricing): string | null {
@@ -25,20 +26,25 @@ function buyNowPriceOf(pricing: AuctionPricing): string | null {
 /**
  * What a buyer can do on a live auction. Desktop: the bid right in the panel, with Buy now and
  * Auto-bid beside each other. Phones: Buy now and automatic bidding as rows, and the bid bar
- * pinned to the foot (the lowest next bid and "Bid", which opens the bid sheet).
+ * pinned to the foot (the lowest next bid and "Bid", which opens the bid sheet). Without a saved
+ * address every one of them asks for an address first (a win becomes an order at once).
  */
 export function LiveActions({
   pricing,
   deliveryLine,
   isSheetOpenOnLoad = false,
+  needsAddress = false,
 }: {
   pricing: AuctionPricing;
   deliveryLine?: ReactNode;
+  /** Signed in with no saved address: prompt for one instead of opening a sheet. */
+  needsAddress?: boolean;
   /** Arrived from "Bid" on My bids: the sheet opens at once. */
   isSheetOpenOnLoad?: boolean;
 }) {
   const { t } = useBiddingTranslation();
-  const [sheet, setSheet] = useState<OpenSheet>(isSheetOpenOnLoad ? 'bid' : null);
+  const [requested, setSheet] = useState<OpenSheet>(isSheetOpenOnLoad ? 'bid' : null);
+  const sheet = needsAddress && requested ? 'address' : requested;
   const standing = useMyStanding(pricing.id);
   const buyNowPrice = buyNowPriceOf(pricing);
   const minimumBid = computeMinimumBid(pricing) ?? 0;
@@ -47,7 +53,7 @@ export function LiveActions({
   return (
     <>
       <div className="hidden gap-3 lg:grid">
-        <BidForm auction={pricing} />
+        {needsAddress ? <AddressFirstNotice /> : <BidForm auction={pricing} />}
         <div className="grid grid-cols-2 gap-2.5">
           {buyNowPrice ? (
             <Button variant="soft" onClick={() => setSheet('buy')}>
@@ -125,6 +131,7 @@ export function LiveActions({
           onClose={() => setSheet(null)}
         />
       ) : null}
+      {sheet === 'address' ? <AddressFirstSheet onClose={() => setSheet(null)} /> : null}
       {sheet === 'buy' && buyNowPrice ? (
         <BuyNowSheet auction={pricing} buyNowPrice={buyNowPrice} onClose={() => setSheet(null)} />
       ) : null}

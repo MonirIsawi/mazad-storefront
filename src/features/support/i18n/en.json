@@ -1,0 +1,98 @@
+{
+  "page": {
+    "title": "Contact us",
+    "help": "Help",
+    "intro": "Send a report or a suggestion from here. You get a reference number and can follow its status below.",
+    "introWithChat": "Message us on WhatsApp or Telegram to talk, or send a report or a suggestion from here."
+  },
+  "channels": {
+    "title": "Need to talk?",
+    "whatsapp": "WhatsApp",
+    "whatsappHint": "Chat with us on WhatsApp",
+    "telegram": "Telegram",
+    "telegramHint": "Message us on Telegram",
+    "newTab": "(opens in a new tab)"
+  },
+  "form": {
+    "title": "Report or suggestion",
+    "subtitle": "A one-way message with a reference number, not a chat.",
+    "subtitleWithChat": "A one-way message with a reference number. To chat, use WhatsApp or Telegram.",
+    "kindLabel": "What is it about?",
+    "kind": {
+      "PROBLEM": "Report a problem",
+      "SUGGESTION": "Suggestion",
+      "OTHER": "Other"
+    },
+    "order": "Order",
+    "orderHint": "Optional. Only your own orders are listed.",
+    "orderNone": "No order",
+    "orderLoading": "Loading your orders…",
+    "message": {
+      "PROBLEM": "What happened?",
+      "SUGGESTION": "Your suggestion",
+      "OTHER": "Your message"
+    },
+    "placeholder": {
+      "PROBLEM": "Describe the problem",
+      "SUGGESTION": "What would make Bidoom better for you?",
+      "OTHER": "Write your message"
+    },
+    "count": "{{count, num}} of {{max, num}} characters",
+    "submit": {
+      "PROBLEM": "Send report",
+      "SUGGESTION": "Send suggestion",
+      "OTHER": "Send message"
+    },
+    "errors": {
+      "messageShort": "Write at least 10 characters.",
+      "messageLong": "Keep it under 2,000 characters.",
+      "SUPPORT_REPORT_LIMIT": "You have sent the most reports allowed for today. Try again tomorrow.",
+      "TOO_MANY_REQUESTS": "Too many attempts. Wait a minute and try again.",
+      "ORDER_NOT_FOUND": "That order isn't one of yours. Choose another, or send without an order.",
+      "generic": "Your report wasn't sent. Check your connection and try again."
+    }
+  },
+  "sent": {
+    "title": {
+      "PROBLEM": "We got your report",
+      "SUGGESTION": "We got your suggestion",
+      "OTHER": "We got your message"
+    },
+    "reference": "Reference",
+    "body": "We'll review it and notify you when it is resolved. Its status shows in your earlier reports.",
+    "back": "Back to help",
+    "another": "Send another"
+  },
+  "history": {
+    "title": "Your earlier reports",
+    "empty": "Reports you send show here with their status.",
+    "loadError": "Your earlier reports didn't load.",
+    "retry": "Try again",
+    "more": "Show more",
+    "status": {
+      "RECEIVED": "Received",
+      "IN_REVIEW": "In review",
+      "RESOLVED": "Resolved"
+    }
+  },
+  "unavailable": {
+    "title": "Not available yet",
+    "message": "Sending reports and suggestions from here isn't available yet. The help centre answers the common questions.",
+    "help": "Go to help"
+  },
+  "entry": {
+    "title": "Didn't find your answer?",
+    "report": "Send us a report or a suggestion.",
+    "reportWithChat": "Message us on WhatsApp or Telegram, or send a report.",
+    "chatOnly": "Message us on WhatsApp or Telegram.",
+    "action": "Contact us",
+    "inlineLead": "Still have a question?"
+  },
+  "orderStatus": {
+    "CREATED": "Pending",
+    "CONFIRMED": "Confirmed",
+    "OUT_FOR_DELIVERY": "Out for delivery",
+    "DELIVERED": "Delivered",
+    "CANCELLED": "Cancelled"
+  }
+}

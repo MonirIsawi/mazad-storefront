@@ -2,6 +2,7 @@
 
 import { useParams, useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
+import { useAddresses } from '@features/addresses';
 import { useCurrentUser } from '@features/auth';
 import { AuctionDetailPage } from '@features/catalog';
 import { BidPanel, useMyStanding } from '@features/bidding';
@@ -17,8 +18,9 @@ const CLOSED = new Set(['ENDED', 'SOLD', 'UNSOLD']);
 const ORDER_POLL_MS = 3_000;
 
 /**
- * The bid panel for one auction, composed here because it needs three features: the signed-in user
- * (own auction), and the user's wins ("You won · View order" on a closed auction they won).
+ * The bid panel for one auction, composed here because it needs four features: the signed-in user
+ * (own auction, bidding paused), the user's wins ("You won · View order" on a closed auction they
+ * won), and their addresses (bidding needs one: "add an address first").
  */
 export function AuctionBidding({
   auctionId,
@@ -35,11 +37,8 @@ export function AuctionBidding({
   const isAuthenticated = useIsAuthenticated();
   const isClosed = CLOSED.has(status);
   const wins = useWins(isClosed);
-  const win = wins.data?.find(
-    (w) =>
-      w.auctionId === auctionId &&
-      (w.status === 'CONFIRMED' || w.status === 'PENDING_CONFIRMATION'),
-  );
+  // A win is an order at once (CONFIRMED); PASSED_OVER went to the next bidder.
+  const win = wins.data?.find((w) => w.auctionId === auctionId && w.status === 'CONFIRMED');
   const orderId = win?.orderItem?.orderId ?? null;
   const refetchWins = wins.refetch;
 
@@ -63,6 +62,7 @@ export function AuctionBidding({
   }, [win, orderId, refetchWins]);
 
   const isOwnAuction = !!me.data && me.data.id === sellerId;
+  const addresses = useAddresses(isAuthenticated && !isClosed && !isOwnAuction);
   return (
     <BidPanel
       auctionId={auctionId}
@@ -73,6 +73,8 @@ export function AuctionBidding({
       reminder={<RemindMeButton auctionId={auctionId} />}
       deliveryLine={<DeliveryLine />}
       isSheetOpenOnLoad={isSheetOpenOnLoad}
+      hasAddress={addresses.data ? addresses.data.length > 0 : undefined}
+      isBiddingPaused={me.data?.biddingPaused === true}
     />
   );
 }
@@ -100,7 +102,9 @@ export function AuctionPageClient() {
         />
       )}
       watchlistToggle={<WatchlistToggle auctionId={params.id} />}
-      renderSellerFollowToggle={(sellerId) => <SellerFollowToggle sellerId={sellerId} />}
+      renderSellerFollowToggle={(sellerId) => (
+        <SellerFollowToggle sellerId={sellerId} emphasis="quiet" />
+      )}
     />
   );
 }

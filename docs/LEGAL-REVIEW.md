@@ -41,9 +41,9 @@ steps to agree.
 | Losing a win for lack of an address adds a no-show strike, and repeated strikes cause an automatic ban                                                                                                                                                                                  | `wins.service.ts` `expireWin` (`settlement.maxStrikes`, default 3)                                                                                     |
 | The buyer can cancel only before the seller confirms; the seller can cancel only while the order is pending                                                                                                                                                                             | `orders.service.ts` `cancelOrder`, `SELLER_TRANSITIONS`                                                                                                |
 | COD: the seller confirms the exact cash, which must equal the order total                                                                                                                                                                                                               | storefront `CASH_AMOUNT_MISMATCH`; prelaunch contract 8                                                                                                |
-| Card payment runs through SwiftPayIQ's hosted page. Mazad never handles card data. Payment is verified server-side, an order is paid once, and duplicates are flagged for review. Card refunds are made in SwiftPayIQ                                                                   | `docs/swiftpay/README.md`                                                                                                                              |
+| Card payment runs through SwiftPayIQ's hosted page. Bidoom never handles card data. Payment is verified server-side, an order is paid once, and duplicates are flagged for review. Card refunds are made in SwiftPayIQ                                                                  | `docs/swiftpay/README.md`                                                                                                                              |
 | Card payment is offered only when enabled, while the order is pending, confirmed or out for delivery                                                                                                                                                                                    | storefront `OrderPaymentSection.tsx` (`PAYABLE`, `swiftpay.enabled`)                                                                                   |
-| Card money goes to Mazad's single SwiftPayIQ merchant account, and Mazad pays sellers outside the app, net of commission                                                                                                                                                                | `docs/swiftpay/README.md` (single merchant, `SellerPayable`)                                                                                           |
+| Card money goes to Bidoom's single SwiftPayIQ merchant account, and Bidoom pays sellers outside the app, net of commission                                                                                                                                                              | `docs/swiftpay/README.md` (single merchant, `SellerPayable`)                                                                                           |
 | Returns: 7 days from delivery, once per item (withdrawn or rejected requests can't be re-opened by the buyer), seller approve/reject, product returned, then refund. The refund is the item's price; the delivery fee is not included. An admin can reopen, decide and lower the amount | `src/modules/returns/returns.service.ts` (`RETURN_WINDOW_DAYS`, default 7; `refundAmount: item.finalPrice`)                                            |
 | A commission is charged per sale, as a percentage set by the platform and snapshot on the auction. It is voided when the item is refunded                                                                                                                                               | `PlatformSettings.defaultCommission` (default 5), `auctions.service.ts`, `returns.service.ts` (`voidedCommission`)                                     |
 | Auctions currently need admin approval                                                                                                                                                                                                                                                  | `PlatformSettings.manualAuctionApproval` (default `true`)                                                                                              |
@@ -51,7 +51,7 @@ steps to agree.
 | Phone verification uses a Telegram bot: the user shares their own contact, then gets the code                                                                                                                                                                                           | `src/modules/auth/otp/telegram-bot.service.ts`                                                                                                         |
 | Account deletion anonymises the account and keeps transactions. There is a 30-day phone cooldown, enforced with a keyed hash                                                                                                                                                            | `docs/account-deletion-design.md`                                                                                                                      |
 | Uploaded photos are re-encoded (sharp to WebP), which drops EXIF, including location                                                                                                                                                                                                    | `src/modules/uploads/uploads.service.ts`                                                                                                               |
-| Third parties: Railway (hosting), Firebase Cloud Messaging (Android push), Telegram (codes), SwiftPayIQ (cards), Google Fonts (website font CSS), OpenFreeMap (Android map tiles)                                                                                                       | `docs/production-environment.md`, `notifications/fcm.channel.ts`, storefront `globals.css`, mobile `PinMap.tsx`                                        |
+| Third parties: Railway (hosting), Firebase Cloud Messaging (Android push), Telegram (codes), SwiftPayIQ (cards), OpenFreeMap (Android map tiles). The website self-hosts its fonts (next/font), so Google Fonts is no longer one                                                        | `docs/production-environment.md`, `notifications/fcm.channel.ts`, storefront `globals.css`, mobile `PinMap.tsx`                                        |
 | The website uses localStorage for the session, language and theme. It has no analytics or ad SDKs                                                                                                                                                                                       | storefront `auth-session.ts`, `layout.tsx`, `package.json`                                                                                             |
 
 ## Corrections made in this revision
@@ -71,19 +71,24 @@ steps to agree.
 
 ## OWNER_DECISION items
 
-### OD-1: Who runs Mazad
+### OD-1: Who runs Bidoom
 
-- **Where:** Privacy › About this policy; Terms › What Mazad is.
+- **Where:** Privacy › About this policy; Terms › What Bidoom is.
 - **Questions:**
-  - What is the legal name of the company or person that operates Mazad and is responsible for user
+  - What is the legal name of the company or person that operates Bidoom and is responsible for user
     data (the data controller)?
   - What is its registered address and its registration or commercial number?
   - Should the pages name it?
 
 ### OD-2: Support contact
 
-- **Where:** Returns › If you can't agree; FAQ › How do I contact Mazad?; Privacy › Contact;
+- **Where:** Returns › If you can't agree; FAQ › How do I contact Bidoom?; Privacy › Contact;
   Terms › Contact. The pages show "Support contact: to be announced."
+- **Status (2026-10-17):** the in-app report form (Contact us: a one-way report or suggestion with a
+  reference and a status) is built. Where the deployed API has it, or a WhatsApp/Telegram channel is
+  configured (`NEXT_PUBLIC_SUPPORT_WHATSAPP` / `NEXT_PUBLIC_SUPPORT_TELEGRAM`), those pages show it
+  in place of "to be announced". The questions below about hours, reply times and a privacy address
+  stay open.
 - **Questions:**
   - Which channel will users have: an email address, a phone or WhatsApp number, the Telegram bot,
     or an in-app form?
@@ -106,14 +111,14 @@ steps to agree.
 - **Facts:** with COD the seller keeps all the cash. The API records commission, but nothing
   collects it.
 - **Questions:**
-  - How and when does a seller pay Mazad the commission on cash sales (invoice, deduction from card
+  - How and when does a seller pay Bidoom the commission on cash sales (invoice, deduction from card
     payouts, a wallet)?
   - What happens if they don't pay?
 
 ### OD-5: Seller payouts for card sales
 
 - **Where:** Selling › Commission.
-- **Facts:** card money lands in Mazad's SwiftPayIQ account. An admin records each transfer to the
+- **Facts:** card money lands in Bidoom's SwiftPayIQ account. An admin records each transfer to the
   seller by hand (`SellerPayable`). `PlatformSettings.payoutDelayDays` has a default of 7.
 - **Questions:**
   - How many days after delivery are sellers paid, and by what method (bank transfer, card)?
@@ -124,7 +129,7 @@ steps to agree.
 - **Where:** Payments › Card.
 - **Facts:** the SwiftPayIQ go-live checklist says to set the fee bearer to the merchant (customer
   share 0). The code still accepts a customer fee share if SwiftPayIQ reports one.
-- **Question:** confirm that buyers pay only the order total, and that Mazad absorbs SwiftPayIQ's
+- **Question:** confirm that buyers pay only the order total, and that Bidoom absorbs SwiftPayIQ's
   fee. Then remove the note.
 
 ### OD-7: Return shipping
@@ -140,7 +145,7 @@ steps to agree.
 
 - **Where:** Payments › Refunds; Returns › What happens next.
 - **Facts:** for COD, the API only records the refund (payment `REFUNDED`). It moves no money.
-- **Question:** who hands the money back (the seller in cash on collection? Mazad?), how, and how
+- **Question:** who hands the money back (the seller in cash on collection? Bidoom?), how, and how
   fast?
 
 ### OD-9: Card refund timing
@@ -148,7 +153,7 @@ steps to agree.
 - **Where:** Payments › Refunds.
 - **Facts:** an admin refunds in the SwiftPayIQ dashboard. The API has no refund endpoint.
 - **Questions:**
-  - How soon after a return is refunded in Mazad does the admin refund in SwiftPayIQ?
+  - How soon after a return is refunded in Bidoom does the admin refund in SwiftPayIQ?
   - How long does SwiftPayIQ take to return the money to the card?
 
 ### OD-10: Data retention
@@ -178,7 +183,8 @@ steps to agree.
     has `OTP_CHANNEL`), or the product-AI providers (Google Gemini, SerpAPI)? Those are off by
     default and unused by the clients. If they are turned on, the policy must name them.
   - In which countries is the data stored?
-  - Should the website self-host its font, so that Google Fonts no longer receives visitor IPs?
+  - (Answered 2026-10-17: the website now self-hosts its fonts, so Google Fonts no longer receives
+    visitor IPs; the Privacy page no longer lists it.)
 
 ### OD-12: Minimum age
 
@@ -199,12 +205,12 @@ steps to agree.
 
 ### LR-1: Marketplace role
 
-- **Where:** Terms › What Mazad is. The same idea appears in plain words in How auctions work › Who
+- **Where:** Terms › What Bidoom is. The same idea appears in plain words in How auctions work › Who
   sells?
 - **Questions:**
-  - Is the statement "Mazad isn't the seller; each sale is between the buyer and the seller, and the
+  - Is the statement "Bidoom isn't the seller; each sale is between the buyer and the seller, and the
     seller is responsible for the item and its delivery" correct and enforceable under Iraqi law?
-  - Does it still hold given that Mazad collects card payments (see LR-5) and moderates listings?
+  - Does it still hold given that Bidoom collects card payments (see LR-5) and moderates listings?
 
 ### LR-2: Prohibited items
 
@@ -241,19 +247,19 @@ steps to agree.
 - **Where:** Terms › Returns and disputes (shown as "To be confirmed").
 - **Questions:**
   - Beyond returns, how are other buyer–seller disputes handled?
-  - Is Mazad's decision on a return final within the platform?
+  - Is Bidoom's decision on a return final within the platform?
   - Which law governs the terms, and which courts have jurisdiction?
 
 ### LR-5: Collecting card payments for sellers
 
 - **Where:** Terms › Payment.
-- **Facts:** Mazad collects card payments for all sellers through one SwiftPayIQ merchant account
+- **Facts:** Bidoom collects card payments for all sellers through one SwiftPayIQ merchant account
   and pays them out manually. The SwiftPayIQ README notes that their terms make the merchant
   responsible for the products sold, that their terms don't mention marketplaces, and that written
   confirmation from SwiftPayIQ is pending.
 - **Questions:**
   - Is this collection model allowed?
-  - Does it change Mazad's responsibility towards buyers?
+  - Does it change Bidoom's responsibility towards buyers?
   - How should the terms describe it?
 
 ### LR-6: Privacy legal basis and user rights
@@ -284,7 +290,7 @@ steps to agree.
 - **Questions:**
   - Are the stated powers (reject listings, block products, suspend stores, ban accounts) and the
     automatic ban after repeated lost wins worded acceptably?
-  - Must Mazad give reasons, or offer an appeal?
+  - Must Bidoom give reasons, or offer an appeal?
 
 ### LR-9: Binding bids
 
@@ -293,7 +299,7 @@ steps to agree.
   confirms it, and no penalty applies today.
 - **Questions:**
   - Is a bid enforceable as a binding offer?
-  - What may Mazad or the seller do when a winner refuses to pay?
+  - What may Bidoom or the seller do when a winner refuses to pay?
   - Is the draft's wording consistent with the buyer's ability to cancel before confirmation?
 
 ### LR-10: Seller legal obligations
@@ -301,5 +307,5 @@ steps to agree.
 - **Where:** Terms › Sellers (shown as "To be confirmed").
 - **Questions:**
   - What must sellers be told about taxes, business licences and consumer protection when selling
-    on Mazad?
+    on Bidoom?
   - Do these differ for individuals and for stores?

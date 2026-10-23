@@ -164,17 +164,21 @@
     "removePhoto": "Remove photo",
     "coverPhoto": "Cover",
     "startingPriceHint": "Whole dinars, at least 1,000 IQD.",
-    "incrementLadder": "Bidoom sets the step from the price, the same for every auction: 1,000 IQD under 100,000; 5,000 up to 1 million; 25,000 up to 10 million; 100,000 above. It grows as the price does.",
     "startNow": "Now",
     "startLater": "Schedule",
     "oneLanguageHint": "Arabic or English is enough; the other language shows the same text until you add it.",
     "currency": "IQD",
     "bidStep": "Bid step",
     "extension": "Automatic extension",
-    "extensionRule": "A bid in the last {{minutes, num}} minutes extends the auction, up to {{times, num}} times, so nobody wins by sniping in the last seconds.",
-    "extensionPlatform": "Bidoom sets this for every auction: a bid in the closing minutes extends it, so nobody wins by sniping. The exact rule shows on the auction page.",
+    "extensionRule": "Every bid in the last {{minutes, num}} minutes adds {{minutes, num}} minutes, up to {{times, num}} times, protecting bidders from last-second sniping.",
     "start": "Start",
-    "bidStepAt": "at this opening price"
+    "bidStepHint": "The least each bid must add. Suggested for a {{opening}} opening: {{step}}.",
+    "bidStepHintEmpty": "The least each bid must add, from 250 IQD up to the opening price.",
+    "bidStepSuggestions": "Suggested steps",
+    "extensionMinutes": "Last minutes",
+    "extensionTimes": "Times at most",
+    "minutesUnit": "minutes",
+    "timesUnit": "times"
   },
   "form": {
     "save": "Save",
@@ -218,7 +222,7 @@
       "productRequired": "Choose a product",
       "deliveryFeeInvalid": "Enter a valid delivery fee",
       "startingPriceInvalid": "Enter a valid opening bid",
-      "minIncrementInvalid": "Minimum raise must be above zero",
+      "minIncrementInvalid": "The bid step must be whole dinars, from 250 IQD up to the opening price.",
       "startsAtRequired": "Choose a start time",
       "endsAtRequired": "Choose an end time",
       "endsBeforeStarts": "The end time must be after the start time",
@@ -234,7 +238,10 @@
       "buyNowNotAboveStart": "The buy now price must be higher than the opening bid",
       "buyNowInvalid": "Enter a valid buy now price",
       "marketPriceInvalid": "Enter the price as a whole number of dinars.",
-      "marketPriceTooHigh": "That price is above the maximum allowed."
+      "marketPriceTooHigh": "That price is above the maximum allowed.",
+      "extensionMinutesInvalid": "The extension must be 1 to 10 minutes.",
+      "maxExtensionsInvalid": "Allow 1 to 20 extensions.",
+      "extensionRuleInvalid": "The extension must be 1 to 10 minutes, 1 to 20 times."
     },
     "STORE_NOT_FOUND": "That store no longer exists.",
     "DEFAULT_STORE_PROTECTED": "Your default store cannot be deleted.",
@@ -263,7 +270,9 @@
       "END_TOO_SOON": "This listing ends too soon to publish. Edit its dates first."
     },
     "IMAGE_NOT_OWNED": "That image wasn't uploaded from your account.",
-    "IMAGE_NOT_FOUND": "That image couldn't be found. Upload it again."
+    "IMAGE_NOT_FOUND": "That image couldn't be found. Upload it again.",
+    "INVALID_BID_STEP": "The bid step must be from 250 IQD up to the opening price.",
+    "INVALID_EXTENSION_RULE": "The extension must be 1 to 10 minutes, 1 to 20 times."
   },
   "conditionHint": {
     "NEW": "Unused, in its original packaging.",
@@ -277,7 +286,6 @@
     "step": "Step",
     "extension": "Extension",
     "extensionValue": "{{minutes, num}} min, up to {{times, num}} times",
-    "byBidoom": "Set by Bidoom",
     "duration": "Duration",
     "hours_one": "{{count, num}} hour",
     "hours_other": "{{count, num}} hours",

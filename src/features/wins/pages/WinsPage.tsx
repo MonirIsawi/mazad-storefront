@@ -8,15 +8,14 @@ import { Skeleton, buttonVariants } from '@shared/components/ui';
 import { useWins } from '../hooks/useWins';
 import { useWinsTranslation } from '../hooks/useWinsTranslation';
 import { WinCard } from '../components/WinCard';
-import { PendingWins } from '../components/PendingWins';
 import { HowWinningWorks } from '../components/HowWinningWorks';
 import type { WinAddressOption, WinOrderSummary } from '../types/win-order';
 
 export type { WinAddressOption, WinOrderSummary } from '../types/win-order';
 
 export interface WinsPageProps {
+  /** Where new wins are delivered (the default one), from the addresses feature via the route. */
   addresses?: WinAddressOption[];
-  isAddressesPending?: boolean;
   /** The orders the wins created, by order id (from the orders feature, via the route). */
   orders?: Record<string, WinOrderSummary>;
 }
@@ -24,19 +23,18 @@ export interface WinsPageProps {
 /**
  * My wins (design `wins`): every win became an order the moment the auction ended, at the default
  * address, so the page lists wins with the order each one created and says plainly what can
- * still change. A win still waiting for the buyer (rare) keeps its confirmation above.
+ * still change. There is nothing to confirm.
  */
-export function WinsPage({ addresses = [], isAddressesPending = false, orders }: WinsPageProps) {
+export function WinsPage({ addresses = [], orders }: WinsPageProps) {
   const { t, isReady } = useWinsTranslation();
   const wins = useWins();
 
   if (!isReady) return <PageLoader />;
 
-  const pending = (wins.data ?? []).filter((win) => win.status === 'PENDING_CONFIRMATION');
-  // Newest win first (by when its auction ended); the API lists by status and deadline.
-  const settled = (wins.data ?? [])
-    .filter((win) => win.status !== 'PENDING_CONFIRMATION')
-    .sort((a, b) => b.auction.endsAt.localeCompare(a.auction.endsAt));
+  // Newest win first (by when its auction ended).
+  const settled = [...(wins.data ?? [])].sort((a, b) =>
+    b.auction.endsAt.localeCompare(a.auction.endsAt),
+  );
 
   return (
     <>
@@ -54,7 +52,7 @@ export function WinsPage({ addresses = [], isAddressesPending = false, orders }:
               ))
             ) : wins.isError ? (
               <ErrorState onRetry={() => void wins.refetch()} />
-            ) : pending.length === 0 && settled.length === 0 ? (
+            ) : settled.length === 0 ? (
               <EmptyState
                 icon="trophy"
                 title={t('page.emptyTitle')}
@@ -66,22 +64,13 @@ export function WinsPage({ addresses = [], isAddressesPending = false, orders }:
                 }
               />
             ) : (
-              <>
-                {pending.length > 0 ? (
-                  <PendingWins
-                    wins={pending}
-                    addresses={addresses}
-                    isAddressesPending={isAddressesPending}
-                  />
-                ) : null}
-                {settled.map((win) => (
-                  <WinCard
-                    key={win.id}
-                    win={win}
-                    order={win.orderItem ? orders?.[win.orderItem.orderId] : undefined}
-                  />
-                ))}
-              </>
+              settled.map((win) => (
+                <WinCard
+                  key={win.id}
+                  win={win}
+                  order={win.orderItem ? orders?.[win.orderItem.orderId] : undefined}
+                />
+              ))
             )}
           </div>
           <div className="lg:sticky lg:top-[100px]">

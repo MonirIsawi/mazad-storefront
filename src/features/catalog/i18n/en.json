@@ -81,7 +81,8 @@
     "showAllBids": "Show all ({{count, num}})",
     "showFewerBids": "Show fewer",
     "payment": "Payment",
-    "returns": "Returns"
+    "returns": "Returns",
+    "extensionOf": "(extension {{count, num}} of {{max, num}})"
   },
   "condition": {
     "NEW": "New",
@@ -131,18 +132,6 @@
       "emptyTitle": "No ratings yet",
       "emptyMessage": "Ratings appear here once buyers have received their orders.",
       "topTags": "Most mentioned"
-    },
-    "tags": {
-      "AS_DESCRIBED": "As described",
-      "FAST_DELIVERY": "Fast delivery",
-      "GOOD_PACKAGING": "Well packed",
-      "FRIENDLY_SELLER": "Easy to reach",
-      "GOOD_VALUE": "Good value",
-      "NOT_AS_DESCRIBED": "Not as described",
-      "LATE_DELIVERY": "Late delivery",
-      "POOR_PACKAGING": "Poor packaging",
-      "UNRESPONSIVE_SELLER": "Hard to reach",
-      "DAMAGED": "Arrived damaged"
     }
   },
   "conditionHint": {
@@ -224,11 +213,12 @@
     "times_one": "{{count, num}} time",
     "times_other": "{{count, num}} times",
     "names": "Bidder names",
-    "namesValue": "partly hidden",
+    "namesValue": "shown in full",
     "binding": "Bids and wins",
     "bindingValue": "binding, no take-backs",
-    "stepNote": "The step comes from the price: it grows as the price rises, the same for every auction at that price.",
-    "how": "How auctions work"
+    "stepNote": "The seller set the step and the extension for this auction.",
+    "how": "How auctions work",
+    "stepNoteLadder": "The step comes from the price: it grows as the price rises, the same for every auction at that price."
   },
   "history": {
     "seeAll": "See all ({{count}})",

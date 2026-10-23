@@ -22,7 +22,7 @@ describe('404 page', () => {
   it('says the page is missing and offers Home and Browse', async () => {
     await i18n.changeLanguage('en');
     renderUi(<NotFoundScreen />);
-    expect(screen.getByText('Page not found')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('This page doesn’t exist');
     expect(screen.getByRole('link', { name: 'Home' })).toHaveAttribute('href', '/');
     expect(screen.getByRole('link', { name: 'Browse auctions' })).toHaveAttribute(
       'href',
@@ -33,7 +33,7 @@ describe('404 page', () => {
   it('reads in Arabic', async () => {
     await i18n.changeLanguage('ar');
     renderUi(<NotFoundScreen />);
-    expect(screen.getByText('الصفحة غير موجودة')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('هذه الصفحة غير موجودة');
     expect(screen.getByRole('link', { name: 'تصفّح المزادات' })).toHaveAttribute(
       'href',
       '/auctions',
@@ -52,7 +52,8 @@ describe('error page', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const retry = vi.fn();
     renderUi(<RouteError error={new Error('TypeError: x is undefined')} retry={retry} />);
-    expect(screen.getByText('Something went wrong')).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('This page didn’t load');
+    expect(screen.getByText(/Your bids are safe/)).toBeTruthy();
     expect(screen.queryByText(/x is undefined/)).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(retry).toHaveBeenCalledTimes(1);
@@ -63,7 +64,8 @@ describe('error page', () => {
   it('reads in Arabic', async () => {
     await i18n.changeLanguage('ar');
     renderUi(<RouteErrorScreen onRetry={vi.fn()} />);
-    expect(screen.getByText('حدث خطأ ما')).toBeTruthy();
+    expect(screen.getByText('تعذّر تحميل الصفحة')).toBeTruthy();
+    expect(screen.getByText(/مزايداتك محفوظة/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'إعادة المحاولة' })).toBeTruthy();
   });
 
@@ -74,6 +76,8 @@ describe('error page', () => {
     render(<GlobalError error={new Error('boom')} retry={retry} />);
     expect(screen.getByText('حدث خطأ ما.')).toBeTruthy();
     expect(screen.getByText('Something went wrong.')).toBeTruthy();
+    expect(screen.getByText(/Bidoom couldn.t open right now/)).toBeTruthy();
+    expect(screen.getByText(/تعذّر فتح بيدوم الآن/)).toBeTruthy();
     await userEvent.click(screen.getByRole('button', { name: /Try again/ }));
     expect(retry).toHaveBeenCalledTimes(1);
   });

@@ -296,7 +296,7 @@
     },
     "/api/v1/admin/auth/login": {
       "post": {
-        "description": "Admins with 2FA enabled receive { mfaRequired, mfaToken } and finish at POST /admin/auth/login/mfa.",
+        "description": "Admins with 2FA enabled receive { mfaRequired, mfaToken } and finish at POST /admin/auth/login/mfa. Without 2FA: a session; mfaEnrollmentRequired=true when 2FA is required but not set up yet. Errors: 401 INVALID_CREDENTIALS (unknown user or wrong password alike), 429 ADMIN_LOGIN_LOCKED (5 failures for a username within 15 minutes lock it for 15 minutes; details.retryAfter, retryAfterSeconds).",
         "operationId": "AdminAuthController_adminLogin",
         "parameters": [],
         "requestBody": {
@@ -317,7 +317,7 @@
                 "schema": {
                   "oneOf": [
                     {
-                      "$ref": "#/components/schemas/AuthSessionResponseDto"
+                      "$ref": "#/components/schemas/AdminAuthSessionResponseDto"
                     },
                     {
                       "$ref": "#/components/schemas/AdminMfaChallengeResponseDto"
@@ -359,7 +359,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuthSessionResponseDto"
+                  "$ref": "#/components/schemas/AdminAuthSessionResponseDto"
                 }
               }
             }
@@ -431,6 +431,7 @@
     },
     "/api/v1/admin/auth/mfa/enable": {
       "post": {
+        "description": "Signs out every other session of this admin (they were opened without 2FA); this session stays.",
         "operationId": "AdminAuthController_mfaEnable",
         "parameters": [],
         "requestBody": {
@@ -1134,6 +1135,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUpdateUserDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": ""
@@ -1144,6 +1155,7 @@
             "bearer": []
           }
         ],
+        "summary": "Update a user's name or locale (audited); any other field is refused",
         "tags": [
           "Admin Users"
         ]
@@ -1190,6 +1202,34 @@
     "/api/v1/admin/users/{id}/unban": {
       "post": {
         "operationId": "AdminUsersController_unban",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/violations/clear": {
+      "post": {
+        "operationId": "AdminUsersController_clearViolations",
         "parameters": [
           {
             "name": "id",
@@ -1522,8 +1562,11 @@
           }
         },
         "responses": {
-          "200": {
-            "description": ""
+          "400": {
+            "description": "IMAGE_NOT_FOUND: coverKey not uploaded with POST /uploads (or already deleted)"
+          },
+          "403": {
+            "description": "IMAGE_NOT_OWNED: coverKey was uploaded by another account"
           }
         },
         "security": [
@@ -1531,7 +1574,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update a store",
+        "summary": "Update a store (incl. its cover: coverKey from POST /uploads, null removes it)",
         "tags": [
           "My Stores"
         ]
@@ -1564,6 +1607,62 @@
         ]
       }
     },
+    "/api/v1/stores": {
+      "get": {
+        "description": "Stores on the marketplace with a live auction or a delivered sale, best rated and most active first. Cursor pages: pass nextCursor back as `cursor`.",
+        "operationId": "StoresController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "`nextCursor` from the previous page; omit for the first page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStoresListDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "INVALID_CURSOR"
+          }
+        },
+        "summary": "Public stores list (\"Verified stores\")",
+        "tags": [
+          "Stores"
+        ]
+      }
+    },
     "/api/v1/stores/{id}": {
       "get": {
         "operationId": "StoresController_getPublic",
@@ -1588,12 +1687,90 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStorePageDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "STORE_NOT_FOUND (missing, deleted, suspended, or seller banned)"
           }
         },
         "summary": "Public store page",
         "tags": [
           "Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/stores/{id}/suspend": {
+      "post": {
+        "operationId": "AdminStoresController_suspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuspendStoreDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend a store and withdraw its listings",
+        "tags": [
+          "Admin Stores"
+        ]
+      }
+    },
+    "/api/v1/admin/stores/{id}/unsuspend": {
+      "post": {
+        "operationId": "AdminStoresController_unsuspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lift a store suspension",
+        "tags": [
+          "Admin Stores"
         ]
       }
     },
@@ -1800,7 +1977,17 @@
       },
       "post": {
         "operationId": "MeProductsController_create",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1904,6 +2091,15 @@
         "operationId": "MeProductsController_update",
         "parameters": [
           {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -1941,6 +2137,15 @@
         "operationId": "MeProductsController_remove",
         "parameters": [
           {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -1969,6 +2174,15 @@
       "get": {
         "operationId": "MeProductsController_listMine",
         "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "page",
             "required": true,
@@ -2006,6 +2220,15 @@
       "put": {
         "operationId": "MeProductsController_replaceVariants",
         "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "required": true,
@@ -2046,6 +2269,15 @@
         "operationId": "MeProductsController_addImage",
         "parameters": [
           {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "id",
             "required": true,
             "in": "path",
@@ -2065,8 +2297,11 @@
           }
         },
         "responses": {
-          "201": {
-            "description": ""
+          "400": {
+            "description": "IMAGE_NOT_FOUND: not uploaded with POST /uploads (or already deleted)"
+          },
+          "403": {
+            "description": "IMAGE_NOT_OWNED: the key was uploaded by another account"
           }
         },
         "security": [
@@ -2074,7 +2309,7 @@
             "bearer": []
           }
         ],
-        "summary": "Add product image",
+        "summary": "Add product image (a key this account uploaded with POST /uploads)",
         "tags": [
           "My Products"
         ]
@@ -2084,6 +2319,15 @@
       "delete": {
         "operationId": "MeProductsController_removeImage",
         "parameters": [
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "id",
             "required": true,
@@ -2287,6 +2531,33 @@
         ]
       }
     },
+    "/api/v1/admin/uploads/cleanup/last-run": {
+      "get": {
+        "operationId": "AdminUploadsController_lastRun",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadCleanupLastRunDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Orphaned-upload cleanup: configuration and the last run's counts (read-only)",
+        "tags": [
+          "Admin Uploads"
+        ]
+      }
+    },
     "/api/v1/auctions": {
       "get": {
         "operationId": "AuctionsController_list",
@@ -2398,9 +2669,13 @@
             "name": "sort",
             "required": false,
             "in": "query",
+            "description": "Default endingSoon: live (ending soonest), then upcoming, finished last. endsAt/startsAt/currentPrice are legacy.",
             "schema": {
               "type": "string",
               "enum": [
+                "endingSoon",
+                "newest",
+                "priceLow",
                 "endsAt",
                 "startsAt",
                 "currentPrice"
@@ -2689,9 +2964,20 @@
             "name": "status",
             "required": false,
             "in": "query",
-            "description": "Filter by auction status enum, e.g. PENDING_APPROVAL, LIVE",
+            "description": "Filter by auction status, e.g. PENDING_APPROVAL, LIVE",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PENDING_APPROVAL",
+                "REJECTED",
+                "SCHEDULED",
+                "LIVE",
+                "ENDED",
+                "SOLD",
+                "UNSOLD",
+                "CANCELLED"
+              ]
             }
           },
           {
@@ -2745,9 +3031,20 @@
             "name": "status",
             "required": false,
             "in": "query",
-            "description": "Filter by auction status enum, e.g. PENDING_APPROVAL, LIVE",
+            "description": "Filter by auction status, e.g. PENDING_APPROVAL, LIVE",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "PENDING_APPROVAL",
+                "REJECTED",
+                "SCHEDULED",
+                "LIVE",
+                "ENDED",
+                "SOLD",
+                "UNSOLD",
+                "CANCELLED"
+              ]
             }
           },
           {
@@ -3088,6 +3385,430 @@
         ]
       }
     },
+    "/api/v1/payments/methods": {
+      "get": {
+        "operationId": "PaymentsController_methods",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Which payment methods the apps may offer (electronic payment on/off, test or live)",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/payments/swiftpay": {
+      "post": {
+        "description": "The amount is the order total, priced on the server in IQD. One open checkout per order: calling again returns the same page while it is valid. Opening or returning from the page does not mark the order paid; only SwiftPayIQ's signed webhook does.",
+        "operationId": "PaymentsController_startCheckout",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Buyer: open (or reopen) the SwiftPayIQ payment page for an order",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/orders/{id}/payments": {
+      "get": {
+        "operationId": "PaymentsController_orderPayments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Payments of an order (buyer, seller or admin): poll this after the payment page",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/me/payments": {
+      "get": {
+        "operationId": "PaymentsController_myPayments",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Buyer: payment history, newest first",
+        "tags": [
+          "Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/provider": {
+      "get": {
+        "operationId": "AdminPaymentsController_provider",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "SwiftPayIQ configuration status (never the keys themselves)",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments": {
+      "get": {
+        "operationId": "AdminPaymentsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PAID",
+                "FAILED",
+                "PARTIALLY_REFUNDED",
+                "REFUNDED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "method",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CASH_ON_DELIVERY",
+                "SWIFTPAY"
+              ]
+            }
+          },
+          {
+            "name": "review",
+            "required": false,
+            "in": "query",
+            "description": "open = only payments waiting for an admin",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "any"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Order number, buyer phone, payment id or SwiftPayIQ id",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Payments log with filters, open reviews and SwiftPayIQ totals",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/{id}": {
+      "get": {
+        "operationId": "AdminPaymentsController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One payment with its provider events and seller payable",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/{id}/reconcile": {
+      "post": {
+        "operationId": "AdminPaymentsController_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Re-read this payment from SwiftPayIQ now (recovers a lost webhook)",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/payments/{id}/review/resolve": {
+      "post": {
+        "operationId": "AdminPaymentsController_resolve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolvePaymentReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close a payment's review with a note (e.g. after refunding it in SwiftPayIQ)",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/seller-payables": {
+      "get": {
+        "operationId": "AdminPaymentsController_payables",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACCRUED",
+                "ON_HOLD",
+                "REVERSED",
+                "SETTLED"
+              ]
+            }
+          },
+          {
+            "name": "sellerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "What Mazad owes sellers for electronic payments (accounting only)",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
+    "/api/v1/admin/seller-payables/{id}/settle": {
+      "post": {
+        "operationId": "AdminPaymentsController_settle",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordSettlementDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a transfer to the seller made outside Mazad (Mazad never transfers money itself)",
+        "tags": [
+          "Admin Payments"
+        ]
+      }
+    },
     "/api/v1/auctions/{id}/buy-now": {
       "post": {
         "operationId": "BiddingController_buyNow",
@@ -3111,6 +3832,34 @@
         ],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Bidding"
+        ]
+      }
+    },
+    "/api/v1/auctions/{id}/me": {
+      "get": {
+        "operationId": "BiddingController_myStanding",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -3201,7 +3950,6 @@
               "enum": [
                 "WINNING",
                 "OUTBID",
-                "AWAITING_CONFIRMATION",
                 "WON",
                 "LOST"
               ]
@@ -3270,63 +4018,7 @@
             "bearer": []
           }
         ],
-        "tags": [
-          "Wins"
-        ]
-      }
-    },
-    "/api/v1/wins/confirm": {
-      "post": {
-        "operationId": "WinsController_confirm",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfirmWinsDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "Wins"
-        ]
-      }
-    },
-    "/api/v1/wins/{id}/decline": {
-      "post": {
-        "operationId": "WinsController_decline",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": ""
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
+        "summary": "My wins, each with the order it became",
         "tags": [
           "Wins"
         ]
@@ -3346,6 +4038,43 @@
             "bearer": []
           }
         ],
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
+    "/api/v1/me/sales/summary": {
+      "get": {
+        "operationId": "OrdersController_salesSummary",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": false,
+            "in": "query",
+            "description": "Count one of my stores; omit for all stores",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SalesSummaryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Count my sales by status (all stores by default)",
         "tags": [
           "Orders"
         ]
@@ -3498,6 +4227,45 @@
         ]
       }
     },
+    "/api/v1/orders/{id}/delivery-refused": {
+      "post": {
+        "operationId": "OrdersController_deliveryRefused",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The buyer refused the delivery (seller): cancels the order, a violation for the buyer",
+        "tags": [
+          "Orders"
+        ]
+      }
+    },
     "/api/v1/admin/orders": {
       "get": {
         "description": "Filter by status/seller/customer/store/date range. Search by order number, names, phone, or product. Omit status for all orders.",
@@ -3579,9 +4347,20 @@
               "type": "string",
               "enum": [
                 "createdAt",
+                "updatedAt",
                 "total",
                 "orderNumber"
               ]
+            }
+          },
+          {
+            "name": "stuckHours",
+            "required": false,
+            "in": "query",
+            "description": "Only open orders (not delivered/cancelled) with no change for this many hours, oldest first",
+            "schema": {
+              "example": 48,
+              "type": "number"
             }
           },
           {
@@ -3712,9 +4491,20 @@
               "type": "string",
               "enum": [
                 "createdAt",
+                "updatedAt",
                 "total",
                 "orderNumber"
               ]
+            }
+          },
+          {
+            "name": "stuckHours",
+            "required": false,
+            "in": "query",
+            "description": "Only open orders (not delivered/cancelled) with no change for this many hours, oldest first",
+            "schema": {
+              "example": 48,
+              "type": "number"
             }
           },
           {
@@ -3834,6 +4624,44 @@
     "/api/v1/admin/orders/{id}/cancel": {
       "post": {
         "operationId": "AdminOrdersController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelOrderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Admin Orders"
+        ]
+      }
+    },
+    "/api/v1/admin/orders/{id}/delivery-refused": {
+      "post": {
+        "operationId": "AdminOrdersController_deliveryRefused",
         "parameters": [
           {
             "name": "id",
@@ -4474,6 +5302,7 @@
     },
     "/api/v1/order-items/{id}/review": {
       "post": {
+        "description": "Notifies the seller (REVIEW_RECEIVED).",
         "operationId": "ReviewsController_create",
         "parameters": [
           {
@@ -4497,7 +5326,20 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "REVIEW_TAGS_MISMATCH: tags outside the rating's band"
+          },
+          "409": {
+            "description": "REVIEW_FORBIDDEN | ORDER_NOT_DELIVERED | REVIEW_ALREADY_EXISTS | REVIEW_WINDOW_CLOSED"
           }
         },
         "security": [
@@ -4505,6 +5347,184 @@
             "bearer": []
           }
         ],
+        "summary": "Rate a delivered order item (the buyer, once, within 14 days of delivery)",
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/{id}": {
+      "patch": {
+        "operationId": "ReviewsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "REVIEW_TAGS_MISMATCH | NOTHING_TO_UPDATE"
+          },
+          "403": {
+            "description": "REVIEW_FORBIDDEN: not the author"
+          },
+          "404": {
+            "description": "REVIEW_NOT_FOUND"
+          },
+          "409": {
+            "description": "REVIEW_WINDOW_CLOSED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit my rating (author only, until 14 days after delivery)",
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/reviews/{id}/reply": {
+      "post": {
+        "description": "Notifies the buyer (REVIEW_REPLIED).",
+        "operationId": "ReviewsController_reply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyToReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReplyResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "REVIEW_REPLY_FORBIDDEN: not the store's seller"
+          },
+          "404": {
+            "description": "REVIEW_NOT_FOUND"
+          },
+          "409": {
+            "description": "REVIEW_ALREADY_REPLIED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reply to a rating of my store (the store's seller, once, public)",
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/api/v1/stores/{id}/reviews": {
+      "get": {
+        "operationId": "ReviewsController_byStore",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "`nextCursor` from the previous page; omit for the first page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "en or ar (default ar)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoreReviewsResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "STORE_NOT_FOUND (missing, deleted, suspended, or seller banned)"
+          }
+        },
+        "summary": "A store's ratings: summary and reviews, newest first (cursor pages)",
         "tags": [
           "Reviews"
         ]
@@ -4585,6 +5605,250 @@
         },
         "tags": [
           "Reviews"
+        ]
+      }
+    },
+    "/api/v1/support/reports": {
+      "post": {
+        "description": "Rate limited: 5 a minute and 10 a day per account (429 SUPPORT_REPORT_LIMIT).",
+        "operationId": "SupportController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSupportReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupportReportCreatedDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ORDER_NOT_FOUND: orderId is not one of my orders"
+          },
+          "429": {
+            "description": "SUPPORT_REPORT_LIMIT or the per-minute limit"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a report or suggestion (signed in; one-way, with a reference)",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/v1/me/support/reports": {
+      "get": {
+        "operationId": "SupportController_listMine",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "`nextCursor` from the previous page; omit for the first page",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MySupportReportsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My reports and their status, newest first (cursor pages)",
+        "tags": [
+          "Support"
+        ]
+      }
+    },
+    "/api/v1/admin/support/reports": {
+      "get": {
+        "operationId": "AdminSupportController_list",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by status; omit for all",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "RECEIVED",
+                "IN_REVIEW",
+                "RESOLVED"
+              ]
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportReportsListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List support reports (filter by status)",
+        "tags": [
+          "Admin Support"
+        ]
+      }
+    },
+    "/api/v1/admin/support/reports/{id}": {
+      "get": {
+        "operationId": "AdminSupportController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportReportDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SUPPORT_REPORT_NOT_FOUND"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One support report",
+        "tags": [
+          "Admin Support"
+        ]
+      }
+    },
+    "/api/v1/admin/support/reports/{id}/status": {
+      "post": {
+        "description": "RECEIVED → IN_REVIEW → RESOLVED, or RECEIVED → RESOLVED. RESOLVED is final.",
+        "operationId": "AdminSupportController_setStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSupportReportStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSupportReportDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SUPPORT_REPORT_NOT_FOUND"
+          },
+          "409": {
+            "description": "INVALID_SUPPORT_REPORT_TRANSITION | SUPPORT_REPORT_CHANGED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Move a report to IN_REVIEW or RESOLVED (audited; resolving notifies the reporter)",
+        "tags": [
+          "Admin Support"
         ]
       }
     },
@@ -5671,10 +6935,30 @@
           "Admin Commission"
         ]
       }
+    },
+    "/api/v1/admin/ops/status": {
+      "get": {
+        "operationId": "AdminOpsController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Operational snapshot: queue backlogs, stuck auctions/payments/orders (read-only; docs/OBSERVABILITY.md)",
+        "tags": [
+          "Admin Ops"
+        ]
+      }
     }
   },
   "info": {
-    "title": "Mazad API",
+    "title": "Bidoom API",
     "description": "All endpoints",
     "version": "1.0",
     "contact": {}
@@ -5833,7 +7117,8 @@
         "properties": {
           "phone": {
             "type": "string",
-            "example": "+9647701234567"
+            "example": "07701234567",
+            "description": "Any common spelling (07…, 7…, +964…, 00964…, Arabic digits, spaces): the API normalizes it."
           },
           "purpose": {
             "type": "string",
@@ -6025,6 +7310,36 @@
           "message"
         ]
       },
+      "AdminAuthSessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "Access JWT (typ=access); send as Authorization: Bearer"
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque refresh token; single use, rotated on every refresh"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          },
+          "mfaEnrollmentRequired": {
+            "type": "boolean",
+            "description": "true: admin 2FA is required (ADMIN_MFA_REQUIRED) and this admin has none. The session only reaches GET /admin/auth/mfa, POST /admin/auth/mfa/setup, POST /admin/auth/mfa/enable, GET /me and logout; every other route answers 403 ADMIN_MFA_ENROLLMENT_REQUIRED until 2FA is enabled. Always false after the 2FA step."
+          }
+        },
+        "required": [
+          "accessToken",
+          "refreshToken",
+          "sessionId",
+          "user",
+          "mfaEnrollmentRequired"
+        ]
+      },
       "AdminMfaChallengeResponseDto": {
         "type": "object",
         "properties": {
@@ -6092,11 +7407,16 @@
           },
           "recoveryCodesRemaining": {
             "type": "number"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Server policy (ADMIN_MFA_REQUIRED). required && !enabled: this session is limited to enrollment"
           }
         },
         "required": [
           "enabled",
-          "recoveryCodesRemaining"
+          "recoveryCodesRemaining",
+          "required"
         ]
       },
       "AdminMfaSetupResponseDto": {
@@ -6255,10 +7575,14 @@
             "type": "string"
           },
           "lat": {
-            "type": "number"
+            "type": "object",
+            "nullable": true,
+            "description": "Delivery pin latitude (WGS84). Send together with lng; null on update clears the pin."
           },
           "lng": {
-            "type": "number"
+            "type": "object",
+            "nullable": true,
+            "description": "Delivery pin longitude (WGS84), with lat."
           },
           "isDefault": {
             "type": "boolean"
@@ -6291,10 +7615,14 @@
             "type": "string"
           },
           "lat": {
-            "type": "number"
+            "type": "object",
+            "nullable": true,
+            "description": "Delivery pin latitude (WGS84). Send together with lng; null on update clears the pin."
           },
           "lng": {
-            "type": "number"
+            "type": "object",
+            "nullable": true,
+            "description": "Delivery pin longitude (WGS84), with lat."
           },
           "isDefault": {
             "type": "boolean"
@@ -6314,7 +7642,8 @@
           },
           "password": {
             "type": "string",
-            "example": "SecurePass123!"
+            "example": "Secure-Pass-2026!",
+            "minLength": 12
           },
           "fullName": {
             "type": "string",
@@ -6334,6 +7663,23 @@
           "password",
           "fullName"
         ]
+      },
+      "AdminUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "locale": {
+            "type": "string",
+            "enum": [
+              "ar",
+              "en"
+            ]
+          }
+        }
       },
       "BanUserDto": {
         "type": "object",
@@ -6488,8 +7834,269 @@
           },
           "deliveryFee": {
             "type": "number"
+          },
+          "coverKey": {
+            "type": "string",
+            "nullable": true,
+            "example": "images/2f1c…/full.webp",
+            "description": "Cover photo: a key from POST /uploads that this seller uploaded (403 IMAGE_NOT_OWNED / 400 IMAGE_NOT_FOUND otherwise). null removes the cover; omit to keep it."
           }
         }
+      },
+      "StoreRatingDto": {
+        "type": "object",
+        "properties": {
+          "avg": {
+            "type": "number",
+            "nullable": true,
+            "description": "One decimal; null until the store has a rating"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "avg",
+          "count"
+        ]
+      },
+      "PublicStoreCardDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "nameAr or nameEn, by Accept-Language (default ar)"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "coverUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "The seller's verified mark"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/StoreRatingDto"
+          },
+          "followers": {
+            "type": "number",
+            "description": "The seller's followers (follows are per seller)"
+          },
+          "liveCount": {
+            "type": "number",
+            "description": "Live, publicly listed auctions"
+          },
+          "soldCount": {
+            "type": "number",
+            "description": "Delivered order items"
+          },
+          "deliveryFee": {
+            "type": "string",
+            "example": "5000",
+            "description": "IQD, as a decimal string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "nameEn",
+          "nameAr",
+          "city",
+          "coverUrl",
+          "isVerified",
+          "rating",
+          "followers",
+          "liveCount",
+          "soldCount",
+          "deliveryFee"
+        ]
+      },
+      "PublicStoresListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicStoreCardDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pass as `cursor` for the next page; null on the last page"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "PublicStoreSellerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "isVerified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "isVerified"
+        ]
+      },
+      "SellerRatingDto": {
+        "type": "object",
+        "properties": {
+          "average": {
+            "type": "number",
+            "nullable": true
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "average",
+          "count"
+        ]
+      },
+      "PublicStorePageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "nameAr or nameEn, by Accept-Language (default ar)"
+          },
+          "nameEn": {
+            "type": "string"
+          },
+          "nameAr": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "coverUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "isVerified": {
+            "type": "boolean",
+            "description": "The seller's verified mark"
+          },
+          "rating": {
+            "$ref": "#/components/schemas/StoreRatingDto"
+          },
+          "followers": {
+            "type": "number",
+            "description": "The seller's followers (follows are per seller)"
+          },
+          "liveCount": {
+            "type": "number",
+            "description": "Live, publicly listed auctions"
+          },
+          "soldCount": {
+            "type": "number",
+            "description": "Delivered order items"
+          },
+          "deliveryFee": {
+            "type": "string",
+            "example": "5000",
+            "description": "IQD, as a decimal string"
+          },
+          "area": {
+            "type": "string",
+            "nullable": true,
+            "description": "Always null (deprecated; kept for app builds that require the key)"
+          },
+          "street": {
+            "type": "string",
+            "nullable": true,
+            "description": "Always null (deprecated)"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true,
+            "description": "Always null (deprecated)"
+          },
+          "contactPhone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Always null (deprecated)"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/PublicStoreSellerDto"
+          },
+          "sellerRating": {
+            "description": "The seller's rating over all their stores (legacy)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SellerRatingDto"
+              }
+            ]
+          },
+          "auctions": {
+            "description": "Always empty: listings come from GET /auctions?storeId=",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "nameEn",
+          "nameAr",
+          "city",
+          "coverUrl",
+          "isVerified",
+          "rating",
+          "followers",
+          "liveCount",
+          "soldCount",
+          "deliveryFee",
+          "area",
+          "street",
+          "details",
+          "contactPhone",
+          "seller",
+          "sellerRating",
+          "auctions"
+        ]
+      },
+      "SuspendStoreDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Counterfeit listings"
+          }
+        },
+        "required": [
+          "reason"
+        ]
       },
       "CreateProductDto": {
         "type": "object",
@@ -6641,6 +8248,123 @@
           "reason"
         ]
       },
+      "UploadCleanupReportDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "dry-run",
+              "delete"
+            ]
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationMs": {
+            "type": "number"
+          },
+          "retentionHours": {
+            "type": "number"
+          },
+          "scanned": {
+            "type": "number",
+            "description": "Upload rows past retention plus untracked image directories examined"
+          },
+          "candidates": {
+            "type": "number",
+            "description": "Unreferenced and past retention (deleted, or would be in dry-run)"
+          },
+          "deleted": {
+            "type": "number"
+          },
+          "skippedReferenced": {
+            "type": "number",
+            "description": "Kept because something references them (or attached during the run)"
+          },
+          "skippedRecent": {
+            "type": "number",
+            "description": "Untracked directories younger than the retention"
+          },
+          "bytes": {
+            "type": "number",
+            "description": "Bytes freed (delete) or that would be freed (dry-run)"
+          },
+          "errors": {
+            "type": "number"
+          },
+          "sampleKeys": {
+            "description": "Up to 20 candidate keys",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "The run stopped at the per-run candidate cap"
+          }
+        },
+        "required": [
+          "mode",
+          "startedAt",
+          "finishedAt",
+          "durationMs",
+          "retentionHours",
+          "scanned",
+          "candidates",
+          "deleted",
+          "skippedReferenced",
+          "skippedRecent",
+          "bytes",
+          "errors",
+          "sampleKeys",
+          "truncated"
+        ]
+      },
+      "UploadCleanupLastRunDto": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "enum": [
+              "off",
+              "dry-run",
+              "delete"
+            ],
+            "description": "UPLOAD_CLEANUP_MODE"
+          },
+          "retentionHours": {
+            "type": "number",
+            "description": "UPLOAD_ORPHAN_RETENTION_HOURS"
+          },
+          "intervalMinutes": {
+            "type": "number",
+            "description": "UPLOAD_CLEANUP_INTERVAL_MINUTES"
+          },
+          "lastRun": {
+            "nullable": true,
+            "description": "Null until a run has finished",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UploadCleanupReportDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode",
+          "retentionHours",
+          "intervalMinutes",
+          "lastRun"
+        ]
+      },
       "CreateAuctionDto": {
         "type": "object",
         "properties": {
@@ -6655,8 +8379,8 @@
           },
           "minIncrement": {
             "type": "number",
-            "example": 10,
-            "description": "Minimum raise per bid"
+            "example": 5000,
+            "description": "The bid step: the least each bid must add, in whole dinars, from 250 IQD up to the opening price. Omitted: the suggested step for the opening price (1,000 under 100k, 5,000 under 1M, 25,000 under 10M, else 100,000)."
           },
           "startsAt": {
             "type": "string",
@@ -6674,18 +8398,21 @@
           "antiSnipingMinutes": {
             "type": "number",
             "example": 5,
-            "description": "Extend auction when bid placed near end (minutes)"
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Anti-sniping: a bid in the last N minutes extends the auction by N minutes (1-10; default 5)."
           },
           "maxExtensions": {
             "type": "number",
             "example": 10,
-            "description": "Max anti-sniping extensions"
+            "minimum": 1,
+            "maximum": 20,
+            "description": "How many times the auction may be extended (1-20; default 10)."
           }
         },
         "required": [
           "productId",
           "startingPrice",
-          "minIncrement",
           "startsAt",
           "endsAt"
         ]
@@ -6699,7 +8426,8 @@
           },
           "minIncrement": {
             "type": "number",
-            "example": 10
+            "example": 5000,
+            "description": "The bid step: the least each bid must add, in whole dinars, from 250 IQD up to the opening price. Omitted: the suggested step for the opening price (1,000 under 100k, 5,000 under 1M, 25,000 under 10M, else 100,000)."
           },
           "startsAt": {
             "type": "string",
@@ -6712,6 +8440,20 @@
           "buyNowPrice": {
             "type": "number",
             "example": 1000
+          },
+          "antiSnipingMinutes": {
+            "type": "number",
+            "example": 5,
+            "minimum": 1,
+            "maximum": 10,
+            "description": "Anti-sniping: a bid in the last N minutes extends the auction by N minutes (1-10; default 5)."
+          },
+          "maxExtensions": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 20,
+            "description": "How many times the auction may be extended (1-20; default 10)."
           }
         }
       },
@@ -6781,6 +8523,34 @@
           }
         }
       },
+      "ResolvePaymentReviewDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string",
+            "example": "Refunded in SwiftPayIQ on 2026-10-10 (ref RF-123)"
+          }
+        },
+        "required": [
+          "note"
+        ]
+      },
+      "RecordSettlementDto": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "Reference of the transfer made outside Mazad",
+            "example": "Bank transfer 7781"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reference"
+        ]
+      },
       "PlaceBidDto": {
         "type": "object",
         "properties": {}
@@ -6789,9 +8559,59 @@
         "type": "object",
         "properties": {}
       },
-      "ConfirmWinsDto": {
+      "SalesSummaryByStatusDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "CREATED": {
+            "type": "number",
+            "example": 2
+          },
+          "CONFIRMED": {
+            "type": "number",
+            "example": 1
+          },
+          "OUT_FOR_DELIVERY": {
+            "type": "number",
+            "example": 0
+          },
+          "DELIVERED": {
+            "type": "number",
+            "example": 14
+          },
+          "CANCELLED": {
+            "type": "number",
+            "example": 3
+          }
+        },
+        "required": [
+          "CREATED",
+          "CONFIRMED",
+          "OUT_FOR_DELIVERY",
+          "DELIVERED",
+          "CANCELLED"
+        ]
+      },
+      "SalesSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "open": {
+            "type": "number",
+            "example": 3,
+            "description": "Orders still to handle: CREATED + CONFIRMED + OUT_FOR_DELIVERY"
+          },
+          "byStatus": {
+            "description": "Every order status, 0 when there are none",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SalesSummaryByStatusDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "open",
+          "byStatus"
+        ]
       },
       "UpdateOrderStatusDto": {
         "type": "object",
@@ -6807,6 +8627,11 @@
             ],
             "example": "CONFIRMED",
             "description": "Next status. Seller flow: CREATED → CONFIRMED → OUT_FOR_DELIVERY → DELIVERED"
+          },
+          "cashReceived": {
+            "type": "number",
+            "example": 910000,
+            "description": "DELIVERED of an unpaid cash-on-delivery order: the cash the seller confirms receiving, in IQD. Must equal the order total; required so one accidental tap can't record cash as collected."
           }
         },
         "required": [
@@ -6820,10 +8645,7 @@
             "type": "string",
             "example": "Customer requested cancellation"
           }
-        },
-        "required": [
-          "reason"
-        ]
+        }
       },
       "OpenReturnDto": {
         "type": "object",
@@ -6835,7 +8657,758 @@
       },
       "CreateReviewDto": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "tags": {
+            "type": "array",
+            "maxItems": 3,
+            "description": "At most 3, no duplicates. Praise tags (AS_DESCRIBED, FAST_DELIVERY, GOOD_PACKAGING, FRIENDLY_SELLER, GOOD_VALUE) go with 4-5 stars; problem tags (NOT_AS_DESCRIBED, LATE_DELIVERY, POOR_PACKAGING, UNRESPONSIVE_SELLER, DAMAGED) with 1-3 stars, else 400 REVIEW_TAGS_MISMATCH.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "AS_DESCRIBED",
+                "FAST_DELIVERY",
+                "GOOD_PACKAGING",
+                "FRIENDLY_SELLER",
+                "GOOD_VALUE",
+                "NOT_AS_DESCRIBED",
+                "LATE_DELIVERY",
+                "POOR_PACKAGING",
+                "UNRESPONSIVE_SELLER",
+                "DAMAGED"
+              ]
+            }
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "rating"
+        ]
+      },
+      "ReviewReplyDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "text",
+          "createdAt"
+        ]
+      },
+      "ReviewCustomerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Ahmed K."
+          }
+        },
+        "required": [
+          "id",
+          "fullName"
+        ]
+      },
+      "ReviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderItemId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "sellerId": {
+            "type": "string"
+          },
+          "storeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "AS_DESCRIBED",
+                "FAST_DELIVERY",
+                "GOOD_PACKAGING",
+                "FRIENDLY_SELLER",
+                "GOOD_VALUE",
+                "NOT_AS_DESCRIBED",
+                "LATE_DELIVERY",
+                "POOR_PACKAGING",
+                "UNRESPONSIVE_SELLER",
+                "DAMAGED"
+              ]
+            }
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "editableUntil": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Rating and editing close then (14 days after delivery)"
+          },
+          "reply": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReplyDto"
+              }
+            ]
+          },
+          "customer": {
+            "description": "Legacy shape: first name and last initial",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewCustomerDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "orderItemId",
+          "productId",
+          "sellerId",
+          "storeId",
+          "rating",
+          "tags",
+          "comment",
+          "createdAt",
+          "updatedAt",
+          "editableUntil",
+          "reply",
+          "customer"
+        ]
+      },
+      "UpdateReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "tags": {
+            "type": "array",
+            "nullable": true,
+            "maxItems": 3,
+            "description": "At most 3, no duplicates. Praise tags (AS_DESCRIBED, FAST_DELIVERY, GOOD_PACKAGING, FRIENDLY_SELLER, GOOD_VALUE) go with 4-5 stars; problem tags (NOT_AS_DESCRIBED, LATE_DELIVERY, POOR_PACKAGING, UNRESPONSIVE_SELLER, DAMAGED) with 1-3 stars, else 400 REVIEW_TAGS_MISMATCH. Checked against the rating after the edit: send the tags with a rating change.",
+            "items": {
+              "type": "string",
+              "enum": [
+                "AS_DESCRIBED",
+                "FAST_DELIVERY",
+                "GOOD_PACKAGING",
+                "FRIENDLY_SELLER",
+                "GOOD_VALUE",
+                "NOT_AS_DESCRIBED",
+                "LATE_DELIVERY",
+                "POOR_PACKAGING",
+                "UNRESPONSIVE_SELLER",
+                "DAMAGED"
+              ]
+            }
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 2000,
+            "nullable": true
+          }
+        }
+      },
+      "ReplyToReviewDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Public; one reply per review."
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "ReviewReplyResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reply": {
+            "$ref": "#/components/schemas/ReviewReplyDto"
+          }
+        },
+        "required": [
+          "id",
+          "reply"
+        ]
+      },
+      "ReviewTagCountDto": {
+        "type": "object",
+        "properties": {
+          "tag": {
+            "type": "string",
+            "enum": [
+              "AS_DESCRIBED",
+              "FAST_DELIVERY",
+              "GOOD_PACKAGING",
+              "FRIENDLY_SELLER",
+              "GOOD_VALUE",
+              "NOT_AS_DESCRIBED",
+              "LATE_DELIVERY",
+              "POOR_PACKAGING",
+              "UNRESPONSIVE_SELLER",
+              "DAMAGED"
+            ]
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "tag",
+          "count"
+        ]
+      },
+      "StoreReviewsSummaryDto": {
+        "type": "object",
+        "properties": {
+          "avg": {
+            "type": "number",
+            "nullable": true,
+            "description": "One decimal; null until the store has a rating"
+          },
+          "count": {
+            "type": "number"
+          },
+          "distribution": {
+            "description": "Counts of 1, 2, 3, 4 and 5 stars, in that order (5 numbers)",
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "topTags": {
+            "description": "Most-picked tags, most first (up to 5)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewTagCountDto"
+            }
+          }
+        },
+        "required": [
+          "avg",
+          "count",
+          "distribution",
+          "topTags"
+        ]
+      },
+      "StoreReviewItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "AS_DESCRIBED",
+                "FAST_DELIVERY",
+                "GOOD_PACKAGING",
+                "FRIENDLY_SELLER",
+                "GOOD_VALUE",
+                "NOT_AS_DESCRIBED",
+                "LATE_DELIVERY",
+                "POOR_PACKAGING",
+                "UNRESPONSIVE_SELLER",
+                "DAMAGED"
+              ]
+            }
+          },
+          "comment": {
+            "type": "string",
+            "nullable": true
+          },
+          "authorName": {
+            "type": "string",
+            "description": "The reviewer's full name (the rating sheet says it is published under it)"
+          },
+          "itemName": {
+            "type": "string",
+            "description": "What was bought, in the Accept-Language language (snapshot taken with the order)"
+          },
+          "itemNameEn": {
+            "type": "string",
+            "nullable": true
+          },
+          "itemNameAr": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last edit by the reviewer; equals createdAt when never edited"
+          },
+          "reply": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReplyDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rating",
+          "tags",
+          "comment",
+          "authorName",
+          "itemName",
+          "itemNameEn",
+          "itemNameAr",
+          "createdAt",
+          "updatedAt",
+          "reply"
+        ]
+      },
+      "StoreReviewsResponseDto": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/StoreReviewsSummaryDto"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StoreReviewItemDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Pass as `cursor` for the next page; null on the last page"
+          }
+        },
+        "required": [
+          "summary",
+          "items",
+          "nextCursor"
+        ]
+      },
+      "CreateSupportReportDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PROBLEM",
+              "SUGGESTION",
+              "OTHER"
+            ]
+          },
+          "orderId": {
+            "type": "string",
+            "description": "One of my orders (as buyer or seller) the report is about"
+          },
+          "message": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 2000,
+            "description": "Trimmed before the length check"
+          }
+        },
+        "required": [
+          "kind",
+          "message"
+        ]
+      },
+      "SupportReportCreatedDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string",
+            "example": "R-7KQ2M9"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "IN_REVIEW",
+              "RESOLVED"
+            ],
+            "example": "RECEIVED"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "status",
+          "createdAt"
+        ]
+      },
+      "MySupportReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string",
+            "example": "R-7KQ2M9"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PROBLEM",
+              "SUGGESTION",
+              "OTHER"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "IN_REVIEW",
+              "RESOLVED"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "What I wrote"
+          },
+          "orderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "orderNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "kind",
+          "status",
+          "message",
+          "orderId",
+          "orderNumber",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "MySupportReportsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MySupportReportDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "AdminSupportReportUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "phone"
+        ]
+      },
+      "AdminSupportReportOrderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "orderNumber": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "orderNumber",
+          "status"
+        ]
+      },
+      "AdminSupportReportHandlerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fullName"
+        ]
+      },
+      "AdminSupportReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "PROBLEM",
+              "SUGGESTION",
+              "OTHER"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RECEIVED",
+              "IN_REVIEW",
+              "RESOLVED"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "adminNote": {
+            "type": "string",
+            "nullable": true
+          },
+          "user": {
+            "$ref": "#/components/schemas/AdminSupportReportUserDto"
+          },
+          "order": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminSupportReportOrderDto"
+              }
+            ]
+          },
+          "handledBy": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminSupportReportHandlerDto"
+              }
+            ]
+          },
+          "resolvedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "reference",
+          "kind",
+          "status",
+          "message",
+          "adminNote",
+          "user",
+          "order",
+          "handledBy",
+          "resolvedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PaginationMetaDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "page",
+          "limit",
+          "total",
+          "totalPages"
+        ]
+      },
+      "AdminSupportReportCountsDto": {
+        "type": "object",
+        "properties": {
+          "RECEIVED": {
+            "type": "number"
+          },
+          "IN_REVIEW": {
+            "type": "number"
+          },
+          "RESOLVED": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "RECEIVED",
+          "IN_REVIEW",
+          "RESOLVED"
+        ]
+      },
+      "AdminSupportReportsListDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSupportReportDto"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PaginationMetaDto"
+          },
+          "counts": {
+            "description": "All reports by status (for the filter tabs)",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminSupportReportCountsDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "meta",
+          "counts"
+        ]
+      },
+      "UpdateSupportReportStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "IN_REVIEW",
+              "RESOLVED"
+            ],
+            "description": "RECEIVED → IN_REVIEW → RESOLVED (or RECEIVED → RESOLVED)"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "Internal note (admins only; audited)"
+          }
+        },
+        "required": [
+          "status"
+        ]
       },
       "ProductAiVisionCapabilitiesDto": {
         "type": "object",

@@ -88,6 +88,14 @@ export const authUserSchema = z.object({
   locale: z.string().nullish(),
 });
 
+// GET /me adds what the session user (AuthUserDto) doesn't carry: refused deliveries so far, the
+// limit, and whether bidding is paused at it (optional: older API builds).
+export const meSchema = authUserSchema.extend({
+  violations: z.number().optional(),
+  violationLimit: z.number().optional(),
+  biddingPaused: z.boolean().optional(),
+});
+
 export const authTokensSchema = z.object({
   accessToken: z.string(),
   refreshToken: z.string(),

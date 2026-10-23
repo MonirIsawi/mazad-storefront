@@ -13,6 +13,7 @@ const LOOK: Record<ShownState['kind'], { tone: StateTone; icon: IconName; isFill
   soldToOther: { tone: 'info', icon: 'gavel' },
   ended: { tone: 'info', icon: 'clock' },
   notStarted: { tone: 'info', icon: 'calendar' },
+  paused: { tone: 'bad', icon: 'warning' },
   autoBid: { tone: 'ok', icon: 'lightning', isFilled: true },
   leading: { tone: 'ok', icon: 'crown', isFilled: true },
   outbid: { tone: 'bad', icon: 'warning' },
@@ -38,7 +39,7 @@ export function StandingBanner({
   return (
     <div data-testid="auction-user-state" data-state={state.kind}>
       <StateBanner
-        role={state.kind === 'outbid' ? 'alert' : 'status'}
+        role={state.kind === 'outbid' || state.kind === 'paused' ? 'alert' : 'status'}
         tone={look.tone}
         icon={look.icon}
         isIconFilled={look.isFilled}

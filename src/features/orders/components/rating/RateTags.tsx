@@ -37,12 +37,12 @@ export function RateTags({
               aria-disabled
               className="inline-flex h-9 items-center rounded-full border border-border px-3.5 text-[13.5px] text-muted-foreground opacity-60"
             >
-              {t(`rating.tags.${tag}`)}
+              {t(`common:reviewTags.${tag}`)}
             </span>
           ) : (
             <Chip key={tag} isActive={isOn} onClick={() => toggle(tag)}>
               {isOn ? <Icon name="check" size={15} /> : null}
-              {t(`rating.tags.${tag}`)}
+              {t(`common:reviewTags.${tag}`)}
             </Chip>
           );
         })}

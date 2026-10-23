@@ -9,24 +9,30 @@ export interface ErrorStateProps {
   onRetry?: () => void;
 }
 
-/** ErrorState — EmptyState's shape with a destructive glyph and a retry. */
+/** A failed load inside a page (design error, smaller): the orb, what happened, and a retry. */
 export function ErrorState({ title, message, onRetry }: ErrorStateProps) {
   const { t } = useTranslation('common');
 
   return (
     <div
       role="alert"
-      className="flex flex-col items-center justify-center gap-2.5 px-8 py-12 text-center"
+      className="flex flex-col items-center justify-center gap-3 px-7 py-12 text-center"
     >
-      <span className="mb-1 inline-flex size-16 items-center justify-center rounded-xl bg-destructive/12">
-        <Icon name="x" size={28} className="text-destructive" />
+      <span
+        aria-hidden
+        className="grid size-20 place-items-center rounded-full border border-border-strong bg-surface bg-[radial-gradient(circle_at_50%_35%,var(--color-gold-soft),transparent_70%)] text-gold light:text-gold-lo"
+      >
+        <Icon name="warning" size={32} />
       </span>
-      <p className="text-title-3 font-bold text-foreground">{title ?? t('state.error')}</p>
-      <p className="max-w-70 text-subhead text-muted-foreground">
+      <p className="font-display text-[22px] leading-[1.3] text-foreground">
+        {title ?? t('state.error')}
+      </p>
+      <p className="max-w-[34ch] text-[15px] leading-[1.7] text-foreground-soft">
         {message ?? t('state.errorDetail')}
       </p>
       {onRetry ? (
-        <Button variant="tinted" onClick={onRetry} className="mt-2">
+        <Button onClick={onRetry} className="mt-1">
+          <Icon name="arrows-clockwise" size={20} />
           {t('state.retry')}
         </Button>
       ) : null}

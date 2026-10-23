@@ -29,7 +29,9 @@ export function BidHistoryPage({ id }: { id: string }) {
   }
 
   const data = auction.data;
-  const bidders = data.bidderCount ?? new Set(bids.data.map((bid) => bid.bidder.maskedName)).size;
+  const bidders =
+    data.bidderCount ??
+    new Set(bids.data.map((bid) => bid.bidder.fullName ?? bid.bidder.maskedName)).size;
   const stats = [
     { key: 'bids', value: data.bidCount, label: t('history.statBids', { count: data.bidCount }) },
     { key: 'bidders', value: bidders, label: t('history.statBidders', { count: bidders }) },

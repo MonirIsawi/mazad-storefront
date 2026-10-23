@@ -12,7 +12,7 @@ export interface ExtensionRule {
 export interface AuctionSummaryCardProps {
   opening: string | null;
   step: string | null;
-  /** From the auction's payload; null for a new auction (the platform sets it at creation). */
+  /** The seller's extension as typed; null while either number is missing. */
   rule: ExtensionRule | null;
   duration: string | null;
   isBusy: boolean;
@@ -24,8 +24,8 @@ export interface AuctionSummaryCardProps {
 }
 
 /**
- * The listing at a glance beside the form (design `create-auction` summary): opening, the step
- * and extension Bidoom applies, the duration, then Publish. Sticky on desktop.
+ * The listing at a glance beside the form (design `create-auction` summary): opening, the seller's
+ * step and extension, the duration, then Publish. Sticky on desktop.
  */
 export function AuctionSummaryCard({
   opening,
@@ -60,7 +60,7 @@ export function AuctionSummaryCard({
             {
               key: 'extension',
               label: t('summary.extension'),
-              value: rule ? t('summary.extensionValue', { ...rule }) : t('summary.byBidoom'),
+              value: rule ? t('summary.extensionValue', { ...rule }) : dash,
             },
             { key: 'duration', label: t('summary.duration'), value: duration ?? dash },
           ]}

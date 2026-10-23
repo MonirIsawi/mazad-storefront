@@ -273,18 +273,6 @@
     "posted": "Your rating is live.",
     "updated": "Your rating was updated.",
     "starsRequired": "Choose the stars first.",
-    "tags": {
-      "AS_DESCRIBED": "As described",
-      "FAST_DELIVERY": "Fast delivery",
-      "GOOD_PACKAGING": "Well packed",
-      "FRIENDLY_SELLER": "Friendly seller",
-      "GOOD_VALUE": "Good value",
-      "NOT_AS_DESCRIBED": "Not as described",
-      "LATE_DELIVERY": "Late delivery",
-      "POOR_PACKAGING": "Poor packaging",
-      "UNRESPONSIVE_SELLER": "Hard to reach",
-      "DAMAGED": "Arrived damaged"
-    },
     "errors": {
       "REVIEW_ALREADY_EXISTS": "You already rated this item.",
       "REVIEW_WINDOW_CLOSED": "Rating this order has closed.",

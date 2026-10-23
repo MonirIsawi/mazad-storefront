@@ -59,12 +59,12 @@
     "empty": "Nothing here yet."
   },
   "notFound": {
-    "title": "Page not found",
-    "message": "This page doesn't exist or was moved. Head home or browse the auctions."
+    "title": "This page doesn’t exist",
+    "message": "The auction may have ended and been removed, or the link is incomplete."
   },
   "errorPage": {
-    "title": "Something went wrong",
-    "message": "This page couldn't be shown. Try again, or head home or to the auctions."
+    "title": "This page didn’t load",
+    "message": "Your bids are safe. Check your connection and try again."
   },
   "recovery": {
     "home": "Home",
@@ -141,5 +141,17 @@
   },
   "slide": {
     "hint": "Drag the handle all the way to confirm, or press to open a confirmation."
+  },
+  "reviewTags": {
+    "AS_DESCRIBED": "As described",
+    "FAST_DELIVERY": "Fast delivery",
+    "GOOD_PACKAGING": "Well packed",
+    "FRIENDLY_SELLER": "Easy to reach",
+    "GOOD_VALUE": "Good value",
+    "NOT_AS_DESCRIBED": "Not as described",
+    "LATE_DELIVERY": "Late delivery",
+    "POOR_PACKAGING": "Poor packaging",
+    "UNRESPONSIVE_SELLER": "Hard to reach",
+    "DAMAGED": "Arrived damaged"
   }
 }

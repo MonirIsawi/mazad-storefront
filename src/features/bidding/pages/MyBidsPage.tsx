@@ -13,12 +13,12 @@ import { MyBidRow } from '../components/MyBidRow';
 import type { BidStanding, MyBidItem } from '../types/bidding.types';
 
 // The three segments a buyer thinks in: what I'm still in, what I won, what's over. The API's
-// five standings (all shown as chips on the rows) collapse onto them.
+// four standings (all shown as chips on the rows) collapse onto them.
 type BidSegment = 'active' | 'won' | 'ended';
 
 const SEGMENT_STANDINGS: Record<BidSegment, BidStanding[]> = {
   active: ['WINNING', 'OUTBID'],
-  won: ['AWAITING_CONFIRMATION', 'WON'],
+  won: ['WON'],
   ended: ['LOST'],
 };
 

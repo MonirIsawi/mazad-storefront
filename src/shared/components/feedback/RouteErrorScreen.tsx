@@ -1,27 +1,37 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@shared/components/ui';
+import { Button, Icon } from '@shared/components/ui';
+import { EmptyState } from './EmptyState';
 import { RecoveryLinks } from './NotFoundScreen';
 
 /**
- * A page that failed to render (the route's error boundary): say so plainly, offer to try again,
- * or go home or to the auctions. Never the error's own text, which may be technical.
+ * A page that failed (design error): it says bids are safe and offers to try again, with Browse
+ * and Home as quieter ways on. Never the error's own text, which may be technical.
  */
 export function RouteErrorScreen({ onRetry }: { onRetry: () => void }) {
   const { t } = useTranslation('common');
   return (
     <div
       role="alert"
-      className="flex min-h-[60dvh] flex-col items-center justify-center gap-2.5 px-8 py-12 text-center"
+      className="mx-auto flex min-h-[60dvh] w-full max-w-page flex-col justify-center px-5 pt-16 lg:px-10 lg:pt-0"
       data-testid="route-error"
     >
-      <span className="mb-1 inline-flex size-16 items-center justify-center rounded-xl bg-destructive/12">
-        <Icon name="x" size={28} className="text-destructive" />
-      </span>
-      <p className="text-title-3 font-bold text-foreground">{t('errorPage.title')}</p>
-      <p className="max-w-70 text-subhead text-muted-foreground">{t('errorPage.message')}</p>
-      <RecoveryLinks onRetry={onRetry} />
+      <EmptyState
+        icon="warning"
+        title={t('errorPage.title')}
+        titleAs="h1"
+        message={t('errorPage.message')}
+        action={
+          <div className="grid justify-items-center gap-3">
+            <Button onClick={onRetry}>
+              <Icon name="arrows-clockwise" size={20} />
+              {t('state.retry')}
+            </Button>
+            <RecoveryLinks isQuiet />
+          </div>
+        }
+      />
     </div>
   );
 }

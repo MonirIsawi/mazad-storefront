@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { productFormSchema } from '../schemas/selling.schema';
 import { canRelistAuction, productAuctionState } from './auction-permissions';
@@ -13,16 +15,53 @@ const state = (overrides: Partial<AuctionFormState> = {}): AuctionFormState => (
   startsAt: at('2026-10-07T10:00:00.000Z'),
   endsAt: at('2026-10-10T10:00:00.000Z'),
   buyNowPrice: '',
+  minIncrement: '',
+  antiSnipingMinutes: '5',
+  maxExtensions: '10',
   ...overrides,
 });
 const build = (overrides: Partial<AuctionFormState> = {}) =>
   buildAuctionPayload(state(overrides), NOW);
 
 describe('buildAuctionPayload (mazad-api listing rules)', () => {
-  it('sends whole dinars and no raise (the server ladder sets it)', () => {
+  it('sends whole dinars; an empty step sends the suggested one', () => {
     const result = build({ startingPrice: '٩١٠٬٠٠٠' });
-    expect(result.ok && result.payload).toMatchObject({ productId: 'p1', startingPrice: 910000 });
-    expect(result.ok && result.payload).not.toHaveProperty('minIncrement');
+    expect(result.ok && result.payload).toMatchObject({
+      productId: 'p1',
+      startingPrice: 910000,
+      minIncrement: 5000,
+      antiSnipingMinutes: 5,
+      maxExtensions: 10,
+    });
+  });
+
+  it("sends the seller's step, from 250 IQD up to the opening price", () => {
+    const ok = build({ minIncrement: '2,500' });
+    expect(ok.ok && ok.payload.minIncrement).toBe(2500);
+    expect(build({ minIncrement: '100000' }).ok).toBe(true);
+    for (const minIncrement of ['249', '100001', 'abc']) {
+      expect(build({ minIncrement })).toEqual({
+        ok: false,
+        errors: { minIncrement: 'errors.field.minIncrementInvalid' },
+      });
+    }
+    expect(build({ minIncrement: '1000.5' })).toEqual({
+      ok: false,
+      errors: { minIncrement: 'errors.field.wholeDinars' },
+    });
+  });
+
+  it('bounds the extension: 1 to 10 minutes, 1 to 20 times', () => {
+    const ok = build({ antiSnipingMinutes: '10', maxExtensions: '20' });
+    expect(ok.ok && ok.payload).toMatchObject({ antiSnipingMinutes: 10, maxExtensions: 20 });
+    expect(build({ antiSnipingMinutes: '0', maxExtensions: '21' })).toEqual({
+      ok: false,
+      errors: {
+        antiSnipingMinutes: 'errors.field.extensionMinutesInvalid',
+        maxExtensions: 'errors.field.maxExtensionsInvalid',
+      },
+    });
+    expect(build({ antiSnipingMinutes: '' }).ok).toBe(false);
   });
 
   it('requires whole dinars and an opening bid of at least 1,000 IQD', () => {
@@ -61,6 +100,21 @@ describe('buildAuctionPayload (mazad-api listing rules)', () => {
       ok: false,
       errors: { endsAt: 'errors.field.durationTooLong' },
     });
+  });
+
+  it('sends only fields CreateAuctionDto / UpdateAuctionDto accept (contracts/)', () => {
+    const contract = JSON.parse(
+      readFileSync(join(process.cwd(), 'contracts', 'mazad-api.openapi.json'), 'utf8'),
+    ) as { components: { schemas: Record<string, { properties: Record<string, unknown> }> } };
+    const result = build({ buyNowPrice: '150000', minIncrement: '2500' });
+    if (!result.ok) throw new Error('expected a payload');
+    const update = Object.keys(result.payload).filter((key) => key !== 'productId');
+    const accepted = (name: string) =>
+      Object.keys(contract.components.schemas[name]?.properties ?? {});
+    expect(accepted('CreateAuctionDto')).toEqual(
+      expect.arrayContaining(Object.keys(result.payload)),
+    );
+    expect(accepted('UpdateAuctionDto')).toEqual(expect.arrayContaining(update));
   });
 
   it('reads typed amounts', () => {

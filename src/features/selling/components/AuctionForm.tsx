@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { getErrorCode, getErrorDetail } from '@shared/lib';
 import { useCreateAuction, useSubmitAuction, useUpdateAuction } from '../hooks/useSellerAuctions';
 import { useSellingTranslation } from '../hooks/useSellingTranslation';
-import { toDateTimeInputValue } from '../lib/datetime-input';
+import { initialAuctionState } from '../lib/auction-form-state';
 import { ladderStep } from '../lib/bid-ladder';
 import {
   buildAuctionPayload,
@@ -15,7 +15,7 @@ import {
   type AuctionFormState,
 } from '../lib/auction-payload';
 import { AuctionFields } from './auctions/AuctionFields';
-import { AuctionSummaryCard, type ExtensionRule } from './auctions/AuctionSummaryCard';
+import { AuctionSummaryCard } from './auctions/AuctionSummaryCard';
 import type { SellerAuction, SellerProduct } from '../types/selling.types';
 
 export interface AuctionFormProps {
@@ -29,55 +29,18 @@ export interface AuctionFormProps {
   onCancel: () => void;
 }
 
-const DAY_MS = 24 * 60 * 60_000;
-
-function initialState(
-  auction: SellerAuction | undefined,
-  initialProductId: string | undefined,
-  relistFrom: SellerAuction | undefined,
-): AuctionFormState {
-  const now = Date.now();
-  const whole = (value: string | null | undefined) =>
-    value ? String(Math.round(Number(value))) : '';
-  if (auction) {
-    // A draft whose start already passed is published as "start now".
-    const startsLater = Date.parse(auction.startsAt) > now;
-    return {
-      productId: auction.product?.id ?? '',
-      startingPrice: whole(auction.startingPrice),
-      startMode: startsLater ? 'later' : 'now',
-      startsAt: toDateTimeInputValue(startsLater ? auction.startsAt : new Date(now).toISOString()),
-      endsAt: toDateTimeInputValue(
-        Date.parse(auction.endsAt) > now + DAY_MS
-          ? auction.endsAt
-          : new Date(now + 3 * DAY_MS).toISOString(),
-      ),
-      buyNowPrice: whole(auction.buyNowPrice),
-    };
-  }
-  // Start now, for 3 days: the common case needs no date picking at all.
-  return {
-    productId: relistFrom?.product?.id ?? initialProductId ?? '',
-    startingPrice: whole(relistFrom?.startingPrice),
-    startMode: 'now',
-    startsAt: toDateTimeInputValue(new Date(now + 60 * 60_000).toISOString()),
-    endsAt: toDateTimeInputValue(new Date(now + 3 * DAY_MS).toISOString()),
-    buyNowPrice: whole(relistFrom?.buyNowPrice),
-  };
-}
-
-/** The extension rule an existing auction's payload carries (a new one gets the platform's). */
-function extensionRule(source: SellerAuction | undefined): ExtensionRule | null {
-  if (source?.antiSnipingMinutes == null || source.maxExtensions == null) return null;
-  return { minutes: source.antiSnipingMinutes, times: source.maxExtensions };
-}
+/** The API's rule errors belong to a field, not the banner: they're shown under the input. */
+const FIELD_ERRORS: Partial<Record<string, readonly [AuctionField, string]>> = {
+  INVALID_BID_STEP: ['minIncrement', 'errors.field.minIncrementInvalid'],
+  INVALID_EXTENSION_RULE: ['antiSnipingMinutes', 'errors.field.extensionRuleInvalid'],
+};
 
 /**
  * Listing form (Bidoom design `create-auction`): product, opening price (whole dinars, at least
- * 1,000 IQD), start now (default) or at a chosen time, the duration, optional buy-now. The bid
- * step and the extension are Bidoom's rules, shown but not asked: the step from the API's price
- * ladder, the extension from the auction's payload. Publish creates and submits in one step;
- * Save draft only saves it. A product without photos can't be published.
+ * 1,000 IQD), the bid step (pre-filled with the suggested step for the opening price until the
+ * seller picks one), the automatic extension (minutes and times), start now (default) or at a
+ * chosen time, the duration, optional buy-now. Publish creates and submits in one step; Save
+ * draft only saves it. A product without photos can't be published.
  */
 export function AuctionForm({
   auction,
@@ -92,15 +55,20 @@ export function AuctionForm({
   const createAuction = useCreateAuction();
   const updateAuction = useUpdateAuction();
   const submitAuction = useSubmitAuction();
-  const [state, setState] = useState(() => initialState(auction, initialProductId, relistFrom));
+  const [state, setState] = useState(() =>
+    initialAuctionState(auction, initialProductId, relistFrom),
+  );
   const [errors, setErrors] = useState<Partial<Record<AuctionField, string>>>({});
+  // Until the seller sets a step, it follows the suggested step for the typed opening price.
+  const [isStepChosen, setIsStepChosen] = useState(() => Boolean(auction ?? relistFrom));
   const [durationDays, setDurationDays] = useState<number | null>(auction ? null : 3);
   // "Start now" counts the summary's duration from when the form opened (close enough to show).
   const [openedAt] = useState(() => Date.now());
 
   const mutation = auction ? updateAuction : createAuction;
   const failure = mutation.error ?? submitAuction.error;
-  const errorCode = getErrorCode(failure);
+  const failureCode = getErrorCode(failure);
+  const errorCode = failureCode && FIELD_ERRORS[failureCode] ? null : failureCode;
   const dateReason =
     errorCode === 'INVALID_AUCTION_DATES' ? getErrorDetail(failure, 'reason') : null;
   const isBusy = mutation.isPending || submitAuction.isPending;
@@ -115,6 +83,27 @@ export function AuctionForm({
     setErrors((current) => ({ ...current, [key]: undefined }));
   };
 
+  const handleOpening = (text: string) => {
+    set('startingPrice', text);
+    if (isStepChosen) return;
+    const parsed = parseDinars(text);
+    set(
+      'minIncrement',
+      'value' in parsed && parsed.value > 0 ? String(ladderStep(parsed.value)) : '',
+    );
+  };
+
+  const handleStep = (text: string) => {
+    setIsStepChosen(text.trim() !== '');
+    set('minIncrement', text);
+  };
+
+  const handleRuleError = (failed: unknown) => {
+    const code = getErrorCode(failed);
+    const fieldError = code ? FIELD_ERRORS[code] : undefined;
+    if (fieldError) setErrors((current) => ({ ...current, [fieldError[0]]: fieldError[1] }));
+  };
+
   const save = (publish: boolean) => {
     const result = buildAuctionPayload(state);
     if (!result.ok) {
@@ -127,13 +116,11 @@ export function AuctionForm({
       if (!publish) return onDone(saved);
       submitAuction.mutate(saved.id, { onSuccess: onDone });
     };
+    const callbacks = { onSuccess: done, onError: handleRuleError };
     if (auction) {
-      updateAuction.mutate(
-        { id: auction.id, values: result.payload, silent: publish },
-        { onSuccess: done },
-      );
+      updateAuction.mutate({ id: auction.id, values: result.payload, silent: publish }, callbacks);
     } else {
-      createAuction.mutate({ values: result.payload, silent: publish }, { onSuccess: done });
+      createAuction.mutate({ values: result.payload, silent: publish }, callbacks);
     }
   };
 
@@ -147,6 +134,14 @@ export function AuctionForm({
         : t('summary.hours', { count: hours });
 
   const message = (key: AuctionField) => (errors[key] ? t(errors[key] ?? '') : undefined);
+  const stepValue = parseDinars(state.minIncrement);
+  const step = 'value' in stepValue && stepValue.value > 0 ? String(stepValue.value) : null;
+  const minutes = Number(state.antiSnipingMinutes);
+  const times = Number(state.maxExtensions);
+  const rule =
+    Number.isInteger(minutes) && minutes > 0 && Number.isInteger(times) && times > 0
+      ? { minutes, times }
+      : null;
   const error = needsPhoto ? (
     <p className="text-[13px] text-destructive" data-testid="auction-needs-photo">
       {t('errors.field.photoRequired')}
@@ -174,8 +169,9 @@ export function AuctionForm({
         fieldError={message}
         products={products}
         isProductLocked={Boolean(auction)}
-        step={openingValue ? String(ladderStep(openingValue)) : null}
-        rule={extensionRule(auction)}
+        opening={openingValue}
+        onOpening={handleOpening}
+        onStep={handleStep}
         durationDays={durationDays}
         onDuration={(days) => {
           setDurationDays(days);
@@ -188,8 +184,8 @@ export function AuctionForm({
       />
       <AuctionSummaryCard
         opening={openingValue ? String(openingValue) : null}
-        step={openingValue ? String(ladderStep(openingValue)) : null}
-        rule={extensionRule(auction)}
+        step={step}
+        rule={rule}
         duration={duration}
         isBusy={isBusy}
         canPublish={!needsPhoto}

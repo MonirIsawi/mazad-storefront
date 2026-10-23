@@ -8,6 +8,7 @@ import { ROUTES } from '@shared/constants';
 import { AppTabBar, SiteFooter, SiteHeader, type FooterColumn } from '@shared/components/layout';
 import { AuctionCardActionProvider } from '@shared/components/cards';
 import { cn } from '@shared/lib';
+import { useApiFeature } from '@shared/hooks';
 
 // Keeps watchlist's JS out of routes that never render an AuctionCard (login/register): this is
 // still the one place app/ composes a feature into shared/'s presentational components; the
@@ -48,6 +49,8 @@ const PUSHED_ROUTE_PATTERN =
 
 function useFooterColumns(): FooterColumn[] {
   const { t } = useTranslation('common');
+  // Contact us only once the API has support reports (hidden, never a dead link, until then).
+  const canContact = useApiFeature('supportReports') === true;
   return [
     {
       title: t('footer.shop'),
@@ -71,6 +74,7 @@ function useFooterColumns(): FooterColumn[] {
         { href: ROUTES.helpTopic('payments'), label: t('footer.paymentsReturns') },
         { href: ROUTES.helpTopic('privacy'), label: t('footer.privacyTerms') },
         { href: ROUTES.help, label: t('footer.helpCentre') },
+        ...(canContact ? [{ href: ROUTES.contact, label: t('footer.contact') }] : []),
       ],
     },
   ];

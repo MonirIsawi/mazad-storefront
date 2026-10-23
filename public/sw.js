@@ -1,5 +1,5 @@
 /*
- * Mazad service worker.
+ * Bidoom (mazad-storefront) service worker.
  *
  * Deliberately minimal. This is a live auction marketplace: a cached page showing a stale price,
  * a bid count that has moved, or a closed auction still counting down is worse than no page at
@@ -12,7 +12,9 @@
  * network every time. The fetch handler also exists because Chrome will not offer to install a
  * PWA without one.
  */
-const CACHE = 'mazad-static-v1';
+// v2: the Bidoom offline page. A new cache name makes installed workers fetch it again (the old
+// cache is dropped on activate); the name is internal and signs nobody out.
+const CACHE = 'mazad-static-v2';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {

@@ -3,32 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>لا يوجد اتصال — مزاد</title>
+    <title>لا يوجد اتصال — بيدوم · You’re offline — Bidoom</title>
     <!--
       Standalone by necessity: this page is served by the service worker when the network is
-      unreachable, so it cannot depend on the app's stylesheet, its webfont, or the persisted
-      theme in localStorage. Colours are the design tokens written as hex, following the device
-      theme instead of the app's own toggle.
+      unreachable, so it cannot depend on the app's stylesheet, its webfonts, or the persisted
+      theme in localStorage. Colours are the Bidoom tokens written as hex: dark by default (the
+      brand's default theme), light when the device asks for it.
     -->
     <style>
       :root {
-        color-scheme: light dark;
-        --background: #f6f7f9;
-        --surface: #ffffff;
-        --foreground: #14161f;
-        --muted: #8e909c;
-        --primary: #678af5;
-        --border: rgb(20 22 31 / 10%);
+        color-scheme: dark;
+        --bg: #080706;
+        --s1: #110e0a;
+        --line-2: rgb(212 166 70 / 24%);
+        --tx: #f4eee4;
+        --tx2: #bdb4a4;
+        --tx3: #978e7f;
+        --gold: #d4a646;
+        --gold-soft: rgb(212 166 70 / 12%);
+        --gold-ink: #120e07;
+        --grad: linear-gradient(180deg, #f8dd86 0%, #e3b556 48%, #c08a2c 100%);
+        --glow: 0 10px 30px -10px rgb(212 166 70 / 55%);
       }
 
-      @media (prefers-color-scheme: dark) {
+      @media (prefers-color-scheme: light) {
         :root {
-          --background: #040405;
-          --surface: #26272c;
-          --foreground: #f9f9fb;
-          --muted: #96979f;
-          --primary: #8ba6f8;
-          --border: rgb(255 255 255 / 14%);
+          color-scheme: light;
+          --bg: #f4eedf;
+          --s1: #fffdf8;
+          --line-2: rgb(45 32 12 / 15%);
+          --tx: #1a1611;
+          --tx2: #585046;
+          --tx3: #665c50;
+          --gold: #87601f;
+          --gold-soft: rgb(148 105 42 / 10%);
+          --gold-ink: #1b1409;
+          --grad: linear-gradient(180deg, #f3d58c 0%, #ddae55 50%, #bc8a35 100%);
+          --glow: 0 10px 24px -12px rgb(120 80 20 / 45%);
         }
       }
 
@@ -39,106 +50,214 @@
       body {
         margin: 0;
         min-height: 100dvh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        background: var(--background);
-        color: var(--foreground);
+        display: grid;
+        place-items: center;
+        padding: 24px 28px;
+        background: var(--bg);
+        color: var(--tx);
         font-family:
-          'Cairo',
-          ui-sans-serif,
           system-ui,
           -apple-system,
+          'Segoe UI',
           'Noto Sans Arabic',
-          Arial,
+          Tahoma,
           sans-serif;
         -webkit-font-smoothing: antialiased;
+        text-align: center;
       }
 
       main {
         width: 100%;
-        max-width: 22rem;
-        padding: 32px 24px;
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        background: var(--surface);
-        text-align: center;
+        max-width: 26rem;
+        display: grid;
+        justify-items: center;
+        gap: 14px;
       }
 
-      .mark {
-        width: 56px;
-        height: 56px;
-        margin: 0 auto 20px;
-        border-radius: 18px;
-        background: var(--primary);
+      .brand {
         display: flex;
         align-items: center;
-        justify-content: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--tx2);
+      }
+
+      .orb {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at 50% 35%, var(--gold-soft), transparent 70%), var(--s1);
+        border: 1px solid var(--line-2);
+        color: var(--gold);
+      }
+
+      .icon {
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
 
       h1 {
-        margin: 0 0 8px;
-        font-size: 22px;
+        margin: 6px 0 0;
+        font-size: 24px;
         line-height: 1.3;
-        letter-spacing: -0.4px;
+        font-weight: 600;
+        text-wrap: balance;
       }
 
       p {
-        margin: 0 0 24px;
+        margin: 0;
+        max-width: 34ch;
         font-size: 15px;
-        line-height: 1.5;
-        color: var(--muted);
+        line-height: 1.7;
+        color: var(--tx2);
+        text-wrap: pretty;
+      }
+
+      .en {
+        direction: ltr;
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line-2);
+      }
+
+      .en h2 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+      }
+
+      .en p {
+        font-size: 14px;
+        color: var(--tx3);
       }
 
       button {
-        width: 100%;
-        min-height: 44px;
-        padding: 0 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 52px;
+        margin-top: 6px;
+        padding: 0 26px;
         border: 0;
         border-radius: 999px;
-        background: var(--primary);
-        color: #ffffff;
+        background: var(--grad);
+        box-shadow: var(--glow);
+        color: var(--gold-ink);
         font: inherit;
-        font-size: 17px;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
       }
 
-      button:active {
-        opacity: 0.72;
+      button:focus-visible {
+        outline: 2px solid var(--gold);
+        outline-offset: 3px;
       }
 
-      @media (prefers-color-scheme: dark) {
-        button {
-          color: #101b33;
-        }
+      button:active {
+        transform: scale(0.98);
       }
     </style>
   </head>
   <body>
     <main>
-      <div class="mark">
-        <svg
-          width="32"
-          height="32"
-          viewBox="0 0 64 64"
-          fill="none"
-          stroke="#ffffff"
-          stroke-width="8"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="42" cy="30" r="12" />
-          <path d="M30 42H14" />
+      <div class="brand">
+        <!-- The engraved Bidoom mark (logo-defs.svg bd-engraved), flattened to plain shapes. -->
+        <svg width="36" height="36" viewBox="0 0 120 120" aria-hidden="true">
+          <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#FBE6A2" />
+              <stop offset=".2" stop-color="#EFC659" />
+              <stop offset=".45" stop-color="#C9922A" />
+              <stop offset=".52" stop-color="#96650F" />
+              <stop offset=".6" stop-color="#BE8A27" />
+              <stop offset=".82" stop-color="#F1D06E" />
+              <stop offset="1" stop-color="#A87617" />
+            </linearGradient>
+          </defs>
+          <rect width="120" height="120" rx="27" fill="url(#g)" />
+          <svg x="24" y="14" width="72" height="92" viewBox="-4 4 262 316">
+            <path
+              fill="#120E07"
+              fill-rule="evenodd"
+              d="M12 18H148C206 18 230 42 230 76C230 104 212 122 184 130C222 138 246 162 246 198C246 238 214 262 154 262H12V250L32 246V34L12 30ZM92 38H138C162 38 174 54 174 77C174 100 160 116 136 118H92ZM92 142H146C174 142 186 160 186 192C186 224 170 242 146 242H92Z"
+            />
+            <g fill="#120E07" stroke="#D9AA4A" stroke-width="5" paint-order="stroke">
+              <rect x="104" y="217" width="76" height="17" rx="5" />
+              <rect x="114" y="204" width="56" height="13" rx="4" />
+            </g>
+            <g
+              transform="translate(160 122) rotate(45)"
+              fill="#120E07"
+              stroke="#D9AA4A"
+              stroke-width="8"
+              stroke-linejoin="round"
+              paint-order="stroke"
+            >
+              <path d="M-7 32H7L5.5 160L0 200L-5.5 160Z" />
+              <rect x="-9" y="20" width="18" height="12" rx="2" />
+              <rect x="-44" y="-20" width="88" height="40" rx="4" />
+              <rect x="-56" y="-25" width="14" height="50" rx="4" />
+              <rect x="42" y="-25" width="14" height="50" rx="4" />
+            </g>
+            <path d="M129 276L147 294L129 312L111 294Z" fill="#120E07" />
+          </svg>
+        </svg>
+        <span>بيدوم · <span lang="en">Bidoom</span></span>
+      </div>
+      <div class="orb" aria-hidden="true">
+        <!-- wifi-slash from the Bidoom icon set (64 grid, round caps and joins) -->
+        <svg class="icon" width="44" height="44" viewBox="0 0 64 64" stroke-width="5">
+          <path
+            d="M7 23a36 36 0 0 1 50 0M15 31.5a24 24 0 0 1 34 0M23 40a12 12 0 0 1 18 0M10 10l44 44"
+          />
+          <circle cx="32" cy="49" r="2.5" fill="currentColor" stroke="none" />
         </svg>
       </div>
       <h1>لا يوجد اتصال بالإنترنت</h1>
-      <!-- Says plainly that bids and prices are unavailable: an auction app going quiet is not
-           the same as a page failing to load, and the difference matters to a bidder. -->
-      <p>تعذّر تحميل المزادات. أسعار المزايدات تتغيّر لحظيًا، لذلك لا نعرض نسخة محفوظة.</p>
-      <button type="button" onclick="location.reload()">إعادة المحاولة</button>
+      <!-- Says plainly that live prices are unavailable: a cached auction page with an old price or
+           a stopped countdown would be worse than no page, and the difference matters to a bidder. -->
+      <p>لا نعرض الأسعار المباشرة من نسخة قديمة. سنحدّث الصفحة فور عودة الاتصال.</p>
+      <div class="en" lang="en">
+        <h2>You’re offline</h2>
+        <p>
+          We don’t show live prices from an old copy. The page refreshes as soon as you’re back
+          online.
+        </p>
+      </div>
+      <button type="button" onclick="location.reload()">
+        <svg
+          class="icon"
+          width="20"
+          height="20"
+          viewBox="0 0 64 64"
+          stroke-width="5.5"
+          aria-hidden="true"
+        >
+          <path
+            d="M50 25A19 19 0 0 0 16.5 19.5M13 9v11h11M14 39a19 19 0 0 0 33.5 5.5M51 55V44H40"
+          />
+        </svg>
+        إعادة المحاولة · <span lang="en">Try again</span>
+      </button>
     </main>
+    <script>
+      // The promise above: reload the moment the connection is back.
+      window.addEventListener('online', function () {
+        location.reload();
+      });
+    </script>
   </body>
 </html>

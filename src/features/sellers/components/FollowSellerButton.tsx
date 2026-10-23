@@ -14,6 +14,11 @@ export interface FollowSellerButtonProps {
   /** `md`: the store and seller pages, where Follow is the one gold action. */
   size?: 'sm' | 'md';
   isFullWidth?: boolean;
+  /**
+   * `quiet`: a gold outline instead of the gold fill, where Follow is not the page's one primary
+   * action (the seller card on an auction page, where bidding is).
+   */
+  emphasis?: 'primary' | 'quiet';
 }
 
 // Same optimistic-override shape as watchlist's WatchlistToggle — see that file's comment for
@@ -22,6 +27,7 @@ export function FollowSellerButton({
   sellerId,
   size = 'sm',
   isFullWidth = false,
+  emphasis = 'primary',
 }: FollowSellerButtonProps) {
   const { t } = useSellersTranslation();
   const { t: tCommon } = useTranslation('common');
@@ -46,7 +52,7 @@ export function FollowSellerButton({
     <div className={cn('flex flex-col gap-1', isFullWidth && 'w-full')}>
       <Button
         type="button"
-        variant={isFollowing ? 'soft' : 'gold'}
+        variant={isFollowing ? 'soft' : emphasis === 'quiet' ? 'line' : 'gold'}
         size={size}
         isFullWidth={isFullWidth}
         isLoading={toggle.isPending}

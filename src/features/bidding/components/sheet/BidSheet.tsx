@@ -79,7 +79,7 @@ export function BidSheet({
           <p className="flex gap-2 text-[13px] leading-[1.6] text-foreground-soft">
             <Icon name="info" size={16} className="mt-0.5 shrink-0 text-gold" />
             <span>
-              {t('sheet.rule', {
+              {t(auction.incrementLadder ? 'sheet.ruleLadder' : 'sheet.rule', {
                 step: money(String(draft.increment)),
                 minimum: money(String(draft.minimumBid)),
               })}

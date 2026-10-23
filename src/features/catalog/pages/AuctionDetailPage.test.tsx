@@ -408,11 +408,11 @@ describe('AuctionDetailPage: bid history', () => {
     createdAt: '2026-10-05T10:00:00.000Z',
     isAutoBid: false,
     isMine: false,
-    bidder: { maskedName: `us***${n}` },
+    bidder: { maskedName: `Bidder ${n}`, fullName: `Bidder Full ${n}` },
     ...extra,
   });
 
-  it('marks the viewer\'s own bids "You" and automatic ones "Auto"; others stay masked', async () => {
+  it('marks the viewer\'s own bids "You" and automatic ones "Auto"; others by full name', async () => {
     vi.mocked(catalogApi.getAuctionBids).mockResolvedValue([
       bid(3, { isMine: true }),
       bid(2, { isAutoBid: true }),
@@ -421,10 +421,19 @@ describe('AuctionDetailPage: bid history', () => {
     await renderAuction(auction());
     const rows = within(await screen.findByTestId('bid-history')).getAllByRole('listitem');
     expect(rows[0]).toHaveTextContent(/^You/);
-    expect(rows[0]).not.toHaveTextContent('us***3');
-    expect(rows[1]).toHaveTextContent(/^us\*\*\*2.*Auto/);
-    expect(rows[2]).toHaveTextContent(/^us\*\*\*1/);
+    expect(rows[0]).not.toHaveTextContent('Bidder Full 3');
+    expect(rows[1]).toHaveTextContent(/^Bidder Full 2.*Auto/);
+    expect(rows[2]).toHaveTextContent(/^Bidder Full 1/);
     expect(rows[2]).not.toHaveTextContent('Auto');
+  });
+
+  it('falls back to maskedName from older API builds (it carries the full name too)', async () => {
+    vi.mocked(catalogApi.getAuctionBids).mockResolvedValue([
+      bid(1, { bidder: { maskedName: 'Ahmed Kareem' } }),
+    ]);
+    await renderAuction(auction());
+    const rows = within(await screen.findByTestId('bid-history')).getAllByRole('listitem');
+    expect(rows[0]).toHaveTextContent(/^Ahmed Kareem/);
   });
 
   it('shows the latest five, with the way to the full history', async () => {

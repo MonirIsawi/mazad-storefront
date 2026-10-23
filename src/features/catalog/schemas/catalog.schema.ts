@@ -163,9 +163,13 @@ export const auctionSchema = z.object({
   returnWindowDays: z.number().optional(),
   sellerRating: z.object({ average: z.number().nullable(), count: z.number() }).optional(),
   serverTime: z.string().optional(),
-  // The late-bid rule for this auction: a bid in the last N minutes extends it by N minutes, at
-  // most maxExtensions times (optional: older API builds).
+  // false: the seller's fixed step (new listings); true: an older auction on the platform ladder.
+  incrementLadder: z.boolean().optional(),
+  // The late-bid rule for this auction, set by the seller: a bid in the last antiSnipingMinutes
+  // extends it by extensionMinutes (the same number; null on older auctions, which extend by the
+  // platform setting), at most maxExtensions times (optional: older API builds).
   antiSnipingMinutes: z.number().optional(),
+  extensionMinutes: z.number().nullable().optional(),
   maxExtensions: z.number().optional(),
   extensionsCount: z.number().optional(),
 });
@@ -191,7 +195,8 @@ export const bidHistoryItemSchema = z.object({
   // Optional: older API builds. `isMine` only ever marks the signed-in viewer's own bids.
   isAutoBid: z.boolean().optional(),
   isMine: z.boolean().optional(),
-  bidder: z.object({ maskedName: z.string() }),
+  // Both carry the bidder's full name now; fullName is optional for older API builds.
+  bidder: z.object({ maskedName: z.string(), fullName: z.string().optional() }),
 });
 
 export const bidHistorySchema = z.array(bidHistoryItemSchema);

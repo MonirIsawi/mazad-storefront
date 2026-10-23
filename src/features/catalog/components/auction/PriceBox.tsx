@@ -115,6 +115,14 @@ export function PriceBox({ auction, isUrgent = false }: { auction: Auction; isUr
         >
           <Icon name="clock" size={14} />
           {t('detail.extended', { count: extendedMinutes })}
+          {auction.extensionsCount && auction.maxExtensions ? (
+            <span className="text-muted-foreground">
+              {t('detail.extensionOf', {
+                count: auction.extensionsCount,
+                max: auction.maxExtensions,
+              })}
+            </span>
+          ) : null}
         </p>
       ) : null}
     </section>

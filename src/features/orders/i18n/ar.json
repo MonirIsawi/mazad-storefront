@@ -281,18 +281,6 @@
     "posted": "نُشر تقييمك.",
     "updated": "تم تحديث تقييمك.",
     "starsRequired": "اختر النجوم أولاً.",
-    "tags": {
-      "AS_DESCRIBED": "مطابق للوصف",
-      "FAST_DELIVERY": "توصيل سريع",
-      "GOOD_PACKAGING": "تغليف ممتاز",
-      "FRIENDLY_SELLER": "بائع متعاون",
-      "GOOD_VALUE": "سعر مناسب",
-      "NOT_AS_DESCRIBED": "لا يطابق الوصف",
-      "LATE_DELIVERY": "تأخر التوصيل",
-      "POOR_PACKAGING": "تغليف سيئ",
-      "UNRESPONSIVE_SELLER": "صعوبة التواصل",
-      "DAMAGED": "وصل متضرراً"
-    },
     "errors": {
       "REVIEW_ALREADY_EXISTS": "سبق أن قيّمت هذا المنتج.",
       "REVIEW_WINDOW_CLOSED": "انتهت مدة تقييم هذا الطلب.",

@@ -22,7 +22,6 @@ const STANDING_LOOK: Record<BidStanding, { tone: BadgeTone; icon?: IconName; isF
   {
     WINNING: { tone: 'live', icon: 'crown', isFilled: true },
     OUTBID: { tone: 'bad', icon: 'warning' },
-    AWAITING_CONFIRMATION: { tone: 'upcoming', icon: 'hourglass' },
     WON: { tone: 'gold', icon: 'crown', isFilled: true },
     LOST: { tone: 'done' },
   };

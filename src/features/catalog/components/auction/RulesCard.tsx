@@ -8,9 +8,10 @@ import { useCatalogTranslation } from '../../hooks/useCatalogTranslation';
 import type { Auction } from '../../types/catalog.types';
 
 /**
- * Rules for this auction (design `.ladder`): the bid step from the API (the price tier's step, not a
- * seller's choice), the late-bid extension and how often it can happen, how bidders are named, and
- * that bids and wins bind. A rule the payload doesn't carry is left out rather than guessed.
+ * Rules for this auction (design `.ladder`): the seller's bid step (the API's current raise), the
+ * late-bid extension and how often it can happen, that bidders show by full name, and that bids
+ * and wins bind. Older auctions on the platform ladder say so in the note. A rule the payload
+ * doesn't carry is left out rather than guessed.
  */
 export function RulesCard({ auction }: { auction: Auction }) {
   const { t } = useCatalogTranslation();
@@ -18,6 +19,7 @@ export function RulesCard({ auction }: { auction: Auction }) {
   const { locale } = useLocale();
   const step = auction.bidIncrement ?? auction.minIncrement;
   const minutes = auction.antiSnipingMinutes;
+  const adds = auction.extensionMinutes ?? minutes;
   const strong = 'font-semibold text-foreground';
 
   const rows: KeyValueRow[] = [
@@ -33,7 +35,7 @@ export function RulesCard({ auction }: { auction: Auction }) {
           {
             key: 'late',
             label: t('rules.lateBid', { count: minutes }),
-            value: <b className={strong}>{t('rules.adds', { count: minutes })}</b>,
+            value: <b className={strong}>{t('rules.adds', { count: adds })}</b>,
           },
         ]
       : []),
@@ -63,7 +65,9 @@ export function RulesCard({ auction }: { auction: Auction }) {
       <CardTitle>{t('rules.title')}</CardTitle>
       <div className="grid gap-2 px-[18px] pt-1 pb-[18px]">
         <KeyValueList rows={rows} />
-        <p className="text-xs leading-[1.6] text-muted-foreground">{t('rules.stepNote')}</p>
+        <p className="text-xs leading-[1.6] text-muted-foreground">
+          {t(auction.incrementLadder ? 'rules.stepNoteLadder' : 'rules.stepNote')}
+        </p>
         <SeeAllLink
           href={ROUTES.helpTopic('how-auctions-work')}
           className="justify-self-start py-2"

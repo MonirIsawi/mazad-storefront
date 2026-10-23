@@ -3,7 +3,7 @@ import { normalizePhone } from '@shared/lib/phone';
 import type { Locale } from '@shared/store';
 import {
   authResponseSchema,
-  authUserSchema,
+  meSchema,
   otpRequestResultSchema,
   resetTokenResultSchema,
 } from '../schemas/auth.schema';
@@ -67,7 +67,7 @@ export const authApi = {
 
   me: async (): Promise<AuthUser> => {
     const response = await httpClient.get<unknown>('/me');
-    return authUserSchema.parse(response.data);
+    return meSchema.parse(response.data);
   },
 
   /** PATCH /me { locale }: the language mazad-api writes notifications and pushes in. */

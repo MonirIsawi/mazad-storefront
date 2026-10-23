@@ -64,4 +64,11 @@ export const QUERY_KEYS = {
     // same call shape as watchlist.list.
     following: ['sellers', 'following'] as const,
   },
+  // The contact screen: my reports, and my orders for the "about an order" picker (its own key and
+  // schema, not orders.list: one key per queryFn).
+  support: {
+    reports: ['support', 'reports'] as const,
+    orders: ['support', 'orders'] as const,
+    order: (id: string) => ['support', 'order', id] as const,
+  },
 } as const;

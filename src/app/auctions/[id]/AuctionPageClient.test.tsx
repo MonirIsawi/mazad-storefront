@@ -54,8 +54,8 @@ describe('AuctionBidding (route composition)', () => {
     expect(lastProps().isOwnAuction).toBe(false);
   });
 
-  it('no winner state for someone who did not win it (or whose win was declined)', () => {
-    wins.data = [win('other', 'o9'), win('a1', 'o1', 'DECLINED')];
+  it('no winner state for someone who did not win it (or whose win was passed over)', () => {
+    wins.data = [win('other', 'o9'), win('a1', 'o1', 'PASSED_OVER')];
     render(<AuctionBidding auctionId="a1" sellerId="seller-1" status="SOLD" />);
     expect(lastProps().winner).toBeNull();
   });

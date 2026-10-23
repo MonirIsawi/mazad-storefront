@@ -6,47 +6,14 @@
     "browse": "Browse auctions",
     "account": "Account"
   },
-  "sections": {
-    "pending": "Awaiting confirmation",
-    "settled": "Confirmed and closed"
-  },
   "card": {
-    "amount": "Amount",
-    "deadline": "Confirm within",
-    "expired": "Confirmation window closed",
-    "viewOrder": "View order",
     "wonFor": "Won for",
     "order": "Order",
     "openAuction": "View auction"
   },
-  "confirm": {
-    "title": "Confirm your wins",
-    "description": "Pick a delivery address. One order is created per store.",
-    "address": "Delivery address",
-    "note": "Note for the seller",
-    "notePlaceholder": "Optional",
-    "submit": "Confirm",
-    "decline": "Decline",
-    "declineConfirm": "This gives up your win on this auction. Are you sure?",
-    "noAddress": "You need a saved delivery address before confirming.",
-    "addAddress": "Add an address",
-    "selected_one": "{{formattedCount}} auction selected",
-    "selected_other": "{{formattedCount}} auctions selected"
-  },
   "status": {
-    "PENDING_CONFIRMATION": "Awaiting confirmation",
-    "CONFIRMED": "Confirmed",
-    "DECLINED": "Declined",
-    "EXPIRED": "Expired"
-  },
-  "toast": {
-    "confirmed": "Win confirmed",
-    "declined": "Win declined"
-  },
-  "errors": {
-    "WIN_EXPIRED": "The confirmation window for this auction has closed.",
-    "WIN_NOT_FOUND": "That win is no longer available.",
-    "ADDRESS_NOT_FOUND": "That address no longer exists."
+    "CONFIRMED": "Ordered",
+    "PASSED_OVER": "Lost"
   },
   "orderStatus": {
     "CREATED": "Pending",
@@ -58,8 +25,8 @@
   "how": {
     "title": "How winning works",
     "created": "When an auction ends in your favour, the order is created at once at your default address. There is nothing to confirm.",
-    "change": "Pay on delivery, or electronically from the order page where it’s offered. The order keeps the address it was created with.",
-    "final": "A win is a promise to buy. Declining a win counts as a violation, and repeated violations pause bidding.",
+    "change": "You can change the address or payment method on the order until the seller ships it.",
+    "final": "A win can’t be cancelled, because your bid took someone else’s chance. Refusing delivery counts as a violation; two violations pause bidding.",
     "defaultAddress": "Default address: {{label}}, {{city}}",
     "noAddress": "Add a delivery address: without one, a win can’t become an order."
   }

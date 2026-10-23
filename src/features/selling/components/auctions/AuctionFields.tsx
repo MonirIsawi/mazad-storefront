@@ -1,6 +1,6 @@
 'use client';
 
-import { Chip, FIELD_LABEL, Input, Price, Select } from '@shared/components/ui';
+import { Chip, FIELD_LABEL, Input, Select } from '@shared/components/ui';
 import { SegmentedControl } from '@shared/components/ios';
 import { useLocale, useMoney } from '@shared/hooks';
 import { formatDateTime, pickLocalizedName, resolveThumbUrl } from '@shared/lib';
@@ -9,7 +9,7 @@ import { parseDinars, type AuctionField, type AuctionFormState } from '../../lib
 import { fromDateTimeInputValue } from '../../lib/datetime-input';
 import type { SellerProduct } from '../../types/selling.types';
 import { LotRow } from '../LotRow';
-import type { ExtensionRule } from './AuctionSummaryCard';
+import { AuctionRuleFields } from './AuctionRuleFields';
 
 const DURATION_DAYS = [1, 3, 5, 7] as const;
 
@@ -20,23 +20,25 @@ export interface AuctionFieldsProps {
   products: SellerProduct[];
   /** The product is fixed once the auction exists (UpdateAuctionDto has no productId). */
   isProductLocked: boolean;
-  /** The step Bidoom's ladder gives the typed opening price. */
-  step: string | null;
-  rule: ExtensionRule | null;
+  /** The typed opening price in dinars, once it reads as one. */
+  opening: number | null;
+  onOpening: (text: string) => void;
+  onStep: (text: string) => void;
   durationDays: number | null;
   onDuration: (days: number) => void;
   onEndsAt: (value: string) => void;
 }
 
-/** The listing's inputs (design `create-auction`), the step and extension shown, not asked. */
+/** The listing's inputs (design `create-auction`), the seller's step and extension included. */
 export function AuctionFields({
   state,
   set,
   fieldError,
   products,
   isProductLocked,
-  step,
-  rule,
+  opening,
+  onOpening,
+  onStep,
   durationDays,
   onDuration,
   onEndsAt,
@@ -92,7 +94,7 @@ export function AuctionFields({
         inputMode="numeric"
         className="font-tabular"
         value={state.startingPrice}
-        onChange={(event) => set('startingPrice', event.target.value)}
+        onChange={(event) => onOpening(event.target.value)}
         hint={preview(state.startingPrice) ?? t('fields.startingPriceHint')}
         error={fieldError('startingPrice')}
         trailing={
@@ -101,32 +103,13 @@ export function AuctionFields({
         data-testid="auction-startingPrice"
       />
 
-      <section className="grid gap-2" aria-labelledby="auction-step">
-        <h2 id="auction-step" className={FIELD_LABEL}>
-          {t('fields.bidStep')}
-        </h2>
-        {step ? (
-          <p className="flex h-14 items-center gap-2 rounded-lg border border-border bg-surface-raised px-[18px] text-sm text-foreground-soft">
-            <Price value={step} size="sm" />
-            <span>{t('fields.bidStepAt')}</span>
-          </p>
-        ) : null}
-        <p
-          className="text-[12.5px] leading-[1.6] text-muted-foreground"
-          data-testid="auction-ladder"
-        >
-          {t('fields.incrementLadder')}
-        </p>
-      </section>
-
-      <section className="grid gap-2" aria-labelledby="auction-extension">
-        <h2 id="auction-extension" className={FIELD_LABEL}>
-          {t('fields.extension')}
-        </h2>
-        <p className="rounded-lg border border-border bg-surface-raised px-[18px] py-3.5 text-[13px] leading-[1.6] text-foreground-soft">
-          {rule ? t('fields.extensionRule', { ...rule }) : t('fields.extensionPlatform')}
-        </p>
-      </section>
+      <AuctionRuleFields
+        state={state}
+        set={set}
+        fieldError={fieldError}
+        opening={opening}
+        onStep={onStep}
+      />
 
       <div className="grid gap-2">
         <span className={FIELD_LABEL}>{t('fields.start')}</span>

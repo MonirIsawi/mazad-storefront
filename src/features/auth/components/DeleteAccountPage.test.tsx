@@ -194,7 +194,7 @@ describe('Delete account', () => {
     const items = within(alert.parentElement as HTMLElement).getAllByRole('listitem');
     expect(items.map((item) => item.textContent)).toEqual([
       "Your purchases that haven't been delivered or cancelled yet. My orders",
-      'Auctions you won that are waiting for your confirmation. My wins',
+      'Auctions you won that are still being settled. My wins',
       'Live auctions where you hold the highest bid. My bids',
       'A balance or a held amount in your wallet.',
     ]);

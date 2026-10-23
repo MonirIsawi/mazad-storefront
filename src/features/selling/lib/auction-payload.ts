@@ -1,6 +1,7 @@
 import { auctionFormSchema } from '../schemas/selling.schema';
 import type { AuctionFormValues } from '../types/selling.types';
 import { fromDateTimeInputValue, toDateTimeInputValue } from './datetime-input';
+import { MIN_BID_STEP, ladderStep } from './bid-ladder';
 import { parseDinars } from './dinars';
 
 export { parseDinars };
@@ -15,6 +16,12 @@ export interface AuctionFormState {
   startsAt: string;
   endsAt: string;
   buyNowPrice: string;
+  /** The seller's bid step in dinars; empty sends the suggested step for the opening price. */
+  minIncrement: string;
+  /** A bid in the last N minutes adds N minutes (1 to 10). */
+  antiSnipingMinutes: string;
+  /** How many times the auction may be extended (1 to 20). */
+  maxExtensions: string;
 }
 
 export type AuctionField = keyof AuctionFormState;
@@ -29,10 +36,15 @@ const MINUTE_MS = 60_000;
 const START_NOW_GRACE_MS = 5 * MINUTE_MS;
 const MIN_DURATION_MS = 60 * MINUTE_MS;
 const MAX_DURATION_MS = 14 * 24 * 60 * MINUTE_MS;
+/** The seller's extension bounds (mazad-api SELLER_EXTENSION_MINUTES / SELLER_MAX_EXTENSIONS). */
+export const EXTENSION_MINUTES = { min: 1, max: 10, default: 5 } as const;
+export const MAX_EXTENSIONS = { min: 1, max: 20, default: 10 } as const;
 
 /**
  * Rules (mazad-api's): the opening bid in whole dinars and at least 1,000 IQD; buy-now optional,
- * whole dinars and above the opening bid. The raise per bid is the server's ladder, not asked.
+ * whole dinars and above the opening bid. The bid step is the seller's, whole dinars from 250 IQD
+ * up to the opening price (empty: the suggested step); the extension is 1 to 10 minutes, 1 to 20
+ * times.
  * "Start now" starts at publishing time; a scheduled start may not be in the past (a few minutes'
  * grace). The auction runs at least an hour and at most 14 days.
  */
@@ -66,6 +78,13 @@ export function buildAuctionPayload(
     }
   }
 
+  const step = buildStep(state.minIncrement, 'error' in starting ? null : starting.value);
+  if ('error' in step) errors.minIncrement = step.error;
+  const minutes = wholeInRange(state.antiSnipingMinutes, EXTENSION_MINUTES);
+  if (minutes === null) errors.antiSnipingMinutes = 'errors.field.extensionMinutesInvalid';
+  const times = wholeInRange(state.maxExtensions, MAX_EXTENSIONS);
+  if (times === null) errors.maxExtensions = 'errors.field.maxExtensionsInvalid';
+
   const startsAt =
     state.startMode === 'now' ? now.toISOString() : fromDateTimeInputValue(state.startsAt);
   const endsAt = fromDateTimeInputValue(state.endsAt);
@@ -75,6 +94,9 @@ export function buildAuctionPayload(
     startsAt,
     endsAt,
     buyNowPrice: buyNow ?? '',
+    minIncrement: 'value' in step ? step.value : 0,
+    antiSnipingMinutes: minutes ?? EXTENSION_MINUTES.default,
+    maxExtensions: times ?? MAX_EXTENSIONS.default,
   });
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
@@ -96,6 +118,34 @@ export function buildAuctionPayload(
 
   if (Object.keys(errors).length > 0 || !parsed.success) return { ok: false, errors };
   return { ok: true, payload: parsed.data };
+}
+
+/** The typed step, or the suggested one when left empty; bounded like the API's INVALID_BID_STEP. */
+function buildStep(text: string, opening: number | null): { value: number } | { error: string } {
+  if (!text.trim()) {
+    return opening === null ? { value: 0 } : { value: ladderStep(opening) };
+  }
+  const parsed = parseDinars(text);
+  if ('error' in parsed) {
+    return {
+      error:
+        parsed.error === 'errors.field.wholeDinars'
+          ? parsed.error
+          : 'errors.field.minIncrementInvalid',
+    };
+  }
+  const maximum = Math.max(opening ?? Number.POSITIVE_INFINITY, MIN_BID_STEP);
+  if (parsed.value < MIN_BID_STEP || parsed.value > maximum) {
+    return { error: 'errors.field.minIncrementInvalid' };
+  }
+  return parsed;
+}
+
+/** A typed whole number within the bounds, else null. */
+function wholeInRange(text: string, bounds: { min: number; max: number }): number | null {
+  const parsed = parseDinars(text);
+  if ('error' in parsed) return null;
+  return parsed.value >= bounds.min && parsed.value <= bounds.max ? parsed.value : null;
 }
 
 /**

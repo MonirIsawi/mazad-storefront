@@ -33,12 +33,20 @@ export interface BidPanelProps {
   deliveryLine?: ReactNode;
   /** Open the bid sheet at once (arrived from "Bid" on My bids). */
   isSheetOpenOnLoad?: boolean;
+  /**
+   * The signed-in viewer has a saved address (the addresses feature); false asks for one before
+   * any bid sheet opens, undefined while unknown (the API still answers ADDRESS_REQUIRED).
+   */
+  hasAddress?: boolean;
+  /** Bidding paused after two violations (GET /me biddingPaused): no bidding, a way to support. */
+  isBiddingPaused?: boolean;
 }
 
 /**
  * The viewer's standing on the auction (one banner, see userStateOf) and what they can do about
  * it: bid, buy now and auto-bid for a buyer on a live auction, the way to the order for the winner,
- * a reminder before it opens, sign-in for a guest. The seller's own auction gets the state only.
+ * a reminder before it opens, sign-in for a guest, support for a paused bidder. The seller's own
+ * auction gets the state only.
  */
 export function BidPanel({
   auctionId,
@@ -48,6 +56,8 @@ export function BidPanel({
   reminder,
   deliveryLine,
   isSheetOpenOnLoad = false,
+  hasAddress,
+  isBiddingPaused = false,
 }: BidPanelProps) {
   const { t, isReady } = useBiddingTranslation();
   const isAuthenticated = useIsAuthenticated();
@@ -67,6 +77,7 @@ export function BidPanel({
     isOwnAuction,
     isWinner: Boolean(winner),
     isAuthenticated,
+    isBiddingPaused,
     standing,
   });
 
@@ -81,7 +92,11 @@ export function BidPanel({
     );
   }
 
-  const canBid = pricing.data.status === 'LIVE' && state.kind !== 'own' && state.kind !== 'won';
+  const canBid =
+    pricing.data.status === 'LIVE' &&
+    state.kind !== 'own' &&
+    state.kind !== 'won' &&
+    state.kind !== 'paused';
 
   return (
     <div className="grid gap-3">
@@ -106,11 +121,24 @@ export function BidPanel({
 
       {state.kind === 'notStarted' && reminder ? <PanelBar>{reminder}</PanelBar> : null}
 
+      {state.kind === 'paused' ? (
+        <PanelBar>
+          <Link
+            href={ROUTES.contact}
+            className={buttonVariants({ variant: 'soft', isFullWidth: true })}
+            data-testid="bidding-paused-support"
+          >
+            {t('panel.contactSupport')}
+          </Link>
+        </PanelBar>
+      ) : null}
+
       {canBid ? (
         <LiveActions
           pricing={pricing.data}
           deliveryLine={deliveryLine}
           isSheetOpenOnLoad={isSheetOpenOnLoad}
+          needsAddress={hasAddress === false}
         />
       ) : null}
     </div>

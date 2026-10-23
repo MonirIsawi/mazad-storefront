@@ -11,13 +11,7 @@ import { useOrderSummaries } from '@features/orders';
 function WinsRoute() {
   const addresses = useAddresses();
   const orders = useOrderSummaries();
-  return (
-    <WinsPage
-      addresses={addresses.data ?? []}
-      isAddressesPending={addresses.isPending}
-      orders={orders}
-    />
-  );
+  return <WinsPage addresses={addresses.data ?? []} orders={orders} />;
 }
 
 export default function Page() {

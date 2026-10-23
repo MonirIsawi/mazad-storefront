@@ -4,9 +4,3 @@ import type { winSchema, winStatusSchema, winsListSchema } from '../schemas/wins
 export type WinStatus = z.infer<typeof winStatusSchema>;
 export type Win = z.infer<typeof winSchema>;
 export type WinsList = z.infer<typeof winsListSchema>;
-
-export interface ConfirmWinsInput {
-  winIds: string[];
-  addressId: string;
-  note?: string;
-}

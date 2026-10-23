@@ -16,6 +16,7 @@ export const NOTIFICATION_VISUAL: Record<
   AUCTION_ENDING_SOON: { icon: 'hourglass', tone: 'warn' },
   AUCTION_EXTENDED: { icon: 'clock', tone: 'info' },
   AUCTION_WON: { icon: 'trophy', tone: 'gold' },
+  // No longer sent (wins need no confirmation); kept for old rows.
   WIN_EXPIRING_SOON: { icon: 'hourglass', tone: 'warn' },
   WIN_PASSED_TO_YOU: { icon: 'trophy', tone: 'gold' },
   AUCTION_APPROVED: { icon: 'check-circle', tone: 'ok' },
@@ -54,6 +55,8 @@ function field(data: unknown, key: string): string | null {
   return typeof value === 'string' && value ? value : null;
 }
 
+// AUCTION_WON / WIN_PASSED_TO_YOU now carry data.orderId (the order the win created), which
+// routes to the order above; the wins list is the fallback for old rows without one.
 const WIN_TYPES: NotificationType[] = ['AUCTION_WON', 'WIN_PASSED_TO_YOU', 'WIN_EXPIRING_SOON'];
 
 /**

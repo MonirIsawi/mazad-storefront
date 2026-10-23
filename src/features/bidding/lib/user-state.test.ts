@@ -73,6 +73,12 @@ describe('userStateOf: one state, in priority order', () => {
     ).toBe('outbid');
   });
 
+  it('paused bidding (two violations) comes before the standing, after sign-in', () => {
+    expect(kind({ isBiddingPaused: true, standing: standing({ leading: true }) })).toBe('paused');
+    expect(kind({ isBiddingPaused: true, isAuthenticated: false })).toBe('signIn');
+    expect(kind({ isBiddingPaused: true, status: 'ENDED' })).toBe('ended');
+  });
+
   it('leading, outbid, or free to bid', () => {
     expect(kind({ standing: standing({ leading: true, myHighestBid: '150000.00' }) })).toBe(
       'leading',

@@ -9,7 +9,7 @@ import { useBiddingTranslation } from '../hooks/useBiddingTranslation';
 
 /**
  * Why a bid, an auto-bid or a purchase was refused, by the API's error code (never its message).
- * A missing address links straight to the addresses page.
+ * A missing address links straight to the addresses page; paused bidding to support.
  */
 export function BidError({ error }: { error: unknown }) {
   const { t } = useBiddingTranslation();
@@ -26,6 +26,13 @@ export function BidError({ error }: { error: unknown }) {
             {t('errors.ADDRESS_REQUIRED')}{' '}
             <Link href={ROUTES.addressesList} className="font-semibold underline">
               {t('errors.addAddressLink')}
+            </Link>
+          </>
+        ) : errorCode === 'BIDDING_PAUSED' ? (
+          <>
+            {t('errors.BIDDING_PAUSED')}{' '}
+            <Link href={ROUTES.contact} className="font-semibold underline">
+              {t('errors.contactSupportLink')}
             </Link>
           </>
         ) : (

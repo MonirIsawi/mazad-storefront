@@ -6,14 +6,18 @@ import { ROUTES } from '@shared/constants';
 import { buttonVariants } from '@shared/components/ui';
 import { EmptyState } from './EmptyState';
 
-/** The app's 404: what happened, and the two ways on (home, or browse the auctions). */
+/** The app's 404 (design not-found): what happened, and two ways on (browse, or home). */
 export function NotFoundScreen() {
   const { t } = useTranslation('common');
   return (
-    <div className="flex min-h-[60dvh] flex-col justify-center px-gutter" data-testid="not-found">
+    <div
+      className="mx-auto flex min-h-[60dvh] w-full max-w-page flex-col justify-center px-5 pt-16 lg:px-10 lg:pt-0"
+      data-testid="not-found"
+    >
       <EmptyState
-        icon="search"
+        icon="magnifying-glass-minus"
         title={t('notFound.title')}
+        titleAs="h1"
         message={t('notFound.message')}
         action={<RecoveryLinks />}
       />
@@ -21,21 +25,25 @@ export function NotFoundScreen() {
   );
 }
 
-/** Home and Browse, the same pair on the 404 and the error screen. */
-export function RecoveryLinks({ onRetry }: { onRetry?: () => void }) {
+/** Browse (the way on, gold) and Home, the same pair on the 404 and the error screen. */
+export function RecoveryLinks({ isQuiet = false }: { isQuiet?: boolean }) {
   const { t } = useTranslation('common');
   return (
-    <div className="mt-2 flex flex-wrap justify-center gap-2">
-      {onRetry ? (
-        <button type="button" onClick={onRetry} className={buttonVariants({ variant: 'filled' })}>
-          {t('state.retry')}
-        </button>
-      ) : null}
-      <Link href={ROUTES.home} className={buttonVariants({ variant: 'gray' })}>
-        {t('recovery.home')}
-      </Link>
-      <Link href={ROUTES.auctions} className={buttonVariants({ variant: 'tinted' })}>
+    <div className="mt-1 flex flex-wrap justify-center gap-2.5">
+      <Link
+        href={ROUTES.auctions}
+        className={buttonVariants({
+          variant: isQuiet ? 'soft' : 'gold',
+          size: isQuiet ? 'sm' : 'md',
+        })}
+      >
         {t('recovery.browse')}
+      </Link>
+      <Link
+        href={ROUTES.home}
+        className={buttonVariants({ variant: 'soft', size: isQuiet ? 'sm' : 'md' })}
+      >
+        {t('recovery.home')}
       </Link>
     </div>
   );

@@ -12,8 +12,8 @@ export function useWins(isEnabled = true) {
     queryKey: QUERY_KEYS.wins.list,
     queryFn: winsApi.list,
     enabled: isAuthenticated && isEnabled,
-    // A confirmation window expires on a server deadline, so a stale list here costs the user a
-    // strike. Refetch on focus and keep it short-lived.
+    // A win turns into an order the moment its auction ends: keep the list short-lived so a
+    // fresh win (and its order link) shows up soon after.
     staleTime: 15_000,
   });
 }

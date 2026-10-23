@@ -30,12 +30,15 @@ async function placeBidBySlide() {
   await userEvent.click(await screen.findByRole('button', { name: 'Place bid' }));
 }
 
-function renderPanel(isOwnAuction: boolean) {
+function renderPanel(
+  isOwnAuction: boolean,
+  extra: { hasAddress?: boolean; isBiddingPaused?: boolean } = {},
+) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
       <I18nextProvider i18n={i18n}>
-        <BidPanel auctionId="auction-1" isOwnAuction={isOwnAuction} />
+        <BidPanel auctionId="auction-1" isOwnAuction={isOwnAuction} {...extra} />
       </I18nextProvider>
     </QueryClientProvider>,
   );
@@ -73,6 +76,48 @@ const standing = (overrides: Record<string, unknown> = {}) => ({
   minNextBid: '100000.00',
   autoBid: null,
   ...overrides,
+});
+
+describe('BidPanel: an address first, and paused bidding', () => {
+  it('signed in with no saved address: "Bid" asks for an address instead of opening the sheet', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(standing());
+    renderPanel(false, { hasAddress: false });
+    await userEvent.click(await screen.findByRole('button', { name: 'Bid' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Add an address first' });
+    expect(dialog).toHaveTextContent('You need at least one saved address before you can bid.');
+    expect(screen.queryByRole('button', { name: /^Slide to bid/ })).toBeNull();
+    expect(screen.getAllByTestId('bid-address-first-add')[0]?.getAttribute('href')).toBe(
+      '/account/addresses',
+    );
+  });
+
+  it('paused after two violations: says so, offers support, and no bid actions', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(standing());
+    renderPanel(false, { isBiddingPaused: true, hasAddress: true });
+    expect(await screen.findByTestId('auction-user-state')).toHaveTextContent(
+      'Your bidding is paused after two refused deliveries.',
+    );
+    expect(screen.getByTestId('bidding-paused-support').getAttribute('href')).toBe('/contact');
+    expect(screen.queryByRole('button', { name: 'Bid' })).toBeNull();
+  });
+
+  it('a BIDDING_PAUSED refusal explains the pause and links to support', async () => {
+    vi.mocked(biddingApi.getMyStanding).mockResolvedValue(standing());
+    vi.mocked(biddingApi.placeBid).mockRejectedValue(
+      Object.assign(new Error('paused'), {
+        isAxiosError: true,
+        response: {
+          status: 403,
+          data: { errorCode: 'BIDDING_PAUSED', details: { violations: 2, limit: 2 } },
+        },
+      }),
+    );
+    renderPanel(false, { hasAddress: true });
+    await placeBidBySlide();
+    expect(
+      await screen.findByText(/Your bidding is paused after two refused deliveries\. Contact/),
+    ).toBeTruthy();
+  });
 });
 
 describe('BidPanel: the server says what happened', () => {

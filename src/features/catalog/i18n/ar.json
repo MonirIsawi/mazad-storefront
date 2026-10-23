@@ -104,7 +104,8 @@
     "showAllBids": "عرض الكل ({{count, num}})",
     "showFewerBids": "عرض أقل",
     "payment": "الدفع",
-    "returns": "الإرجاع"
+    "returns": "الإرجاع",
+    "extensionOf": "(التمديد {{count, num}} من {{max, num}})"
   },
   "condition": {
     "NEW": "جديد",
@@ -154,18 +155,6 @@
       "emptyTitle": "لا تقييمات بعد",
       "emptyMessage": "تظهر التقييمات هنا بعد أن يستلم المشترون طلباتهم.",
       "topTags": "الأكثر ذكراً"
-    },
-    "tags": {
-      "AS_DESCRIBED": "مطابق للوصف",
-      "FAST_DELIVERY": "توصيل سريع",
-      "GOOD_PACKAGING": "تغليف ممتاز",
-      "FRIENDLY_SELLER": "تواصل جيد",
-      "GOOD_VALUE": "سعر يستحق",
-      "NOT_AS_DESCRIBED": "لا يطابق الوصف",
-      "LATE_DELIVERY": "تأخر التوصيل",
-      "POOR_PACKAGING": "تغليف سيئ",
-      "UNRESPONSIVE_SELLER": "صعوبة التواصل",
-      "DAMAGED": "وصل متضرراً"
     }
   },
   "conditionHint": {
@@ -267,11 +256,12 @@
     "times_many": "{{count, num}} مرة",
     "times_other": "{{count, num}} مرة",
     "names": "أسماء المزايدين",
-    "namesValue": "مخفية جزئياً",
+    "namesValue": "ظاهرة بالاسم الكامل",
     "binding": "المزايدة والفوز",
     "bindingValue": "ملزمان، لا سحب ولا إلغاء",
-    "stepNote": "تأتي الخطوة من السعر: تكبر كلما ارتفع السعر، وهي نفسها لكل مزاد عند ذلك السعر.",
-    "how": "كيف تعمل المزادات"
+    "stepNote": "حدد البائع الخطوة والتمديد لهذا المزاد.",
+    "how": "كيف تعمل المزادات",
+    "stepNoteLadder": "تأتي الخطوة من السعر: تكبر كلما ارتفع السعر، وهي نفسها لكل مزاد عند ذلك السعر."
   },
   "history": {
     "seeAll": "عرض الكل ({{count}})",

@@ -1,13 +1,8 @@
 import { z } from 'zod';
 import { MAX_MONEY_AMOUNT } from '@shared/lib';
 
-export const bidStandingSchema = z.enum([
-  'WINNING',
-  'OUTBID',
-  'AWAITING_CONFIRMATION',
-  'WON',
-  'LOST',
-]);
+// A win becomes an order at once: there is no "awaiting confirmation" standing any more.
+export const bidStandingSchema = z.enum(['WINNING', 'OUTBID', 'WON', 'LOST']);
 
 const bidAuctionSummarySchema = z.object({
   currentPrice: z.string(),
@@ -17,6 +12,8 @@ const bidAuctionSummarySchema = z.object({
   // The server's rule for the next bid (optional: older API builds don't send them).
   minNextBid: z.string().optional(),
   bidIncrement: z.string().optional(),
+  // The leader's full name (leaderMaskedName carries the same name for older clients).
+  leaderName: z.string().nullable().optional(),
   leaderMaskedName: z.string().nullable().optional(),
 });
 
@@ -70,6 +67,8 @@ export const auctionPricingSchema = z.object({
   endsAt: z.string(),
   minNextBid: z.string().optional(),
   bidIncrement: z.string().optional(),
+  // true: an older auction on the platform ladder; otherwise the step is the seller's.
+  incrementLadder: z.boolean().optional(),
   // For the buy-now sheet: what is bought and the total with delivery (optional: older builds).
   deliveryFee: z.string().optional(),
   store: z.object({ deliveryFee: z.string() }).optional(),
@@ -78,9 +77,9 @@ export const auctionPricingSchema = z.object({
 
 const myBidWinSchema = z.object({
   id: z.string(),
-  status: z.enum(['PENDING_CONFIRMATION', 'CONFIRMED', 'DECLINED', 'EXPIRED']),
+  // CONFIRMED: the order exists; PASSED_OVER: the winner couldn't receive it (shown as lost).
+  status: z.enum(['CONFIRMED', 'PASSED_OVER']),
   amount: z.string(),
-  confirmationDeadline: z.string(),
 });
 
 export const myBidItemSchema = z.object({

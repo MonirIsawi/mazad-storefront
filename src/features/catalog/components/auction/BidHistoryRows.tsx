@@ -12,8 +12,8 @@ function isToday(iso: string) {
 
 /**
  * Bids as mazad-api orders them (highest, then newest, first), design `.hist`: the viewer's own
- * bids read "You" in gold with the crown; everyone else as the API names them (masked), and
- * automatic bids carry a small "Auto" tag.
+ * bids read "You" in gold with the crown; everyone else by full name, and automatic bids carry a
+ * small "Auto" tag.
  */
 export function BidHistoryRows({ bids }: { bids: BidHistoryItem[] }) {
   const { t } = useCatalogTranslation();
@@ -22,7 +22,9 @@ export function BidHistoryRows({ bids }: { bids: BidHistoryItem[] }) {
   return (
     <ul className="grid" data-testid="bid-history">
       {bids.map((bid) => {
-        const name = bid.isMine ? t('detail.bidYou') : bid.bidder.maskedName;
+        const name = bid.isMine
+          ? t('detail.bidYou')
+          : (bid.bidder.fullName ?? bid.bidder.maskedName);
         const time = isToday(bid.createdAt)
           ? formatTime(bid.createdAt, locale)
           : formatDateTime(bid.createdAt, locale);

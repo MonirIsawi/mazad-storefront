@@ -38,9 +38,7 @@ export function Chip({
     >
       {icon ? <Icon name={icon} size={size === 'sm' ? 13 : 16} /> : null}
       {children}
-      {count != null ? (
-        <span className="font-tabular text-xs font-semibold opacity-75">{count}</span>
-      ) : null}
+      {count != null ? <span className="font-tabular text-xs font-semibold">{count}</span> : null}
       {isRemovable ? <Icon name="x" size={14} className="opacity-80" /> : null}
     </button>
   );

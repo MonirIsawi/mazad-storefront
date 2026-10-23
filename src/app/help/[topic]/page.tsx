@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { HELP_TOPICS, HelpTopicPage, type HelpTopic } from '@features/help';
+import { HELP_TOPICS, type HelpTopic } from '@features/help';
+import { HelpTopicRoute } from '../help-routes';
 
 export function generateStaticParams() {
   return HELP_TOPICS.map((topic) => ({ topic }));
@@ -8,5 +9,5 @@ export function generateStaticParams() {
 export default async function Page({ params }: { params: Promise<{ topic: string }> }) {
   const { topic } = await params;
   if (!HELP_TOPICS.includes(topic as HelpTopic)) notFound();
-  return <HelpTopicPage topic={topic as HelpTopic} />;
+  return <HelpTopicRoute topic={topic as HelpTopic} />;
 }
