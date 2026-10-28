@@ -13,7 +13,8 @@ import type { PublicStore } from '../types/home.types';
 
 /**
  * "Verified stores" (design `.storecard` rail), from GET /stores. Drawn only when the API has
- * that route and returns verified stores: until then there is no rail, never a placeholder.
+ * that route and returns verified stores: until then there is no rail, never a placeholder. On
+ * desktop a few stores stretch to fill the row (up to 620px each); more than fit scroll as a rail.
  */
 export function StoresRail() {
   const { t } = useHomeTranslation();
@@ -21,7 +22,11 @@ export function StoresRail() {
   if (stores.length === 0) return null;
 
   return (
-    <Rail title={t('sections.stores')} icon="shield" itemClassName="w-[250px] lg:w-[250px]">
+    <Rail
+      title={t('sections.stores')}
+      icon="shield"
+      itemClassName="w-[250px] lg:w-auto lg:max-w-[620px] lg:min-w-[250px] lg:flex-1"
+    >
       {stores.map((store) => (
         <StoreCard key={store.id} store={store} />
       ))}
@@ -41,7 +46,13 @@ function StoreCard({ store }: { store: PublicStore }) {
     >
       <span className="relative block h-[110px] bg-tile">
         {store.coverUrl ? (
-          <Image src={store.coverUrl} alt="" fill sizes="250px" className="object-cover" />
+          <Image
+            src={store.coverUrl}
+            alt=""
+            fill
+            sizes="(min-width: 960px) 620px, 250px"
+            className="object-cover"
+          />
         ) : null}
         <span
           aria-hidden

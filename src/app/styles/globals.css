@@ -205,6 +205,8 @@ html[lang='en'] {
 @theme inline {
   /* Tailwind's own breakpoints stay, except lg: the design switches to its desktop layout at 960. */
   --breakpoint-lg: 60rem;
+  /* wide desktops (1800px): one more auction column */
+  --breakpoint-3xl: 112.5rem;
 
   --color-background: var(--color-background);
   --color-background-deep: var(--color-background-deep);
@@ -335,7 +337,7 @@ html[lang='en'] {
   --spacing-safe-top: 44px;
   --spacing-safe-bottom: 24px;
   /* the page column; the desktop header's content shares it, so their edges line up */
-  --container-page: 1600px;
+  --container-page: 1920px;
 
   --blur-chrome: 20px;
 
