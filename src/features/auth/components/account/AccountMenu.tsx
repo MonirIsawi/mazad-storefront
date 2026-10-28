@@ -4,13 +4,22 @@ import type { ReactNode } from 'react';
 import { MenuRow } from '@shared/components/ui';
 import { ROUTES } from '@shared/constants';
 import { useApiFeature, useMoney } from '@shared/hooks';
+import { cn } from '@shared/lib';
 import { useAuthTranslation } from '../../hooks/useAuthTranslation';
 import { PreferenceRows } from './PreferenceRows';
 
 /** A titled group of menu rows (design `.grp-t` + `.menu`). */
-function MenuGroup({ title, children }: { title: string; children: ReactNode }) {
+function MenuGroup({
+  title,
+  className,
+  children,
+}: {
+  title: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <section className="grid gap-2 lg:gap-2.5">
+    <section className={cn('grid content-start gap-2 lg:gap-2.5', className)}>
       <h2 className="px-1.5 pt-3.5 text-[13px] font-normal text-muted-foreground">{title}</h2>
       {children}
     </section>
@@ -19,7 +28,9 @@ function MenuGroup({ title, children }: { title: string; children: ReactNode }) 
 
 /**
  * The account's grouped menus: selling, my activity, preferences with help. "Contact us" only
- * while the API has support reports; otherwise the row isn't there at all.
+ * while the API has support reports; otherwise the row isn't there at all. From 1280px my activity
+ * takes one column and selling with preferences the other. Theme and language stay here on phones;
+ * on desktop they are in the header.
  */
 export function AccountMenu({ unreadNotifications }: { unreadNotifications?: number }) {
   const { t } = useAuthTranslation();
@@ -36,16 +47,8 @@ export function AccountMenu({ unreadNotifications }: { unreadNotifications?: num
   ] as const;
 
   return (
-    <>
-      <MenuGroup title={t('account.selling')}>
-        <MenuRow
-          href={ROUTES.selling}
-          icon="store"
-          title={t('account.sellerHub')}
-          subtitle={t('account.sellerHubHint')}
-        />
-      </MenuGroup>
-      <MenuGroup title={t('account.activity')}>
+    <div className="grid gap-4 xl:grid-cols-2 xl:items-start xl:gap-x-8">
+      <MenuGroup title={t('account.activity')} className="order-2 xl:order-none">
         {activity.map((row) => (
           <MenuRow key={row.href} href={row.href} icon={row.icon} title={row.title} />
         ))}
@@ -60,18 +63,31 @@ export function AccountMenu({ unreadNotifications }: { unreadNotifications?: num
           }
         />
       </MenuGroup>
-      <MenuGroup title={t('account.preferences')}>
-        <PreferenceRows />
-        <MenuRow href={ROUTES.help} icon="question" title={t('account.help')} />
-        {hasContact ? (
+      {/* Phones: selling, my activity, preferences. From 1280px: activity, then this column. */}
+      <div className="contents xl:grid xl:gap-4">
+        <MenuGroup title={t('account.selling')} className="order-1 xl:order-none">
           <MenuRow
-            href={ROUTES.contact}
-            icon="telegram"
-            title={t('account.contact')}
-            subtitle={t('account.contactHint')}
+            href={ROUTES.selling}
+            icon="store"
+            title={t('account.sellerHub')}
+            subtitle={t('account.sellerHubHint')}
           />
-        ) : null}
-      </MenuGroup>
-    </>
+        </MenuGroup>
+        <MenuGroup title={t('account.preferences')} className="order-3 xl:order-none">
+          <div className="grid gap-2 lg:hidden">
+            <PreferenceRows />
+          </div>
+          <MenuRow href={ROUTES.help} icon="question" title={t('account.help')} />
+          {hasContact ? (
+            <MenuRow
+              href={ROUTES.contact}
+              icon="telegram"
+              title={t('account.contact')}
+              subtitle={t('account.contactHint')}
+            />
+          ) : null}
+        </MenuGroup>
+      </div>
+    </div>
   );
 }

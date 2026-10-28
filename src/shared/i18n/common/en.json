@@ -32,12 +32,17 @@
   "theme": {
     "light": "Light",
     "dark": "Dark",
-    "label": "Appearance"
+    "label": "Appearance",
+    "switchTo": "Switch to {{theme}} theme"
   },
   "locale": {
     "en": "English",
     "ar": "العربية",
-    "label": "Language"
+    "label": "Language",
+    "short": {
+      "en": "EN",
+      "ar": "ع"
+    }
   },
   "password": {
     "show": "Show password",

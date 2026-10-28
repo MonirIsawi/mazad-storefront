@@ -26,7 +26,8 @@ export interface AccountPageProps {
 
 /**
  * Profile, three live counters that link to what needs you, then grouped menus. Delete account
- * sits alone, far below sign-out, and opens its own page.
+ * sits alone, far below sign-out, and opens its own page. On desktop the menus sit side by side in
+ * the wide column, beside a sidebar with the profile.
  */
 export function AccountPage({ counts = {}, aside }: AccountPageProps) {
   const { t, isReady } = useAuthTranslation();
@@ -61,16 +62,20 @@ export function AccountPage({ counts = {}, aside }: AccountPageProps) {
     <>
       <ScreenHeader title={t('account.title')} isRoot />
       <PageContainer className="pb-10">
-        <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-10">
-          <div className="grid gap-4">
+        {/* Phones: one column (profile, counters, menus, sign out). From 960px: a sticky sidebar
+            with the profile, counters and sign out, and the menus and orders in the wide column. */}
+        <div className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-10 xl:grid-cols-[360px_minmax(0,1fr)] xl:gap-12">
+          <div className="contents lg:sticky lg:top-[100px] lg:grid lg:gap-4">
             <ProfileCard user={user} />
             <AccountCounters counters={counters} />
-            <AccountMenu unreadNotifications={counts.unreadNotifications} />
-            <AccountSignOut />
+            <div className="order-last lg:order-none">
+              <AccountSignOut />
+            </div>
           </div>
-          {aside ? (
-            <div className="hidden gap-[18px] lg:sticky lg:top-[100px] lg:grid">{aside}</div>
-          ) : null}
+          <div className="grid gap-4 lg:gap-6">
+            {aside ? <div className="hidden gap-[18px] lg:grid">{aside}</div> : null}
+            <AccountMenu unreadNotifications={counts.unreadNotifications} />
+          </div>
         </div>
       </PageContainer>
     </>

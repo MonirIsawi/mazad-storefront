@@ -4,10 +4,10 @@ import { AuctionCard } from './AuctionCard';
 import type { AuctionSummary } from '@shared/types';
 
 const COLUMN_CLASSES = {
-  /** two up on phones, four from 960px (design `.grid`) */
-  2: 'grid-cols-2 lg:grid-cols-4',
+  /** two up on phones, four from 960px, five and six on wide screens (design `.grid`) */
+  2: 'grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
   /** beside a filter column or a side panel (design `.grid.g3`) */
-  3: 'grid-cols-2 lg:grid-cols-3',
+  3: 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5',
 } as const;
 
 export interface AuctionGridProps {

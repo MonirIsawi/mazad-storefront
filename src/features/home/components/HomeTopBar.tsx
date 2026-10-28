@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
 import { BrandLockup } from '@shared/components/brand';
 import { Avatar, IconButton } from '@shared/components/ui';
+import { PreferenceToggles } from '@shared/components/layout';
 
 export interface HomeTopBarProps {
   unreadCount: number;
@@ -13,7 +14,10 @@ export interface HomeTopBarProps {
   userName?: string;
 }
 
-/** The phone home bar (design `.mtop`): the lockup, the bell and the account avatar. */
+/**
+ * The phone home bar (design `.mtop`): the lockup, the theme and language switches, the bell and
+ * the account avatar.
+ */
 export function HomeTopBar({ unreadCount, userName }: HomeTopBarProps) {
   const { t: tCommon } = useTranslation('common');
   const router = useRouter();
@@ -24,6 +28,7 @@ export function HomeTopBar({ unreadCount, userName }: HomeTopBarProps) {
         <BrandLockup />
       </Link>
       <span className="min-w-0 flex-1" />
+      <PreferenceToggles />
       <IconButton
         name="bell"
         label={tCommon('nav.notifications')}
