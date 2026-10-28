@@ -334,7 +334,8 @@ html[lang='en'] {
   --spacing-header: 78px;
   --spacing-safe-top: 44px;
   --spacing-safe-bottom: 24px;
-  --container-page: 1280px;
+  /* the page column; the desktop header's content shares it, so their edges line up */
+  --container-page: 1600px;
 
   --blur-chrome: 20px;
 

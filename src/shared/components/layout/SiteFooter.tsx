@@ -20,8 +20,8 @@ export function SiteFooter({ columns }: { columns: FooterColumn[] }) {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-10 hidden border-t border-border bg-background-deep px-10 pt-10 pb-[34px] lg:block">
-      <div className="mx-auto grid max-w-page grid-cols-[1.4fr_repeat(3,1fr)] gap-[30px]">
+    <footer className="mt-10 hidden border-t border-border bg-background-deep pt-10 pb-[34px] lg:block">
+      <div className="mx-auto grid max-w-page px-10 grid-cols-[1.4fr_repeat(3,1fr)] gap-[30px]">
         <div className="grid content-start gap-3">
           <BrandLockup />
           <p className="max-w-[38ch] text-[13px] text-foreground-soft">{t('footer.promise')}</p>

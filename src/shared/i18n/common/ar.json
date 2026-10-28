@@ -32,12 +32,17 @@
   "theme": {
     "light": "فاتح",
     "dark": "داكن",
-    "label": "المظهر"
+    "label": "المظهر",
+    "switchTo": "التبديل إلى المظهر ال{{theme}}"
   },
   "locale": {
     "en": "English",
     "ar": "العربية",
-    "label": "اللغة"
+    "label": "اللغة",
+    "short": {
+      "en": "EN",
+      "ar": "ع"
+    }
   },
   "password": {
     "show": "إظهار كلمة المرور",

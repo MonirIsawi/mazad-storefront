@@ -6,16 +6,23 @@ import { useTranslation } from 'react-i18next';
 import { ROUTES } from '@shared/constants';
 import { useIsAuthenticated } from '@shared/hooks';
 import { Avatar, IconButton, buttonVariants } from '@shared/components/ui';
+import { PreferenceToggles } from '@shared/components/layout';
 import { useCurrentUser } from '@features/auth';
 import { useUnreadNotificationCount } from '@features/notifications';
 
 /**
- * The desktop header's end: the bell with the unread count and the account avatar when signed
- * in, a sign-in button otherwise. Composed here in app/ because it reads two features.
+ * The desktop header's end: the theme and language switches, then the bell with the unread count
+ * and the account avatar when signed in, a sign-in button otherwise. Composed here in app/
+ * because it reads two features.
  */
 export function HeaderActions() {
   const isAuthenticated = useIsAuthenticated();
-  return isAuthenticated ? <SignedInActions /> : <SignInLink />;
+  return (
+    <>
+      <PreferenceToggles />
+      {isAuthenticated ? <SignedInActions /> : <SignInLink />}
+    </>
+  );
 }
 
 function SignedInActions() {

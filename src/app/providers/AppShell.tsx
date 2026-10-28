@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <main
           id="main"
           className={cn(
-            'flex-1 pt-[env(safe-area-inset-top)] lg:pt-0',
+            'flex-1 overflow-x-clip pt-[env(safe-area-inset-top)] lg:pt-0',
             // Clears the floating tab bar and the home indicator on phones.
             hasTabBar &&
               'pb-[calc(var(--spacing-tab-bar-floating)+env(safe-area-inset-bottom))] lg:pb-0',
