@@ -8,12 +8,16 @@ import { useCatalogTranslation } from '../hooks/useCatalogTranslation';
 import { useCategories } from '../hooks/useCategories';
 import { flattenCategories } from '../lib/category-list';
 
-const RAIL = 'no-scrollbar -mx-5 flex gap-4 overflow-x-auto px-5 lg:mx-0 lg:gap-2.5 lg:px-0';
+// Phones swipe one row; from 960px the pills wrap, so every category is visible without a scroll a
+// mouse can't do.
+const RAIL =
+  'no-scrollbar -mx-5 flex gap-4 overflow-x-auto px-5 lg:mx-0 lg:flex-wrap lg:gap-2.5 lg:overflow-visible lg:px-0';
 
 /**
  * The category shortcuts on the home feed (design `.cats`): round gold-glyph tiles on phones, pills
- * from 960px. "All" leads and is the current choice on home. Lives in catalog because it owns the
- * categories query; the home route composes it in (AGENTS.md rule 1).
+ * from 960px, wrapping onto more lines when they don't fit. "All" leads and is the current choice
+ * on home. Lives in catalog because it owns the categories query; the home route composes it in
+ * (AGENTS.md rule 1).
  */
 export function CategoryRail() {
   const { t, isReady } = useCatalogTranslation();
